@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>AI查重助手v1.0 - 多已建对比（豆包视觉模型）</title>
+    <title>AI查重助手v1.0</title>
     <style>
-        /* 样式与上一版相同，略 */
         * {
             margin: 0;
             padding: 0;
@@ -14,7 +13,7 @@
         }
         body {
             width: 100%;
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 30px 20px;
             background: #f8fafc;
@@ -36,41 +35,11 @@
             border-radius: 30px;
             margin-left: 10px;
         }
-        .top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 16px;
-            background: #ecfdf5;
-            border-left: 4px solid #10b981;
-            border-radius: 10px;
-            padding: 12px 18px;
-        }
-        .api-config {
-            font-size: 13px;
-            color: #065f46;
-        }
-        .history-btn {
-            background: #3b82f6;
-            color: white;
-            border: none;
-            border-radius: 40px;
-            padding: 8px 20px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .history-btn:hover {
-            background: #1e40af;
-        }
         .comparison-card {
             background: white;
             border-radius: 24px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
             overflow: hidden;
-            transition: all 0.2s;
         }
         .card-header {
             background: #f1f5f9;
@@ -78,22 +47,21 @@
             font-weight: bold;
             font-size: 18px;
             border-bottom: 1px solid #e2e8f0;
-            cursor: pointer;
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            gap: 12px;
         }
-        .card-header h2 {
-            font-size: 18px;
-            margin: 0;
+        .card-header label {
+            font-weight: 500;
         }
-        .toggle-icon {
-            font-size: 20px;
-            transition: transform 0.2s;
+        .card-header input {
+            padding: 4px 8px;
+            border-radius: 30px;
+            border: 1px solid #cbd5e1;
+            width: 140px;
         }
         .card-content {
             padding: 20px;
-            display: block;
         }
         .config-bar {
             display: flex;
@@ -102,15 +70,6 @@
             gap: 20px;
             align-items: center;
             flex-wrap: wrap;
-        }
-        .config-bar label {
-            font-size: 14px;
-            font-weight: 500;
-        }
-        .config-bar select {
-            padding: 6px 12px;
-            border-radius: 30px;
-            border: 1px solid #cbd5e1;
         }
         .compare-layout {
             display: flex;
@@ -228,42 +187,198 @@
             background: #94a3b8;
             cursor: not-allowed;
         }
-        .result-summary {
+        /* AI问答模块样式 */
+        .qa-section {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            overflow: hidden;
+            margin-top: 16px;
+        }
+        .qa-header {
+            background: #f1f5f9;
+            padding: 12px 20px;
+            font-weight: bold;
+            font-size: 18px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .qa-body {
+            padding: 16px 20px;
+        }
+        .qa-input-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .qa-input-group input {
+            flex: 1;
+            padding: 10px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 30px;
+            font-size: 14px;
+        }
+        .qa-input-group button {
+            background: #1e40af;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 8px 20px;
+            cursor: pointer;
+        }
+        .qa-answer {
             background: #f9fafb;
             border-radius: 16px;
-            padding: 12px 16px;
-            margin-top: 16px;
-            cursor: pointer;
+            padding: 12px;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #1e293b;
+            border-left: 3px solid #3b82f6;
+        }
+        .qa-answer.loading {
+            color: #2563eb;
+        }
+        .history-section {
+            margin-top: 24px;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        .history-header {
+            background: #f1f5f9;
+            padding: 12px 20px;
+            font-weight: bold;
+            font-size: 18px;
+            border-bottom: 1px solid #e2e8f0;
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
             gap: 12px;
         }
-        .summary-stats {
+        .search-box {
             display: flex;
-            gap: 24px;
+            gap: 8px;
+            align-items: center;
+        }
+        .search-box input {
+            padding: 6px 12px;
+            border-radius: 30px;
+            border: 1px solid #cbd5e1;
+            width: 200px;
+        }
+        .search-box button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 6px 16px;
+            cursor: pointer;
+        }
+        .records-list {
+            padding: 20px;
+        }
+        .record-item {
+            background: #f9fafb;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s;
+        }
+        .record-summary {
+            padding: 12px 16px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            background: #ffffff;
+            border-radius: 16px;
+        }
+        .record-summary:hover {
+            background: #f1f5f9;
+        }
+        .record-info {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .image-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             flex-wrap: wrap;
         }
-        .stat {
-            font-size: 14px;
+        .thumb {
+            width: 50px;
+            height: 50px;
+            background: #e2e8f0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
         }
-        .stat-value {
-            font-weight: 700;
-            font-size: 18px;
-            margin-right: 4px;
+        .thumb img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: cover;
         }
-        .stat-label {
+        .vs {
+            font-weight: bold;
             color: #475569;
         }
-        .result-detail {
-            margin-top: 12px;
-            padding-top: 12px;
+        .record-desc {
+            font-size: 13px;
+            color: #334155;
+        }
+        .record-status {
+            font-weight: bold;
+            padding: 4px 12px;
+            border-radius: 30px;
+            background: #e2e8f0;
+        }
+        .record-status.pass {
+            background: #15803d;
+            color: white;
+        }
+        .record-status.fail {
+            background: #b91c1c;
+            color: white;
+        }
+        .record-status.analyzing {
+            background: #eab308;
+            color: white;
+        }
+        .retry-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 4px 12px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .record-detail {
+            padding: 16px;
             border-top: 1px solid #e2e8f0;
             display: none;
+            background: #f9fafb;
         }
-        .result-detail.show {
+        .record-detail.show {
             display: block;
+        }
+        .clear-history {
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 6px 16px;
+            font-size: 13px;
+            cursor: pointer;
+            margin-left: 16px;
         }
         .product-descriptions {
             display: flex;
@@ -342,7 +457,7 @@
             display: inline-block;
             padding: 2px 8px;
             border-radius: 20px;
-            font-size: 11px;
+            font-size: 13px;
             font-weight: 600;
             margin-right: 8px;
         }
@@ -366,12 +481,6 @@
         }
         .conclusion-text.pass { color: #15803d; }
         .conclusion-text.fail { color: #b91c1c; }
-        .paste-hint {
-            font-size: 11px;
-            color: #3b82f6;
-            margin-top: 4px;
-            text-align: center;
-        }
         .loading {
             text-align: center;
             padding: 20px;
@@ -413,17 +522,85 @@
             .compare-layout { flex-direction: column; }
             .product-descriptions { flex-direction: column; }
             .dimension-summary { flex-direction: column; align-items: center; }
+            .record-info { flex-direction: column; align-items: flex-start; }
         }
     </style>
 </head>
 <body>
 <div class="container">
-    <div class="top-bar">
-        <div class="api-config">✅ 接入豆包视觉大模型 | 智能识别组合数量 | 尺寸统一单位对比 | 忽略微小尺寸差异 | 首创规则（保护期内数量/尺寸/颜色不作为差异）</div>
-        <button class="history-btn" id="openHistoryBtn">📜 历史记录</button>
+    <h1>
+        AI查重助手<span class="version-badge">v1.0</span>
+    </h1>
+
+    <!-- 单组对比卡片 -->
+    <div class="comparison-card">
+        <div class="card-header">
+            <label>新品ID：</label>
+            <input type="text" id="newProductId" placeholder="如 2424704">
+        </div>
+        <div class="card-content">
+            <div class="config-bar">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <label>已建数量：</label>
+                    <select id="builtCount" class="built-count-select">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    </select>
+                </div>
+            </div>
+            <div class="compare-layout">
+                <div class="unbuilt-area">
+                    <div class="active-hint">当前激活</div>
+                    <div class="zone-header">
+                        <h3>📦 未建</h3>
+                    </div>
+                    <textarea placeholder="可选：输入产品方案，AI将结合图片一起分析" class="text-area" id="unbuiltText"></textarea>
+                    <div class="dropzone" id="unbuiltDropzone">
+                        <img id="unbuiltPreview" class="preview-img">
+                        <div class="instructions" id="unbuiltInstructions">拖拽图片到此 或 Ctrl+V 粘贴<br><span class="upload-link" id="unbuiltUploadBtn">点击上传</span></div>
+                        <button class="delete-img-btn" id="unbuiltDeleteBtn" style="display:none;">✕</button>
+                        <input type="file" accept="image/*" id="unbuiltFileInput" style="display:none">
+                    </div>
+                    <div class="paste-hint">💡 提示：上传产品效果图，如有文字说明请填写在上方文本框</div>
+                </div>
+                <div class="built-area" id="builtArea"></div>
+            </div>
+            <button class="compare-btn" id="compareBtn">🔍 启动AI对比分析</button>
+        </div>
     </div>
 
-    <div id="comparisonContainer"></div>
+    <!-- AI问答模块 -->
+    <div class="qa-section">
+        <div class="qa-header">
+            💬 AI智能问答
+        </div>
+        <div class="qa-body">
+            <div class="qa-input-group">
+                <input type="text" id="qaQuestion" placeholder="输入您的问题，例如：炻器是否属于陶瓷材质？">
+                <button id="qaAskBtn">提问</button>
+            </div>
+            <div id="qaAnswer" class="qa-answer" style="display: none;"></div>
+        </div>
+    </div>
+
+    <!-- 查重记录区域 -->
+    <div class="history-section">
+        <div class="history-header">
+            <span>📋 查重记录</span>
+            <div class="search-box">
+                <input type="text" id="historySearchInput" placeholder="按新品ID搜索">
+                <button id="historySearchBtn">搜索</button>
+                <button id="historyResetBtn">重置</button>
+                <button class="clear-history" id="clearHistoryBtn">清空记录</button>
+            </div>
+        </div>
+        <div id="recordsList" class="records-list">
+            <!-- 动态记录列表 -->
+        </div>
+    </div>
 </div>
 
 <script>
@@ -433,99 +610,205 @@
         const ENDPOINT_ID = "ep-20260320164842-rsqff";
         const API_URL = "https://ark.cn-beijing.volces.com/api/v3/chat/completions";
 
-        // ---------- 历史记录存储 ----------
-        let historyRecords = [];
-        const STORAGE_KEY = "ai_chat_history";
+        // ---------- IndexedDB 存储 ----------
+        const DB_NAME = "AIChatHistoryDB";
+        const DB_VERSION = 1;
+        const STORE_NAME = "records";
 
-        function loadHistory() {
-            const stored = localStorage.getItem(STORAGE_KEY);
-            if (stored) {
-                try {
-                    historyRecords = JSON.parse(stored);
-                } catch(e) { historyRecords = []; }
+        let historyRecords = [];
+        let db = null;
+
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                if (db && db.name === DB_NAME) {
+                    resolve(db);
+                    return;
+                }
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onerror = (event) => reject(event.target.error);
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    resolve(db);
+                };
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        db.createObjectStore(STORE_NAME, { keyPath: "id" });
+                    }
+                };
+            });
+        }
+
+        async function loadHistory() {
+            try {
+                const database = await openDB();
+                const transaction = database.transaction(STORE_NAME, "readonly");
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.getAll();
+                const records = await new Promise((resolve, reject) => {
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+                records.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                historyRecords = records;
+                renderRecordsList();
+            } catch (error) {
+                console.error("加载历史记录失败", error);
+                historyRecords = [];
+                renderRecordsList();
             }
         }
-        function saveHistory() {
-            const toSave = historyRecords.map(rec => ({
-                id: rec.id,
-                groupId: rec.groupId,
-                timestamp: rec.timestamp,
-                summaryHtml: rec.summaryHtml,
-                detailHtml: rec.detailHtml,
-                isPass: rec.isPass,
-                combinedDiff: rec.combinedDiff,
-                newProductId: rec.newProductId,
-                builtIds: rec.builtIds
-            }));
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+
+        async function saveHistory() {
+            try {
+                const database = await openDB();
+                const transaction = database.transaction(STORE_NAME, "readwrite");
+                const store = transaction.objectStore(STORE_NAME);
+                await new Promise((resolve, reject) => {
+                    const clearRequest = store.clear();
+                    clearRequest.onsuccess = () => resolve();
+                    clearRequest.onerror = () => reject(clearRequest.error);
+                });
+                for (const record of historyRecords) {
+                    store.add(record);
+                }
+                await new Promise((resolve, reject) => {
+                    transaction.oncomplete = () => resolve();
+                    transaction.onerror = () => reject(transaction.error);
+                });
+            } catch (error) {
+                console.error("保存历史记录失败", error);
+            }
         }
-        function addHistoryRecord(groupId, summaryHtml, detailHtml, isPass, combinedDiff, newProductId, builtIds) {
-            const record = {
-                id: Date.now() + '_' + Math.random(),
-                groupId: groupId,
-                timestamp: new Date().toLocaleString(),
-                summaryHtml: summaryHtml,
-                detailHtml: detailHtml,
-                isPass: isPass,
-                combinedDiff: combinedDiff,
-                newProductId: newProductId,
-                builtIds: builtIds
-            };
+
+        async function addRecord(record) {
             historyRecords.unshift(record);
-            if (historyRecords.length > 50) historyRecords.pop();
-            saveHistory();
-            if (historyModal && historyModal.style.display === 'flex') {
-                renderHistoryPanel();
+            await saveHistory();
+            renderRecordsList();
+        }
+
+        async function updateRecord(id, updates) {
+            const index = historyRecords.findIndex(r => r.id === id);
+            if (index !== -1) {
+                historyRecords[index] = { ...historyRecords[index], ...updates };
+                await saveHistory();
+                renderRecordsList();
             }
         }
-        function clearHistory() {
+
+        async function clearHistory() {
             historyRecords = [];
-            saveHistory();
-            if (historyModal && historyModal.style.display === 'flex') renderHistoryPanel();
+            await saveHistory();
+            renderRecordsList();
         }
 
         // ---------- 辅助函数 ----------
+        function safeString(str) {
+            return typeof str === 'string' ? str : '';
+        }
+
+        function formatPercent(value) {
+            if (value === null || value === undefined) return '—';
+            if (value > 100) return '100%+';
+            return Math.round(value) + '%';
+        }
+
+        // 改进的 extractNumber 用于显示（保留原有简单逻辑）
         function extractNumber(str) {
-            if (!str) return null;
-            let cardMatch = str.match(/(\d+(?:\.\d+)?)\s*张/);
+            const s = safeString(str);
+            if (!s) return null;
+            let cardMatch = s.match(/(\d+(?:\.\d+)?)\s*张/);
             if (cardMatch) return parseFloat(cardMatch[1]);
-            let pieceMatch = str.match(/(\d+(?:\.\d+)?)\s*个/);
+            let pieceMatch = s.match(/(\d+(?:\.\d+)?)\s*个/);
             if (pieceMatch) return parseFloat(pieceMatch[1]);
-            let setMatch = str.match(/(\d+(?:\.\d+)?)\s*套\s*(\d+(?:\.\d+)?)\s*个/);
-            if (setMatch) return parseFloat(setMatch[2]);
-            let simple = str.match(/(\d+(?:\.\d+)?)/);
+            let setMatch = s.match(/(\d+(?:\.\d+)?)\s*套/);
+            if (setMatch) return parseFloat(setMatch[1]);
+            let simple = s.match(/(\d+(?:\.\d+)?)/);
             return simple ? parseFloat(simple[1]) : null;
         }
 
+        // 增强的数量解析函数：处理组合产品（多个组件数量相同则取该数量，否则无法计算）
+        function parseQuantity(quantityStr) {
+            const s = safeString(quantityStr);
+            if (!s) return { value: null, status: 'none', reason: '' };
+
+            // 1. 忽略“点胶”
+            if (s.includes('点胶')) {
+                return { value: null, status: 'ignore', reason: '含点胶数量，已忽略' };
+            }
+
+            // 2. 匹配组合产品中的多个数量（例如：100张... + 100个... + 100张...）
+            const matches = [...s.matchAll(/(\d+(?:\.\d+)?)\s*(?:个|张)/g)];
+            if (matches.length > 1) {
+                const values = matches.map(m => parseFloat(m[1]));
+                const allSame = values.every(v => v === values[0]);
+                if (allSame) {
+                    return { value: values[0], status: 'ok', reason: `组合产品，各组件数量均为${values[0]}个` };
+                } else {
+                    return { value: null, status: 'ambiguous', reason: '组合产品各组件数量不一致，不便计算数量差异' };
+                }
+            }
+
+            // 3. 原有的“X个A和Y个B为一套”模式
+            const comboMatch = s.match(/(\d+(?:\.\d+)?)\s*个\s*[^和]+和\s*(\d+(?:\.\d+)?)\s*个\s*[^为]+为一套/);
+            if (comboMatch) {
+                const num1 = parseFloat(comboMatch[1]);
+                const num2 = parseFloat(comboMatch[2]);
+                if (num1 === num2) {
+                    return { value: num1, status: 'ok', reason: `组合产品，${num1}套` };
+                } else {
+                    return { value: null, status: 'ambiguous', reason: '组合产品组件数量不匹配，不便计算数量差异' };
+                }
+            }
+
+            // 4. 常规单个数量
+            let cardMatch = s.match(/(\d+(?:\.\d+)?)\s*张/);
+            if (cardMatch) return { value: parseFloat(cardMatch[1]), status: 'ok', reason: '' };
+            let pieceMatch = s.match(/(\d+(?:\.\d+)?)\s*个/);
+            if (pieceMatch) return { value: parseFloat(pieceMatch[1]), status: 'ok', reason: '' };
+            let setMatch = s.match(/(\d+(?:\.\d+)?)\s*套/);
+            if (setMatch) return { value: parseFloat(setMatch[1]), status: 'ok', reason: '' };
+            let simple = s.match(/(\d+(?:\.\d+)?)/);
+            if (simple) return { value: parseFloat(simple[1]), status: 'ok', reason: '' };
+            return { value: null, status: 'none', reason: '未识别数量' };
+        }
+
+        function calcQuantityDiff(builtVal, unbuiltVal) {
+            const builtParsed = parseQuantity(builtVal);
+            const unbuiltParsed = parseQuantity(unbuiltVal);
+            if (builtParsed.status === 'ignore' || unbuiltParsed.status === 'ignore' ||
+                builtParsed.status === 'ambiguous' || unbuiltParsed.status === 'ambiguous') {
+                return { diff: null, reason: builtParsed.reason || unbuiltParsed.reason || '不便计算数量差异' };
+            }
+            if (builtParsed.value === null || unbuiltParsed.value === null) {
+                return { diff: null, reason: '数量未识别' };
+            }
+            const b = builtParsed.value;
+            const u = unbuiltParsed.value;
+            if (b === 0) return { diff: null, reason: '已建数量为0' };
+            const diff = Math.abs(u - b) / b * 100;
+            return { diff: diff, reason: null };
+        }
+
         function convertToCm(str) {
-            if (!str) return null;
-            let feetInchMatch = str.match(/(\d+(?:\.\d+)?)\s*['′]\s*(?:(\d+(?:\.\d+)?)\s*["″]?)?/);
+            const s = safeString(str);
+            if (!s) return null;
+            let feetInchMatch = s.match(/(\d+(?:\.\d+)?)\s*['′]\s*(?:(\d+(?:\.\d+)?)\s*["″]?)?/);
             if (feetInchMatch) {
                 const feet = parseFloat(feetInchMatch[1]);
                 const inches = feetInchMatch[2] ? parseFloat(feetInchMatch[2]) : 0;
                 return feet * 30.48 + inches * 2.54;
             }
-            let match = str.match(/^([\d.]+)\s*([a-zA-Z'"]+)?/);
+            let match = s.match(/^([\d.]+)\s*([a-zA-Z\u4e00-\u9fa5]+)?/);
             if (!match) return null;
             const num = parseFloat(match[1]);
             let unit = match[2] ? match[2].toLowerCase() : '';
-            if (unit === "'" || unit === '′' || unit === 'ft') unit = 'ft';
-            if (unit === '"' || unit === '″' || unit === 'in' || unit === 'inch' || unit === 'inches') unit = 'in';
-            switch (unit) {
-                case 'cm': return num;
-                case 'mm': return num / 10;
-                case 'm': return num * 100;
-                case 'ft': return num * 30.48;
-                case 'in': return num * 2.54;
-                default: return num;
-            }
-        }
-
-        function calcQuantityDiff(builtVal, unbuiltVal) {
-            const b = extractNumber(builtVal);
-            const u = extractNumber(unbuiltVal);
-            if (b === null || u === null || b === 0) return null;
-            return Math.abs(u - b) / b * 100;
+            if (unit === 'cm' || unit === '厘米') return num;
+            if (unit === 'mm' || unit === '毫米') return num / 10;
+            if (unit === 'm' || unit === '米') return num * 100;
+            if (unit === 'ft' || unit === '英尺') return num * 30.48;
+            if (unit === 'in' || unit === 'inch' || unit === 'inches' || unit === '英寸') return num * 2.54;
+            return num;
         }
 
         function calcSingleDimDiff(builtVal, unbuiltVal) {
@@ -539,7 +822,7 @@
         }
 
         function calcSizeDiffStructured(builtSizeObj, unbuiltSizeObj) {
-            if (!builtSizeObj || !unbuiltSizeObj) return null;
+            if (!builtSizeObj || !unbuiltSizeObj) return { diff: null, reason: '未识别' };
             const keys = new Set([...Object.keys(builtSizeObj), ...Object.keys(unbuiltSizeObj)]);
             let diffs = [];
             for (let key of keys) {
@@ -550,36 +833,37 @@
                     if (diff !== null) diffs.push(diff);
                 }
             }
-            if (diffs.length === 0) return null;
-            return diffs.reduce((a,b) => a+b, 0) / diffs.length;
+            if (diffs.length === 0) return { diff: null, reason: '微小' };
+            return { diff: diffs.reduce((a,b) => a+b, 0) / diffs.length, reason: null };
         }
 
-        // 材质大类判断（简化的类别分组）
         const materialCategories = {
             '金属': ['铁','钢','不锈钢','铝','铜','金属','合金','锌合金'],
             '木材': ['木','木质','竹','实木','密度板'],
             '塑料': ['塑料','PP','PVC','ABS','亚克力','树脂','硅胶','橡胶'],
             '玻璃': ['玻璃','钢化玻璃','水晶'],
-            '陶瓷': ['陶瓷','瓷','陶'],
+            '陶瓷': ['陶瓷','瓷','陶','炻器'],
             '布艺': ['布','棉','麻','绒','毛毡'],
             '纸': ['纸','卡纸','牛皮纸'],
             '其他': []
         };
         function getMaterialCategory(material) {
-            if (!material) return '未知';
+            const m = safeString(material);
+            if (!m) return '未知';
             for (let [cat, keywords] of Object.entries(materialCategories)) {
-                if (keywords.some(kw => material.includes(kw))) return cat;
+                if (keywords.some(kw => m.includes(kw))) return cat;
             }
             return '其他';
         }
         function isMaterialCategoryDiff(materialA, materialB) {
+            if (!materialA || !materialB) return false;
             const catA = getMaterialCategory(materialA);
             const catB = getMaterialCategory(materialB);
             return catA !== catB && catA !== '未知' && catB !== '未知';
         }
 
-        // 首创规则判断（根据附件规则重写）
-        function evaluatePioneerRule(quantityDiff, sizeDiff, colorSame, patternDiff, buildDate, productType, materialA, materialB) {
+        // 首创规则判断（仅基于款式差异，忽略数量、尺寸、颜色、材质）
+        function evaluatePioneerRule(patternDiff, buildDate, productType) {
             if (!buildDate) return { pass: false, message: "缺少建SKU时间，无法判断首创规则" };
             const now = new Date();
             const buildTime = new Date(buildDate);
@@ -588,48 +872,61 @@
             const inProtection = monthsDiff < protectionMonths;
             
             if (inProtection) {
-                // 保护期内：数量、尺寸、颜色不作为差异维度。仅考虑图文差异和材质大类差异
-                let significant = false;
-                let reasons = [];
                 if (patternDiff !== null && patternDiff >= 50) {
-                    significant = true;
-                    reasons.push(`图文差异度${Math.round(patternDiff)}%≥50%`);
-                }
-                const materialDiff = isMaterialCategoryDiff(materialA, materialB);
-                if (materialDiff) {
-                    significant = true;
-                    reasons.push(`材质大类不同（${getMaterialCategory(materialA)} vs ${getMaterialCategory(materialB)}）`);
-                }
-                if (significant) {
-                    return { pass: true, message: `保护期内，因${reasons.join('、')}，视为有效差异，允许通过。` };
+                    return { pass: true, message: `保护期内，款式差异度${Math.round(patternDiff)}%≥50%，允许通过。` };
                 } else {
-                    return { pass: false, message: `保护期内（${protectionMonths}个月），新品在图文和材质上均无显著差异，不予通过。` };
+                    return { pass: false, message: `保护期内（${protectionMonths}个月），款式差异不足（${patternDiff !== null ? Math.round(patternDiff) + '%' : '未识别'}）。请评估材质是否属于大类差异。` };
                 }
             } else {
-                // 保护期外：需要2个维度差异且其中一个维度差异≥50%（数量、尺寸、颜色、图文）
-                let dims = [];
-                if (quantityDiff !== null && quantityDiff >= 50) dims.push(`数量差异${Math.round(quantityDiff)}%`);
-                if (sizeDiff !== null && sizeDiff >= 50) dims.push(`尺寸差异${Math.round(sizeDiff)}%`);
-                if (!colorSame) dims.push('颜色不同');
-                if (patternDiff !== null && patternDiff >= 50) dims.push(`图文差异${Math.round(patternDiff)}%`);
-                if (dims.length >= 2) {
-                    return { pass: true, message: `保护期外，存在${dims.length}个显著差异维度：${dims.join('、')}，满足2个维度差异要求，允许通过。` };
+                if (patternDiff !== null && patternDiff >= 50) {
+                    return { pass: true, message: `保护期外，款式差异度${Math.round(patternDiff)}%≥50%，允许通过。` };
                 } else {
-                    return { pass: false, message: `保护期外，仅${dims.length}个显著差异维度，未达到2个维度要求，不予通过。` };
+                    return { pass: false, message: `保护期外，款式差异不足（${patternDiff !== null ? Math.round(patternDiff) + '%' : '未识别'}）。请评估材质是否属于大类差异。` };
                 }
             }
         }
 
-        // ---------- 豆包API调用 ----------
-        async function callDoubaoProductComparison(imgBase64A, imgBase64B, textA, textB) {
+        // 后处理函数：强制修正性别相关的人群差异
+        function enforceGenderAudienceDiff(result) {
+            const builtScene = (result.built_scene_audience || '').toLowerCase();
+            const unbuiltScene = (result.unbuilt_scene_audience || '').toLowerCase();
+            
+            // 定义性别关键词
+            const maleKeywords = ['男', '男性', '男士', '男生', '男孩', '男性用户', '男款'];
+            const femaleKeywords = ['女', '女性', '女士', '女生', '女孩', '女性用户', '女款'];
+            
+            const builtIsMale = maleKeywords.some(kw => builtScene.includes(kw));
+            const builtIsFemale = femaleKeywords.some(kw => builtScene.includes(kw));
+            const unbuiltIsMale = maleKeywords.some(kw => unbuiltScene.includes(kw));
+            const unbuiltIsFemale = femaleKeywords.some(kw => unbuiltScene.includes(kw));
+            
+            // 如果一方为男性，另一方为女性，则强制标记为人群差异较大
+            if ((builtIsMale && unbuiltIsFemale) || (builtIsFemale && unbuiltIsMale)) {
+                result.scene_audience_summary = '人群差异较大（性别不同）';
+                // 可选：同时修改详细描述，保持一致性
+                if (!result.scene_audience_summary.includes('性别不同')) {
+                    result.scene_audience_summary = '人群差异较大（性别不同）';
+                }
+            }
+            return result;
+        }
+
+        // ---------- 豆包API调用（强化款式理解，结合产品方案和图片文字）----------
+        async function callDoubaoProductComparison(imgBase64A, imgBase64B, textA, textB, isPioneer = false) {
             const base64A = imgBase64A.split(',')[1];
             const base64B = imgBase64B.split(',')[1];
             
-            const prompt = `请对比以下两张产品图片（分别对应【已建产品】和【未建产品】），结合可能提供的文字说明，分析两个产品的实际产品设计差异。任务：
+            let prompt = `请对比以下两张产品图片（分别对应【已建产品】和【未建产品】），结合可能提供的文字说明，分析两个产品的实际产品设计差异。**极其重要：你需要结合两方面的信息来判断产品实际款式：一是用户输入的【产品方案】文字说明，二是图片中可能出现的文字描述。当两者信息不一致时，必须以产品方案文字为准，图片文字作为辅助确认。例如：
+- 产品方案写着“扇形边壁挂篮”，图片显示是平口，但图上有文字“做成扇形边”，则实际产品应为扇形边壁挂篮，而不是平口。
+- 产品方案写着“扇形边壁挂篮”，即使图片视觉上看起来像平口，也必须以产品方案为准，判断为扇形边。
+
+你必须严格按照这种逻辑理解实际款式，优先采纳产品方案文字，忽略图片视觉上不一致的误导。
+
+任务：
 
 1. 识别图片中的产品形态、图案、结构，以及图片中可能出现的文字描述（如“做成右边灯笼款式”、“数量10个”、“1套12个”等）。数量描述中若出现“X套Y个”，实际数量应为Y个（总个数），而不是套数。
 2. 对于每个产品，请提取以下信息（如有，若没有则标注“未识别”）：
-   - 产品简短描述（30字以内，概括款式、特征）
+   - 产品简短描述（30字以内，概括理解后的款式、特征，必须基于产品方案文字优先，再结合图片文字综合判断）
    - 数量：提取实际总数量（数字+单位，例如“12个”）。如果出现“1套12个”，则数量为“12个”。
    - 尺寸：请根据产品形状，尽可能提取关键维度的数值，格式为对象。例如：
        * 长方体/立方体：{"length": "30cm", "width": "20cm", "height": "10cm"}
@@ -639,16 +936,43 @@
    - 颜色（如“红色”、“白+金”等）
    - 材质（如“不锈钢”、“木质”等）
 3. 分析产品的核心功能与用途：该产品主要用来做什么？解决什么问题？功能上有何特点？请分别描述两个产品，并给出总结性判断（例如“功能一致”、“功能差异较小”、“功能差异较大”）。同时，请分析材质差异对功能用途的影响，并输出材质影响分析。
-4. 分析产品的使用人群与场景：适合哪些人使用？在什么场景下使用？请分别描述两个产品，并给出总结性判断。判断标准：人群类型明显不同（儿童 vs 成人、专业人士 vs 大众等）或场景明显不同（室内 vs 户外、商用 vs 家用等）为“差异较大”；细微差别为“差异较小”；基本一致为“一致”。同时分析材质差异对人群场景的影响。
+4. 分析产品的使用人群与场景：适合哪些人使用？在什么场景下使用？请分别描述两个产品，并给出总结性判断。**特别注意：如果一方产品明确面向男性群体（如“男士”、“男性”、“男孩”），另一方明确面向女性群体（如“女士”、“女性”、“女孩”），则必须判定为“人群差异较大”。** 判断标准：人群类型明显不同（儿童 vs 成人、专业人士 vs 大众等）或场景明显不同（室内 vs 户外、商用 vs 家用等）为“差异较大”；细微差别为“差异较小”；基本一致为“一致”。同时分析材质差异对人群场景的影响。
 5. 对产品进行成本智能判断：基于产品材质、工艺、复杂度、尺寸等，分析产品成本水平（高/中/低），并分析成本差异对功能用途和人群场景的影响。
 6. 然后从以下维度详细对比两个实际产品的差异（忽略拍摄角度、构图、背景、2D/3D渲染效果，不分析材质）。在分析“整体目视化差异”时，请忽略产品在图片中的摆放、排版等非产品本身的因素，只对比产品本身的视觉特征，并明确给出定性判断（例如“目视化差异较大”、“目视化差异较小”、“目视化差异中等”）：
    - 整体目视化差异：先给出定性判断，然后具体描述。
    - 形状与轮廓：具体区别。
    - 图案与装饰：对比种类、数量、大小、布局等。
    - 结构与部件：对比部件数量、排列方式、结构复杂度等。
-7. 最后给出简短总结性分析（20-40字），以及综合外观差异百分比（0-100%）。
+7. 最后给出简短总结性分析（20-40字），以及综合外观差异百分比（0-100%）。`;
 
-请只输出一个JSON对象，格式如下：
+            if (isPioneer) {
+                prompt = `请对比以下两张产品图片（分别对应【已建产品】和【未建产品】），结合可能提供的文字说明，分析两个产品的实际产品设计差异。**重点分析产品的款式（外形特征）**，即整体形状、轮廓、结构、组合方式等。**忽略颜色差异**，**对图案装饰的差异权重降至最低**。你需要结合用户输入的【产品方案】文字说明和图片中的文字描述，判断最终产品的实际款式。**再次强调：必须优先采纳产品方案文字**，如果产品方案明确写了款式（如“扇形边壁挂篮”），则以此为准，即使图片视觉看起来不同。
+
+任务：
+
+1. 识别图片中的产品形态、结构，以及图片中可能出现的文字描述（如“做成右边灯笼款式”、“扇形边”等），这些文字是对最终产品款式的指示。请结合图片、文字和产品方案，理解实际要做的产品款式。
+2. 对于每个产品，请提取以下信息（如有，若没有则标注“未识别”）：
+   - 产品简短描述（30字以内，重点概括款式、外形特征，例如“扇形边壁挂篮”）
+   - 数量：提取实际总数量（数字+单位，例如“12个”）。如果出现“1套12个”，则数量为“12个”。
+   - 尺寸：请根据产品形状，尽可能提取关键维度的数值，格式为对象。例如：
+       * 长方体/立方体：{"length": "30cm", "width": "20cm", "height": "10cm"}
+       * 圆形/圆柱：{"diameter": "15cm", "height": "20cm"}
+       * 不规则：{"overall": "30x20x10cm"} 或根据实际提取。
+     注意：必须将相同维度的数值放在对应字段下，以便后续进行同维度对比（长度对比长度，宽度对比宽度）。
+   - 颜色（可忽略，但若提取也不作为主要对比依据）
+   - 材质（如“不锈钢”、“木质”等）
+3. 分析产品的核心功能与用途：该产品主要用来做什么？解决什么问题？功能上有何特点？请分别描述两个产品，并给出总结性判断（例如“功能一致”、“功能差异较小”、“功能差异较大”）。同时，请分析材质差异对功能用途的影响，并输出材质影响分析。
+4. 分析产品的使用人群与场景：适合哪些人使用？在什么场景下使用？请分别描述两个产品，并给出总结性判断。**特别注意：如果一方产品明确面向男性群体（如“男士”、“男性”、“男孩”），另一方明确面向女性群体（如“女士”、“女性”、“女孩”），则必须判定为“人群差异较大”。** 判断标准：人群类型明显不同（儿童 vs 成人、专业人士 vs 大众等）或场景明显不同（室内 vs 户外、商用 vs 家用等）为“差异较大”；细微差别为“差异较小”；基本一致为“一致”。同时分析材质差异对人群场景的影响。
+5. 对产品进行成本智能判断：基于产品材质、工艺、复杂度、尺寸等，分析产品成本水平（高/中/低），并分析成本差异对功能用途和人群场景的影响。
+6. 然后从以下维度详细对比两个实际产品的差异（忽略拍摄角度、构图、背景、2D/3D渲染效果，不分析材质）。**重点对比形状与轮廓、结构与部件**，图案与装饰仅作参考，颜色完全忽略：
+   - 整体目视化差异：先给出定性判断，然后具体描述（主要基于外形）。
+   - 形状与轮廓：具体区别（核心）。
+   - 图案与装饰：轻描淡写，不作为主要判断依据。
+   - 结构与部件：对比部件数量、排列方式、结构复杂度等。
+7. 最后给出简短总结性分析（20-40字），以及综合外观差异百分比（0-100%），该百分比应主要基于款式差异，降低图案和颜色的权重。`;
+            }
+
+            prompt += `\n\n请只输出一个JSON对象，格式如下：
 {
   "built_product_desc": "已建产品简短描述",
   "built_quantity": "已建产品数量",
@@ -681,7 +1005,7 @@
 }
 不要输出任何其他内容。`;
 
-            const userText = `已建产品文字说明：${textA || '无'}；未建产品文字说明：${textB || '无'}`;
+            const userText = `已建产品文字说明：${safeString(textA) || '无'}；未建产品文字说明：${safeString(textB) || '无'}`;
             const messages = [
                 {
                     role: "user",
@@ -717,15 +1041,44 @@
             else throw new Error("API返回格式异常");
         }
 
-        function compressImageToBase64(dataUrl, maxSide=800, quality=0.8) {
+        // 独立问答函数
+        async function askQuestion(question) {
+            const prompt = `请回答以下问题，要求简洁、准确。问题：${question}`;
+            const messages = [
+                {
+                    role: "user",
+                    content: prompt
+                }
+            ];
+            const requestBody = {
+                model: ENDPOINT_ID,
+                messages: messages,
+                max_tokens: 800,
+                temperature: 0.3
+            };
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${API_KEY}`
+                },
+                body: JSON.stringify(requestBody)
+            });
+            if (!response.ok) throw new Error(`API请求失败: ${response.status}`);
+            const data = await response.json();
+            return data.choices[0].message.content;
+        }
+
+        // ---------- 图片处理 ----------
+        async function compressToThumbnail(dataUrl, maxSize=80, quality=0.6) {
             return new Promise((resolve) => {
                 const img = new Image();
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
                     let w = img.width, h = img.height;
-                    if (w > maxSide || h > maxSide) {
-                        if (w > h) { h = h * (maxSide / w); w = maxSide; }
-                        else { w = w * (maxSide / h); h = maxSide; }
+                    if (w > maxSize || h > maxSize) {
+                        if (w > h) { h = h * (maxSize / w); w = maxSize; }
+                        else { w = w * (maxSize / h); h = maxSize; }
                     }
                     canvas.width = w; canvas.height = h;
                     canvas.getContext('2d').drawImage(img, 0, 0, w, h);
@@ -735,591 +1088,752 @@
             });
         }
 
-        // ---------- 创建单个对比框 ----------
-        function createComparisonCard(index) {
-            const cardId = `card_${index}`;
-            const container = document.createElement('div');
-            container.className = 'comparison-card';
-            container.innerHTML = `
-                <div class="card-header" data-toggle="${cardId}">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <label style="font-weight: 500;">新品ID：</label>
-                        <input type="text" id="${cardId}_newProductId" placeholder="如 2424704" style="padding: 4px 8px; border-radius: 30px; border: 1px solid #cbd5e1; width: 140px;">
+        // ---------- 动态生成已建卡片 ----------
+        let builtItems = {};
+        let currentBuiltCount = 1;
+        const builtArea = document.getElementById('builtArea');
+        const builtCountSelect = document.getElementById('builtCount');
+
+        function rebuildBuiltItems(count) {
+            const newBuiltItems = {};
+            for (let i = 1; i <= count; i++) {
+                const key = `built_${i}`;
+                if (builtItems[key]) {
+                    newBuiltItems[key] = builtItems[key];
+                } else {
+                    newBuiltItems[key] = { imageDataUrl: null, compressedBase64: null, text: '', compareType: 'non_pioneer', buildDate: '', productType: 'regular' };
+                }
+            }
+            builtItems = newBuiltItems;
+            currentBuiltCount = count;
+            builtArea.innerHTML = '';
+            for (let i = 1; i <= count; i++) {
+                const data = builtItems[`built_${i}`];
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'built-item';
+                itemDiv.id = `built_${i}`;
+                itemDiv.innerHTML = `
+                    <div class="built-item-header">
+                        <h4>🏷️ 已建 ${i}</h4>
                     </div>
-                    <span class="toggle-icon">▼</span>
-                </div>
-                <div class="card-content" id="${cardId}">
-                    <div class="config-bar">
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <label>已建数量：</label>
-                            <select id="${cardId}_builtCount" class="built-count-select">
-                                <option value="1">1</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5">5</option>
+                    <textarea placeholder="可选：输入产品方案，AI将结合图片一起分析" class="text-area" id="built_${i}_Text">${data.text || ''}</textarea>
+                    <div class="dropzone" id="built_${i}_Dropzone">
+                        <img id="built_${i}_Preview" class="preview-img" src="${data.imageDataUrl || ''}" style="${data.imageDataUrl ? 'display:block' : 'display:none'}">
+                        <div class="instructions" id="built_${i}_Instructions" style="${data.imageDataUrl ? 'display:none' : 'display:block'}">拖拽图片到此 或 Ctrl+V 粘贴<br><span class="upload-link" id="built_${i}_UploadBtn">点击上传</span></div>
+                        <button class="delete-img-btn" id="built_${i}_DeleteBtn" style="${data.imageDataUrl ? 'display:flex' : 'display:none'}">✕</button>
+                        <input type="file" accept="image/*" id="built_${i}_FileInput" style="display:none">
+                    </div>
+                    <div class="paste-hint">💡 提示：上传已建产品的实际图片，如有文字说明请填写在上方文本框</div>
+                    <div class="pioneer-controls">
+                        <label><input type="radio" name="compareType_${i}" value="non_pioneer" ${data.compareType === 'non_pioneer' ? 'checked' : ''}> 非首创对比</label>
+                        <label><input type="radio" name="compareType_${i}" value="pioneer" ${data.compareType === 'pioneer' ? 'checked' : ''}> 首创对比</label>
+                        <div id="pioneerFields_${i}" style="display: ${data.compareType === 'pioneer' ? 'flex' : 'none'}; gap: 8px; flex-wrap: wrap;">
+                            <label>建SKU时间：</label>
+                            <input type="date" id="built_${i}_buildDate" value="${data.buildDate || ''}" style="padding: 4px 8px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                            <label>产品类型：</label>
+                            <select id="built_${i}_productType" style="padding: 4px 8px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                                <option value="regular" ${data.productType === 'regular' ? 'selected' : ''}>常规产品</option>
+                                <option value="seasonal" ${data.productType === 'seasonal' ? 'selected' : ''}>节气产品</option>
                             </select>
                         </div>
                     </div>
-                    <div class="compare-layout">
-                        <div class="unbuilt-area">
-                            <div class="active-hint">当前激活</div>
-                            <div class="zone-header">
-                                <h3>📦 未建</h3>
-                            </div>
-                            <textarea placeholder="可选：输入产品方案，AI将结合图片一起分析" class="text-area" id="${cardId}_unbuiltText"></textarea>
-                            <div class="dropzone" id="${cardId}_unbuiltDropzone">
-                                <img id="${cardId}_unbuiltPreview" class="preview-img">
-                                <div class="instructions" id="${cardId}_unbuiltInstructions">拖拽图片到此 或 Ctrl+V 粘贴<br><span class="upload-link" id="${cardId}_unbuiltUploadBtn">点击上传</span></div>
-                                <button class="delete-img-btn" id="${cardId}_unbuiltDeleteBtn" style="display:none;">✕</button>
-                                <input type="file" accept="image/*" id="${cardId}_unbuiltFileInput" style="display:none">
-                            </div>
-                            <div class="paste-hint">💡 提示：上传产品效果图，如有文字说明请填写在上方文本框</div>
-                        </div>
-                        <div class="built-area" id="${cardId}_builtArea"></div>
-                    </div>
-                    <button class="compare-btn" id="${cardId}_compareBtn">🔍 启动AI对比分析</button>
-                    <div id="${cardId}_resultArea" style="margin-top: 16px;"></div>
-                </div>
-            `;
-            return container;
+                `;
+                builtArea.appendChild(itemDiv);
+                attachBuiltHandlers(i, data);
+            }
         }
 
-        // 初始化卡片
-        function initCard(cardIndex) {
-            const cardId = `card_${cardIndex}`;
-            const builtArea = document.getElementById(`${cardId}_builtArea`);
-            const builtCountSelect = document.getElementById(`${cardId}_builtCount`);
-            const newProductIdInput = document.getElementById(`${cardId}_newProductId`);
-            if (!builtArea || !builtCountSelect) return;
+        function attachBuiltHandlers(idx, existingData) {
+            const zoneId = `built_${idx}`;
+            const uploadLink = document.getElementById(`${zoneId}_UploadBtn`);
+            const fileInput = document.getElementById(`${zoneId}_FileInput`);
+            const deleteBtn = document.getElementById(`${zoneId}_DeleteBtn`);
+            const dropzone = document.getElementById(`${zoneId}_Dropzone`);
+            const preview = document.getElementById(`${zoneId}_Preview`);
+            const instructions = document.getElementById(`${zoneId}_Instructions`);
+            const textarea = document.getElementById(`${zoneId}_Text`);
+            const radioNon = document.querySelector(`input[name="compareType_${idx}"][value="non_pioneer"]`);
+            const radioPio = document.querySelector(`input[name="compareType_${idx}"][value="pioneer"]`);
+            const pioneerFields = document.getElementById(`pioneerFields_${idx}`);
+            const buildDateInput = document.getElementById(`${zoneId}_buildDate`);
+            const productTypeSelect = document.getElementById(`${zoneId}_productType`);
 
-            // 未建数据
-            const unbuilt = {
-                imageDataUrl: null,
-                compressedBase64: null,
-                text: '',
-                newProductId: ''
-            };
-            let builtItems = {}; // 每个元素: { imageDataUrl, compressedBase64, text, compareType, buildDate, productType }
-            let currentBuiltCount = 1;
-
-            // 未建交互
-            function initUnbuilt() {
-                const uploadLink = document.getElementById(`${cardId}_unbuiltUploadBtn`);
-                const fileInput = document.getElementById(`${cardId}_unbuiltFileInput`);
-                const deleteBtn = document.getElementById(`${cardId}_unbuiltDeleteBtn`);
-                const dropzone = document.getElementById(`${cardId}_unbuiltDropzone`);
-                const preview = document.getElementById(`${cardId}_unbuiltPreview`);
-                const instructions = document.getElementById(`${cardId}_unbuiltInstructions`);
-                const textarea = document.getElementById(`${cardId}_unbuiltText`);
-
-                async function setImage(dataUrl) {
-                    unbuilt.imageDataUrl = dataUrl;
-                    unbuilt.compressedBase64 = await compressImageToBase64(dataUrl);
-                    preview.src = dataUrl;
-                    preview.style.display = 'block';
-                    instructions.style.display = 'none';
-                    deleteBtn.style.display = 'flex';
-                }
-                function deleteImage() {
-                    unbuilt.imageDataUrl = null;
-                    unbuilt.compressedBase64 = null;
-                    preview.src = '';
-                    preview.style.display = 'none';
-                    instructions.style.display = 'block';
-                    deleteBtn.style.display = 'none';
-                }
-                function handleFile(file) {
-                    if (!file || !file.type.startsWith('image/')) return;
-                    const reader = new FileReader();
-                    reader.onload = async (e) => { await setImage(e.target.result); };
-                    reader.readAsDataURL(file);
-                }
-                if (uploadLink) uploadLink.addEventListener('click', (e) => { e.stopPropagation(); fileInput.click(); });
-                fileInput.addEventListener('change', (e) => { if (e.target.files.length) handleFile(e.target.files[0]); fileInput.value = ''; });
-                deleteBtn.addEventListener('click', (e) => { e.stopPropagation(); deleteImage(); });
-                dropzone.addEventListener('paste', async (e) => {
-                    e.stopPropagation();
-                    const items = e.clipboardData.items;
-                    for (let i = 0; i < items.length; i++) {
-                        if (items[i].type.indexOf('image') !== -1) {
-                            const blob = items[i].getAsFile();
-                            const reader = new FileReader();
-                            reader.onload = async (ev) => { await setImage(ev.target.result); };
-                            reader.readAsDataURL(blob);
-                            break;
+            // 年份输入自动跳转：当输入4位数字后自动跳转到月份
+            if (buildDateInput) {
+                buildDateInput.addEventListener('input', function(e) {
+                    const val = this.value;
+                    if (val && val.length === 4 && /^\d{4}$/.test(val)) {
+                        const nextField = this.nextElementSibling;
+                        if (nextField && nextField.tagName === 'INPUT') {
+                            nextField.focus();
                         }
                     }
                 });
-                dropzone.addEventListener('dragover', e => e.preventDefault());
-                dropzone.addEventListener('drop', e => {
-                    e.preventDefault();
-                    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
-                });
-                textarea.addEventListener('input', () => { unbuilt.text = textarea.value; });
-                if (newProductIdInput) {
-                    newProductIdInput.addEventListener('input', () => { unbuilt.newProductId = newProductIdInput.value.trim(); });
-                }
             }
 
-            function rebuildBuiltItems(count) {
-                const newBuiltItems = {};
-                for (let i = 1; i <= count; i++) {
-                    const key = `built_${i}`;
-                    if (builtItems[key]) {
-                        newBuiltItems[key] = builtItems[key];
-                    } else {
-                        newBuiltItems[key] = { imageDataUrl: null, compressedBase64: null, text: '', compareType: 'non_pioneer', buildDate: '', productType: 'regular' };
-                    }
-                }
-                builtItems = newBuiltItems;
-                currentBuiltCount = count;
-                builtArea.innerHTML = '';
-                for (let i = 1; i <= count; i++) {
-                    const data = builtItems[`built_${i}`];
-                    const itemDiv = document.createElement('div');
-                    itemDiv.className = 'built-item';
-                    itemDiv.id = `${cardId}_built_${i}`;
-                    itemDiv.innerHTML = `
-                        <div class="built-item-header">
-                            <h4>🏷️ 已建 ${i}</h4>
-                        </div>
-                        <textarea placeholder="可选：输入产品方案，AI将结合图片一起分析" class="text-area" id="${cardId}_built_${i}_Text">${data.text || ''}</textarea>
-                        <div class="dropzone" id="${cardId}_built_${i}_Dropzone">
-                            <img id="${cardId}_built_${i}_Preview" class="preview-img" src="${data.imageDataUrl || ''}" style="${data.imageDataUrl ? 'display:block' : 'display:none'}">
-                            <div class="instructions" id="${cardId}_built_${i}_Instructions" style="${data.imageDataUrl ? 'display:none' : 'display:block'}">拖拽图片到此 或 Ctrl+V 粘贴<br><span class="upload-link" id="${cardId}_built_${i}_UploadBtn">点击上传</span></div>
-                            <button class="delete-img-btn" id="${cardId}_built_${i}_DeleteBtn" style="${data.imageDataUrl ? 'display:flex' : 'display:none'}">✕</button>
-                            <input type="file" accept="image/*" id="${cardId}_built_${i}_FileInput" style="display:none">
-                        </div>
-                        <div class="paste-hint">💡 提示：上传已建产品的实际图片，如有文字说明请填写在上方文本框</div>
-                        <div class="pioneer-controls">
-                            <label><input type="radio" name="compareType_${cardId}_${i}" value="non_pioneer" ${data.compareType === 'non_pioneer' ? 'checked' : ''}> 非首创对比</label>
-                            <label><input type="radio" name="compareType_${cardId}_${i}" value="pioneer" ${data.compareType === 'pioneer' ? 'checked' : ''}> 首创对比</label>
-                            <div id="pioneerFields_${cardId}_${i}" style="display: ${data.compareType === 'pioneer' ? 'flex' : 'none'}; gap: 8px; flex-wrap: wrap;">
-                                <label>建SKU时间：</label>
-                                <input type="date" id="${cardId}_built_${i}_buildDate" value="${data.buildDate || ''}" style="padding: 4px 8px; border-radius: 8px; border: 1px solid #cbd5e1;">
-                                <label>产品类型：</label>
-                                <select id="${cardId}_built_${i}_productType" style="padding: 4px 8px; border-radius: 8px; border: 1px solid #cbd5e1;">
-                                    <option value="regular" ${data.productType === 'regular' ? 'selected' : ''}>常规产品</option>
-                                    <option value="seasonal" ${data.productType === 'seasonal' ? 'selected' : ''}>节气产品</option>
-                                </select>
-                            </div>
-                        </div>
-                    `;
-                    builtArea.appendChild(itemDiv);
-                    attachBuiltHandlers(i, data);
+            function updatePioneerFields() {
+                if (radioPio.checked) {
+                    pioneerFields.style.display = 'flex';
+                    builtItems[zoneId].compareType = 'pioneer';
+                } else {
+                    pioneerFields.style.display = 'none';
+                    builtItems[zoneId].compareType = 'non_pioneer';
                 }
             }
+            if (radioNon) radioNon.addEventListener('change', updatePioneerFields);
+            if (radioPio) radioPio.addEventListener('change', updatePioneerFields);
+            if (buildDateInput) buildDateInput.addEventListener('change', () => { builtItems[zoneId].buildDate = buildDateInput.value; });
+            if (productTypeSelect) productTypeSelect.addEventListener('change', () => { builtItems[zoneId].productType = productTypeSelect.value; });
 
-            function attachBuiltHandlers(idx, existingData) {
-                const zoneId = `built_${idx}`;
-                const uploadLink = document.getElementById(`${cardId}_${zoneId}_UploadBtn`);
-                const fileInput = document.getElementById(`${cardId}_${zoneId}_FileInput`);
-                const deleteBtn = document.getElementById(`${cardId}_${zoneId}_DeleteBtn`);
-                const dropzone = document.getElementById(`${cardId}_${zoneId}_Dropzone`);
-                const preview = document.getElementById(`${cardId}_${zoneId}_Preview`);
-                const instructions = document.getElementById(`${cardId}_${zoneId}_Instructions`);
-                const textarea = document.getElementById(`${cardId}_${zoneId}_Text`);
-                const radioNon = document.querySelector(`input[name="compareType_${cardId}_${idx}"][value="non_pioneer"]`);
-                const radioPio = document.querySelector(`input[name="compareType_${cardId}_${idx}"][value="pioneer"]`);
-                const pioneerFields = document.getElementById(`pioneerFields_${cardId}_${idx}`);
-                const buildDateInput = document.getElementById(`${cardId}_built_${idx}_buildDate`);
-                const productTypeSelect = document.getElementById(`${cardId}_built_${idx}_productType`);
-
-                function updatePioneerFields() {
-                    if (radioPio.checked) {
-                        pioneerFields.style.display = 'flex';
-                        builtItems[zoneId].compareType = 'pioneer';
-                    } else {
-                        pioneerFields.style.display = 'none';
-                        builtItems[zoneId].compareType = 'non_pioneer';
-                    }
-                }
-                if (radioNon) radioNon.addEventListener('change', updatePioneerFields);
-                if (radioPio) radioPio.addEventListener('change', updatePioneerFields);
-                if (buildDateInput) buildDateInput.addEventListener('change', () => { builtItems[zoneId].buildDate = buildDateInput.value; });
-                if (productTypeSelect) productTypeSelect.addEventListener('change', () => { builtItems[zoneId].productType = productTypeSelect.value; });
-
-                async function setImage(dataUrl) {
-                    builtItems[zoneId].imageDataUrl = dataUrl;
-                    builtItems[zoneId].compressedBase64 = await compressImageToBase64(dataUrl);
-                    preview.src = dataUrl;
-                    preview.style.display = 'block';
-                    instructions.style.display = 'none';
-                    deleteBtn.style.display = 'flex';
-                }
-                function deleteImage() {
-                    builtItems[zoneId].imageDataUrl = null;
-                    builtItems[zoneId].compressedBase64 = null;
-                    preview.src = '';
-                    preview.style.display = 'none';
-                    instructions.style.display = 'block';
-                    deleteBtn.style.display = 'none';
-                }
-                function handleFile(file) {
-                    if (!file || !file.type.startsWith('image/')) return;
-                    const reader = new FileReader();
-                    reader.onload = async (e) => { await setImage(e.target.result); };
-                    reader.readAsDataURL(file);
-                }
-                if (uploadLink) uploadLink.addEventListener('click', (e) => { e.stopPropagation(); fileInput.click(); });
-                fileInput.addEventListener('change', (e) => { if (e.target.files.length) handleFile(e.target.files[0]); fileInput.value = ''; });
-                deleteBtn.addEventListener('click', (e) => { e.stopPropagation(); deleteImage(); });
-                dropzone.addEventListener('paste', async (e) => {
-                    e.stopPropagation();
-                    const items = e.clipboardData.items;
-                    for (let i = 0; i < items.length; i++) {
-                        if (items[i].type.indexOf('image') !== -1) {
-                            const blob = items[i].getAsFile();
-                            const reader = new FileReader();
-                            reader.onload = async (ev) => { await setImage(ev.target.result); };
-                            reader.readAsDataURL(blob);
-                            break;
-                        }
-                    }
-                });
-                dropzone.addEventListener('dragover', e => e.preventDefault());
-                dropzone.addEventListener('drop', e => {
-                    e.preventDefault();
-                    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
-                });
-                textarea.addEventListener('input', () => { builtItems[zoneId].text = textarea.value; });
-                if (existingData.imageDataUrl) setImage(existingData.imageDataUrl);
-                // 初始化时存储已有的日期和产品类型
-                if (existingData.buildDate && buildDateInput) buildDateInput.value = existingData.buildDate;
-                if (existingData.productType && productTypeSelect) productTypeSelect.value = existingData.productType;
-                updatePioneerFields();
+            async function setImage(dataUrl) {
+                builtItems[zoneId].imageDataUrl = dataUrl;
+                builtItems[zoneId].compressedBase64 = await compressToThumbnail(dataUrl);
+                preview.src = dataUrl;
+                preview.style.display = 'block';
+                instructions.style.display = 'none';
+                deleteBtn.style.display = 'flex';
             }
+            function deleteImage() {
+                builtItems[zoneId].imageDataUrl = null;
+                builtItems[zoneId].compressedBase64 = null;
+                preview.src = '';
+                preview.style.display = 'none';
+                instructions.style.display = 'block';
+                deleteBtn.style.display = 'none';
+            }
+            function handleFile(file) {
+                if (!file || !file.type.startsWith('image/')) return;
+                const reader = new FileReader();
+                reader.onload = async (e) => { await setImage(e.target.result); };
+                reader.readAsDataURL(file);
+            }
+            if (uploadLink) uploadLink.addEventListener('click', (e) => { e.stopPropagation(); fileInput.click(); });
+            fileInput.addEventListener('change', (e) => { if (e.target.files.length) handleFile(e.target.files[0]); fileInput.value = ''; });
+            deleteBtn.addEventListener('click', (e) => { e.stopPropagation(); deleteImage(); });
+            dropzone.addEventListener('paste', async (e) => {
+                e.stopPropagation();
+                const items = e.clipboardData.items;
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].type.indexOf('image') !== -1) {
+                        const blob = items[i].getAsFile();
+                        const reader = new FileReader();
+                        reader.onload = async (ev) => { await setImage(ev.target.result); };
+                        reader.readAsDataURL(blob);
+                        break;
+                    }
+                }
+            });
+            dropzone.addEventListener('dragover', e => e.preventDefault());
+            dropzone.addEventListener('drop', e => {
+                e.preventDefault();
+                if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+            });
+            textarea.addEventListener('input', () => { builtItems[zoneId].text = textarea.value; });
+            if (existingData.imageDataUrl) setImage(existingData.imageDataUrl);
+            if (existingData.buildDate && buildDateInput) buildDateInput.value = existingData.buildDate;
+            if (existingData.productType && productTypeSelect) productTypeSelect.value = existingData.productType;
+            updatePioneerFields();
+        }
 
-            initUnbuilt();
-            for (let i = 1; i <= 1; i++) {
-                builtItems[`built_${i}`] = { imageDataUrl: null, compressedBase64: null, text: '', compareType: 'non_pioneer', buildDate: '', productType: 'regular' };
+        // 未建交互
+        const unbuilt = {
+            imageDataUrl: null,
+            compressedBase64: null,
+            text: '',
+            newProductId: ''
+        };
+        function initUnbuilt() {
+            const uploadLink = document.getElementById('unbuiltUploadBtn');
+            const fileInput = document.getElementById('unbuiltFileInput');
+            const deleteBtn = document.getElementById('unbuiltDeleteBtn');
+            const dropzone = document.getElementById('unbuiltDropzone');
+            const preview = document.getElementById('unbuiltPreview');
+            const instructions = document.getElementById('unbuiltInstructions');
+            const textarea = document.getElementById('unbuiltText');
+            const newProductIdInput = document.getElementById('newProductId');
+
+            async function setImage(dataUrl) {
+                unbuilt.imageDataUrl = dataUrl;
+                unbuilt.compressedBase64 = await compressToThumbnail(dataUrl);
+                preview.src = dataUrl;
+                preview.style.display = 'block';
+                instructions.style.display = 'none';
+                deleteBtn.style.display = 'flex';
+            }
+            function deleteImage() {
+                unbuilt.imageDataUrl = null;
+                unbuilt.compressedBase64 = null;
+                preview.src = '';
+                preview.style.display = 'none';
+                instructions.style.display = 'block';
+                deleteBtn.style.display = 'none';
+            }
+            function handleFile(file) {
+                if (!file || !file.type.startsWith('image/')) return;
+                const reader = new FileReader();
+                reader.onload = async (e) => { await setImage(e.target.result); };
+                reader.readAsDataURL(file);
+            }
+            if (uploadLink) uploadLink.addEventListener('click', (e) => { e.stopPropagation(); fileInput.click(); });
+            fileInput.addEventListener('change', (e) => { if (e.target.files.length) handleFile(e.target.files[0]); fileInput.value = ''; });
+            deleteBtn.addEventListener('click', (e) => { e.stopPropagation(); deleteImage(); });
+            dropzone.addEventListener('paste', async (e) => {
+                e.stopPropagation();
+                const items = e.clipboardData.items;
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].type.indexOf('image') !== -1) {
+                        const blob = items[i].getAsFile();
+                        const reader = new FileReader();
+                        reader.onload = async (ev) => { await setImage(ev.target.result); };
+                        reader.readAsDataURL(blob);
+                        break;
+                    }
+                }
+            });
+            dropzone.addEventListener('dragover', e => e.preventDefault());
+            dropzone.addEventListener('drop', e => {
+                e.preventDefault();
+                if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+            });
+            textarea.addEventListener('input', () => { unbuilt.text = textarea.value; });
+            newProductIdInput.addEventListener('input', () => { unbuilt.newProductId = newProductIdInput.value.trim(); });
+        }
+
+        // 清空对比组所有内容
+        function clearComparisonGroup() {
+            unbuilt.imageDataUrl = null;
+            unbuilt.compressedBase64 = null;
+            unbuilt.text = '';
+            unbuilt.newProductId = '';
+            document.getElementById('unbuiltText').value = '';
+            document.getElementById('newProductId').value = '';
+            const unbuiltPreview = document.getElementById('unbuiltPreview');
+            const unbuiltInstructions = document.getElementById('unbuiltInstructions');
+            const unbuiltDeleteBtn = document.getElementById('unbuiltDeleteBtn');
+            unbuiltPreview.src = '';
+            unbuiltPreview.style.display = 'none';
+            unbuiltInstructions.style.display = 'block';
+            unbuiltDeleteBtn.style.display = 'none';
+            builtCountSelect.value = '1';
+            for (let i = 1; i <= 5; i++) {
+                if (builtItems[`built_${i}`]) {
+                    builtItems[`built_${i}`].imageDataUrl = null;
+                    builtItems[`built_${i}`].compressedBase64 = null;
+                    builtItems[`built_${i}`].text = '';
+                    builtItems[`built_${i}`].compareType = 'non_pioneer';
+                    builtItems[`built_${i}`].buildDate = '';
+                    builtItems[`built_${i}`].productType = 'regular';
+                }
             }
             rebuildBuiltItems(1);
-            builtCountSelect.addEventListener('change', () => {
-                const newCount = parseInt(builtCountSelect.value);
-                rebuildBuiltItems(newCount);
-            });
+        }
 
-            const compareBtn = document.getElementById(`${cardId}_compareBtn`);
-            const resultArea = document.getElementById(`${cardId}_resultArea`);
+        // 执行分析（使用当前配置）
+        async function analyzeWithConfig(config) {
+            const unbuiltImageData = config.unbuiltImageData;
+            const unbuiltText = config.unbuiltText;
+            const builtItemsData = config.builtItemsData;
 
-            compareBtn.onclick = async function() {
-                if (!unbuilt.compressedBase64) {
-                    alert('请上传未建产品图片');
-                    return;
+            let allDetailsHtml = '';
+            let overallPass = true;
+            let finalCombinedMin = 100;
+            let pioneerFailExists = false;
+            let cachedUnbuiltInfo = null;
+
+            for (let i = 0; i < builtItemsData.length; i++) {
+                const built = builtItemsData[i];
+                if (!built.imageData) continue;
+                const isPioneer = (built.compareType === 'pioneer');
+                let result = await callDoubaoProductComparison(built.imageData, unbuiltImageData, built.text, unbuiltText, isPioneer);
+                
+                // 后处理：强制修正性别相关的人群差异
+                result = enforceGenderAudienceDiff(result);
+                
+                if (!cachedUnbuiltInfo) {
+                    cachedUnbuiltInfo = {
+                        product_desc: result.unbuilt_product_desc,
+                        quantity: result.unbuilt_quantity,
+                        size: result.unbuilt_size,
+                        color: result.unbuilt_color,
+                        material: result.unbuilt_material,
+                        cost_level: result.unbuilt_cost_level,
+                        function_usage: result.unbuilt_function_usage,
+                        scene_audience: result.unbuilt_scene_audience
+                    };
                 }
-                const builtKeys = Object.keys(builtItems);
-                const anyBuiltImage = builtKeys.some(key => builtItems[key].compressedBase64);
-                if (!anyBuiltImage) {
-                    alert('请至少上传一个已建产品的图片');
-                    return;
+                result.unbuilt_product_desc = cachedUnbuiltInfo.product_desc;
+                result.unbuilt_quantity = cachedUnbuiltInfo.quantity;
+                result.unbuilt_size = cachedUnbuiltInfo.size;
+                result.unbuilt_color = cachedUnbuiltInfo.color;
+                result.unbuilt_material = cachedUnbuiltInfo.material;
+                result.unbuilt_cost_level = cachedUnbuiltInfo.cost_level;
+                result.unbuilt_function_usage = cachedUnbuiltInfo.function_usage;
+                result.unbuilt_scene_audience = cachedUnbuiltInfo.scene_audience;
+                
+                const appearanceDiff = result.overall_percent;  // 款式差异度（主要基于外形）
+                const quantityDiffResult = calcQuantityDiff(result.built_quantity, result.unbuilt_quantity);
+                const quantityDiff = quantityDiffResult.diff;
+                const quantityReason = quantityDiffResult.reason;
+                const sizeResult = calcSizeDiffStructured(result.built_size, result.unbuilt_size);
+                const sizeDiff = sizeResult.diff;
+                const sizeReason = sizeResult.reason;
+                const colorSame = (result.built_color && result.unbuilt_color && result.built_color === result.unbuilt_color) ? true : false;
+                
+                let schemeDiff = 0;
+                if (quantityDiff !== null) schemeDiff += quantityDiff;
+                if (sizeDiff !== null) schemeDiff += sizeDiff;
+                const schemeDiffRounded = schemeDiff !== 0 ? Math.round(schemeDiff) : null;
+                
+                let combinedDiff = 0;
+                if (quantityDiff !== null) combinedDiff += quantityDiff;
+                if (sizeDiff !== null) combinedDiff += sizeDiff;
+                combinedDiff += appearanceDiff;
+                const combinedRounded = Math.round(combinedDiff);
+                
+                let pioneerRulePass = true;
+                let pioneerMessage = '';
+                if (isPioneer) {
+                    // 首创规则仅基于款式差异（appearanceDiff），忽略其他
+                    const ruleResult = evaluatePioneerRule(appearanceDiff, built.buildDate, built.productType);
+                    pioneerRulePass = ruleResult.pass;
+                    pioneerMessage = ruleResult.message;
+                    if (!pioneerRulePass) pioneerFailExists = true;
                 }
-                compareBtn.disabled = true;
-                compareBtn.textContent = "🤖 AI分析中...";
-                resultArea.innerHTML = '<div class="loading">🤖 正在调用豆包AI进行详细对比，请稍候...</div>';
+                
+                const isPass = isPioneer ? (pioneerRulePass) : (combinedDiff >= 50);
+                if (!isPass) overallPass = false;
+                if (combinedDiff < finalCombinedMin) finalCombinedMin = combinedDiff;
 
-                try {
-                    let overallPass = true;
-                    let finalCombinedMin = 100;
-                    let allDetailsHtml = '';
-
-                    for (let key of builtKeys) {
-                        const built = builtItems[key];
-                        if (!built.compressedBase64) continue;
-                        const result = await callDoubaoProductComparison(built.compressedBase64, unbuilt.compressedBase64, built.text, unbuilt.text);
-                        const appearanceDiff = result.overall_percent;
-                        const quantityDiff = calcQuantityDiff(result.built_quantity, result.unbuilt_quantity);
-                        const sizeDiff = calcSizeDiffStructured(result.built_size, result.unbuilt_size);
-                        const colorSame = (result.built_color && result.unbuilt_color && result.built_color === result.unbuilt_color) ? true : false;
-                        
-                        let schemeDiff = 0;
-                        if (quantityDiff !== null) schemeDiff += quantityDiff;
-                        if (sizeDiff !== null) schemeDiff += sizeDiff;
-                        const schemeDiffRounded = schemeDiff !== 0 ? Math.round(schemeDiff) : null;
-                        
-                        let combinedDiff = 0;
-                        if (quantityDiff !== null) combinedDiff += quantityDiff;
-                        if (sizeDiff !== null) combinedDiff += sizeDiff;
-                        combinedDiff += appearanceDiff;
-                        const combinedRounded = Math.round(combinedDiff);
-                        
-                        // 首创规则判断
-                        let pioneerRulePass = true;
-                        let pioneerMessage = '';
-                        if (built.compareType === 'pioneer') {
-                            const ruleResult = evaluatePioneerRule(quantityDiff, sizeDiff, colorSame, appearanceDiff, built.buildDate, built.productType, result.built_material, result.unbuilt_material);
-                            pioneerRulePass = ruleResult.pass;
-                            pioneerMessage = ruleResult.message;
-                        }
-                        
-                        const isPass = (built.compareType === 'pioneer') ? (combinedDiff >= 50 && pioneerRulePass) : (combinedDiff >= 50);
-                        if (!isPass) overallPass = false;
-                        if (combinedDiff < finalCombinedMin) finalCombinedMin = combinedDiff;
-
-                        // 构建详细HTML（内容与之前相同，但增加首创规则显示）
-                        const formatSizeObj = (obj) => {
-                            if (!obj) return '';
-                            const parts = [];
-                            for (let [k,v] of Object.entries(obj)) {
-                                if (k === 'length') parts.push(`长${v}`);
-                                else if (k === 'width') parts.push(`宽${v}`);
-                                else if (k === 'height') parts.push(`高${v}`);
-                                else if (k === 'diameter') parts.push(`直径${v}`);
-                                else parts.push(`${k}:${v}`);
-                            }
-                            return parts.join(' × ');
-                        };
-                        const unbuiltSizeStr = formatSizeObj(result.unbuilt_size);
-                        const builtSizeStr = formatSizeObj(result.built_size);
-                        
-                        const unbuiltAttr = [];
-                        if (result.unbuilt_quantity) unbuiltAttr.push(`📦 数量：${result.unbuilt_quantity}`);
-                        if (unbuiltSizeStr) unbuiltAttr.push(`📏 尺寸：${unbuiltSizeStr}`);
-                        if (result.unbuilt_color) unbuiltAttr.push(`🎨 颜色：${result.unbuilt_color}`);
-                        if (result.unbuilt_material) unbuiltAttr.push(`🔧 材质：${result.unbuilt_material}`);
-                        if (result.unbuilt_cost_level) unbuiltAttr.push(`💰 成本：${result.unbuilt_cost_level}`);
-                        const builtAttr = [];
-                        if (result.built_quantity) builtAttr.push(`📦 数量：${result.built_quantity}`);
-                        if (builtSizeStr) builtAttr.push(`📏 尺寸：${builtSizeStr}`);
-                        if (result.built_color) builtAttr.push(`🎨 颜色：${result.built_color}`);
-                        if (result.built_material) builtAttr.push(`🔧 材质：${result.built_material}`);
-                        if (result.built_cost_level) builtAttr.push(`💰 成本：${result.built_cost_level}`);
-                        
-                        const isFunctionConsistent = result.function_usage_summary && result.function_usage_summary.includes('一致');
-                        const isSceneConsistent = result.scene_audience_summary && result.scene_audience_summary.includes('一致');
-                        
-                        let functionHtml = `<div class="diff-item"><div class="diff-label">核心功能与用途</div><div class="diff-desc">`;
-                        functionHtml += `<span class="summary-badge">${result.function_usage_summary ? result.function_usage_summary.split('。')[0] : '分析中'}</span>`;
-                        if (!isFunctionConsistent) {
-                            functionHtml += `<br><strong>未建：</strong> ${result.unbuilt_function_usage || '—'}<br>`;
-                            functionHtml += `<strong>已建：</strong> ${result.built_function_usage || '—'}<br>`;
-                        }
-                        functionHtml += `${result.function_usage_summary ? `<div style="margin-top:6px; color:#1e293b;">📌 ${result.function_usage_summary}</div>` : ''}`;
-                        if (result.function_usage_material_impact && result.function_usage_material_impact !== '无') {
-                            functionHtml += `<div class="material-impact">🔧 材质影响：${result.function_usage_material_impact}</div>`;
-                        }
-                        if (result.function_usage_cost_impact && result.function_usage_cost_impact !== '无') {
-                            functionHtml += `<div class="cost-impact">💰 成本影响：${result.function_usage_cost_impact}</div>`;
-                        }
-                        functionHtml += `</div></div>`;
-                        
-                        let sceneHtml = `<div class="diff-item"><div class="diff-label">使用人群与场景</div><div class="diff-desc">`;
-                        sceneHtml += `<span class="summary-badge">${result.scene_audience_summary ? result.scene_audience_summary.split('。')[0] : '分析中'}</span>`;
-                        if (!isSceneConsistent) {
-                            sceneHtml += `<br><strong>未建：</strong> ${result.unbuilt_scene_audience || '—'}<br>`;
-                            sceneHtml += `<strong>已建：</strong> ${result.built_scene_audience || '—'}<br>`;
-                        }
-                        sceneHtml += `${result.scene_audience_summary ? `<div style="margin-top:6px; color:#1e293b;">📌 ${result.scene_audience_summary}</div>` : ''}`;
-                        if (result.scene_audience_material_impact && result.scene_audience_material_impact !== '无') {
-                            sceneHtml += `<div class="material-impact">🔧 材质影响：${result.scene_audience_material_impact}</div>`;
-                        }
-                        if (result.scene_audience_cost_impact && result.scene_audience_cost_impact !== '无') {
-                            sceneHtml += `<div class="cost-impact">💰 成本影响：${result.scene_audience_cost_impact}</div>`;
-                        }
-                        sceneHtml += `</div></div>`;
-                        
-                        const pioneerRuleHtml = (built.compareType === 'pioneer') ? `<div class="diff-item"><div class="diff-label">📋 首创规则判定</div><div class="diff-desc">${pioneerMessage}</div></div>` : '';
-                        
-                        const itemDetailHtml = `
-                            <div class="built-item" style="margin-bottom: 20px; border: 1px solid #e2e8f0; border-radius: 16px; padding: 12px;">
-                                <h4 style="margin-bottom: 12px;">📊 对比已建 ${key.split('_')[1]}</h4>
-                                <div class="product-descriptions">
-                                    <div class="product-card"><h4>📦 未建</h4><div class="product-desc-text">${result.unbuilt_product_desc || '—'}${unbuiltAttr.length ? `<div class="attr">${unbuiltAttr.join(' · ')}</div>` : ''}</div></div>
-                                    <div class="product-card"><h4>🏷️ 已建</h4><div class="product-desc-text">${result.built_product_desc || '—'}${builtAttr.length ? `<div class="attr">${builtAttr.join(' · ')}</div>` : ''}</div></div>
-                                </div>
-                                <div class="dimension-summary">
-                                    <div class="dimension-card"><h4>📊 方案差异度</h4><div class="dimension-value">${schemeDiffRounded !== null ? schemeDiffRounded + '%' : '—'}</div><div class="sub-value">数量差 + 尺寸差(显著维度平均)</div></div>
-                                    <div class="dimension-card"><h4>🎨 图案差异度</h4><div class="dimension-value">${Math.round(appearanceDiff)}%</div><div class="sub-value">豆包AI视觉分析</div></div>
-                                    <div class="dimension-card"><h4>⚖️ 综合差异度</h4><div class="dimension-value">${combinedRounded}%</div><div class="sub-value">数量差 + 尺寸差 + 图案差</div></div>
-                                </div>
-                                <div class="formula-area">
-                                    <div><strong>📐 计算过程：</strong></div>
-                                    ${quantityDiff !== null ? `<div>数量差异 = |${extractNumber(result.unbuilt_quantity)} - ${extractNumber(result.built_quantity)}| / ${extractNumber(result.built_quantity)} × 100% = ${Math.round(quantityDiff)}%</div>` : '<div>数量差异 = 数据缺失</div>'}
-                                    ${sizeDiff !== null ? `<div>尺寸差异（显著维度平均，忽略微小差异） = ${Math.round(sizeDiff)}%</div>` : '<div>尺寸差异 = 数据缺失</div>'}
-                                    <div>图案差异 = ${Math.round(appearanceDiff)}% (豆包AI)</div>
-                                    ${quantityDiff !== null && sizeDiff !== null ? `<div>综合差异 = ${Math.round(quantityDiff)}% + ${Math.round(sizeDiff)}% + ${Math.round(appearanceDiff)}% = ${combinedRounded}%</div>` : 
-                                      (quantityDiff !== null ? `<div>综合差异 = ${Math.round(quantityDiff)}% + 0% + ${Math.round(appearanceDiff)}% = ${combinedRounded}%</div>` :
-                                       (sizeDiff !== null ? `<div>综合差异 = 0% + ${Math.round(sizeDiff)}% + ${Math.round(appearanceDiff)}% = ${combinedRounded}%</div>` :
-                                        `<div>综合差异 = 0% + 0% + ${Math.round(appearanceDiff)}% = ${combinedRounded}%</div>`))}
-                                </div>
-                                <div class="diff-detail">
-                                    ${functionHtml}
-                                    ${sceneHtml}
-                                    ${pioneerRuleHtml}
-                                    <div class="diff-item"><div class="diff-label">整体目视化差异</div><div class="diff-desc">${result.visual_overall || '—'}</div></div>
-                                    <div class="diff-item"><div class="diff-label">形状与轮廓</div><div class="diff-desc">${result.shape_contour || '—'}</div></div>
-                                    <div class="diff-item"><div class="diff-label">图案与装饰</div><div class="diff-desc">${result.pattern_decoration || '—'}</div></div>
-                                    <div class="diff-item"><div class="diff-label">结构与部件</div><div class="diff-desc">${result.structure_parts || '—'}</div></div>
-                                    <div class="diff-item"><div class="diff-label">📌 总结性分析</div><div class="diff-desc">${result.summary || '—'}</div></div>
-                                </div>
-                                <div class="final-conclusion" style="margin-top: 8px;">
-                                    <div class="conclusion-text ${isPass ? 'pass' : 'fail'}">${isPass ? '该已建对比通过' : '该已建对比不通过'}</div>
-                                    <div class="conclusion-reason">综合差异度${combinedRounded}% ${isPass ? '≥50%' : '<50%'} ${built.compareType === 'pioneer' ? (pioneerRulePass ? '且符合首创规则' : '但不符合首创规则') : ''}</div>
-                                </div>
-                            </div>
-                        `;
-                        allDetailsHtml += itemDetailHtml;
+                // 构建详细HTML（省略部分，保留核心）
+                const formatSizeObj = (obj) => {
+                    if (!obj) return '';
+                    const parts = [];
+                    for (let [k,v] of Object.entries(obj)) {
+                        if (k === 'length') parts.push(`长${v}`);
+                        else if (k === 'width') parts.push(`宽${v}`);
+                        else if (k === 'height') parts.push(`高${v}`);
+                        else if (k === 'diameter') parts.push(`直径${v}`);
+                        else parts.push(`${k}:${v}`);
                     }
-                    
-                    const finalPass = overallPass;
-                    const summaryHtml = `
-                        <div class="result-summary" id="${cardId}_summary">
-                            <div class="summary-stats">
-                                <div class="stat"><span class="stat-value">${finalPass ? '✅ 通过' : '❌ 不通过'}</span></div>
-                                <div class="stat"><span class="stat-value">${Math.round(finalCombinedMin)}%</span><span class="stat-label">最小综合差异</span></div>
-                            </div>
-                            <span class="toggle-icon">▼</span>
-                        </div>
-                        <div id="${cardId}_detail" class="result-detail" style="display: none;">${allDetailsHtml}</div>
-                    `;
-                    resultArea.innerHTML = summaryHtml;
-                    
-                    const summaryDiv = document.getElementById(`${cardId}_summary`);
-                    const detailDiv = document.getElementById(`${cardId}_detail`);
-                    summaryDiv.addEventListener('click', () => {
-                        const isHidden = detailDiv.style.display === 'none';
-                        detailDiv.style.display = isHidden ? 'block' : 'none';
-                        summaryDiv.querySelector('.toggle-icon').textContent = isHidden ? '▲' : '▼';
-                    });
-                    
-                    const builtIds = Object.keys(builtItems).map(k => builtItems[k].id).filter(id => id);
-                    addHistoryRecord(cardIndex, summaryHtml, allDetailsHtml, finalPass, Math.round(finalCombinedMin), unbuilt.newProductId, builtIds);
-                    
-                } catch (error) {
-                    console.error(error);
-                    resultArea.innerHTML = `<div class="loading">❌ AI分析失败：${error.message}。请检查网络或稍后重试。</div>`;
-                } finally {
-                    compareBtn.disabled = false;
-                    compareBtn.textContent = "🔍 启动AI对比分析";
+                    return parts.join(' × ');
+                };
+                const unbuiltSizeStr = formatSizeObj(result.unbuilt_size);
+                const builtSizeStr = formatSizeObj(result.built_size);
+                
+                const unbuiltAttr = [];
+                if (result.unbuilt_quantity) unbuiltAttr.push(`📦 数量：${result.unbuilt_quantity}`);
+                if (unbuiltSizeStr) unbuiltAttr.push(`📏 尺寸：${unbuiltSizeStr}`);
+                if (result.unbuilt_color) unbuiltAttr.push(`🎨 颜色：${result.unbuilt_color}`);
+                if (result.unbuilt_material) unbuiltAttr.push(`🔧 材质：${result.unbuilt_material}`);
+                if (result.unbuilt_cost_level) unbuiltAttr.push(`💰 成本：${result.unbuilt_cost_level}`);
+                const builtAttr = [];
+                if (result.built_quantity) builtAttr.push(`📦 数量：${result.built_quantity}`);
+                if (builtSizeStr) builtAttr.push(`📏 尺寸：${builtSizeStr}`);
+                if (result.built_color) builtAttr.push(`🎨 颜色：${result.built_color}`);
+                if (result.built_material) builtAttr.push(`🔧 材质：${result.built_material}`);
+                if (result.built_cost_level) builtAttr.push(`💰 成本：${result.built_cost_level}`);
+                
+                const isFunctionConsistent = result.function_usage_summary && result.function_usage_summary.includes('一致');
+                const isSceneConsistent = result.scene_audience_summary && result.scene_audience_summary.includes('一致');
+                
+                let functionHtml = `<div class="diff-item"><div class="diff-label">核心功能与用途</div><div class="diff-desc">`;
+                functionHtml += `<span class="summary-badge">${result.function_usage_summary ? result.function_usage_summary.split('。')[0] : '分析中'}</span>`;
+                if (!isFunctionConsistent) {
+                    functionHtml += `<br><strong>未建：</strong> ${result.unbuilt_function_usage || '—'}<br>`;
+                    functionHtml += `<strong>已建：</strong> ${result.built_function_usage || '—'}<br>`;
                 }
-            };
-        }
-
-        // ---------- 历史记录面板 ----------
-        let historyModal = null;
-        function createHistoryModal() {
-            const modalDiv = document.createElement('div');
-            modalDiv.className = 'modal-overlay';
-            modalDiv.style.display = 'none';
-            modalDiv.innerHTML = `
-                <div class="modal-container">
-                    <div class="modal-header">
-                        <h3>📋 历史分析记录</h3>
-                        <button class="close-modal">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="search-box">
-                            <input type="text" id="historySearchInput" placeholder="按新品ID或已建ID搜索">
-                            <button id="historySearchBtn">搜索</button>
-                            <button id="historyResetBtn">重置</button>
+                if (result.function_usage_material_impact && result.function_usage_material_impact !== '无') {
+                    functionHtml += `<div class="material-impact">🔧 材质影响：${result.function_usage_material_impact}</div>`;
+                }
+                if (result.function_usage_cost_impact && result.function_usage_cost_impact !== '无') {
+                    functionHtml += `<div class="cost-impact">💰 成本影响：${result.function_usage_cost_impact}</div>`;
+                }
+                functionHtml += `</div></div>`;
+                
+                let sceneHtml = `<div class="diff-item"><div class="diff-label">使用人群与场景</div><div class="diff-desc">`;
+                sceneHtml += `<span class="summary-badge">${result.scene_audience_summary ? result.scene_audience_summary.split('。')[0] : '分析中'}</span>`;
+                if (!isSceneConsistent) {
+                    sceneHtml += `<br><strong>未建：</strong> ${result.unbuilt_scene_audience || '—'}<br>`;
+                    sceneHtml += `<strong>已建：</strong> ${result.built_scene_audience || '—'}<br>`;
+                }
+                if (result.scene_audience_material_impact && result.scene_audience_material_impact !== '无') {
+                    sceneHtml += `<div class="material-impact">🔧 材质影响：${result.scene_audience_material_impact}</div>`;
+                }
+                if (result.scene_audience_cost_impact && result.scene_audience_cost_impact !== '无') {
+                    sceneHtml += `<div class="cost-impact">💰 成本影响：${result.scene_audience_cost_impact}</div>`;
+                }
+                sceneHtml += `</div></div>`;
+                
+                const pioneerRuleHtml = isPioneer ? `<div class="diff-item"><div class="diff-label">📋 首创规则判定</div><div class="diff-desc">${pioneerMessage}</div></div>` : '';
+                
+                let sizeDisplay = '';
+                if (sizeReason === '未识别') sizeDisplay = '<div>尺寸差异 = 未识别</div>';
+                else if (sizeReason === '微小') sizeDisplay = '<div>尺寸差异 = 微小</div>';
+                else sizeDisplay = `<div>尺寸差异（显著维度平均，忽略微小差异） = ${formatPercent(sizeDiff)}</div>`;
+                
+                let quantityDisplay = '';
+                if (quantityReason) {
+                    quantityDisplay = `<div>数量差异 = ${quantityReason}</div>`;
+                } else if (quantityDiff !== null) {
+                    quantityDisplay = `<div>数量差异 = |${extractNumber(result.unbuilt_quantity)} - ${extractNumber(result.built_quantity)}| / ${extractNumber(result.built_quantity)} × 100% = ${formatPercent(quantityDiff)}</div>`;
+                } else {
+                    quantityDisplay = '<div>数量差异 = 数据缺失</div>';
+                }
+                
+                const itemDetailHtml = `
+                    <div style="margin-bottom: 20px; border: 1px solid #e2e8f0; border-radius: 16px; padding: 12px;">
+                        <h4 style="margin-bottom: 12px;">📊 对比已建 ${i+1}</h4>
+                        <div class="product-descriptions">
+                            <div class="product-card"><h4>📦 未建</h4><div class="product-desc-text">${result.unbuilt_product_desc || '—'}${unbuiltAttr.length ? `<div class="attr">${unbuiltAttr.join(' · ')}</div>` : ''}</div></div>
+                            <div class="product-card"><h4>🏷️ 已建</h4><div class="product-desc-text">${result.built_product_desc || '—'}${builtAttr.length ? `<div class="attr">${builtAttr.join(' · ')}</div>` : ''}</div></div>
                         </div>
-                        <div id="historyListContainer"></div>
-                        <button class="clear-history" id="clearHistoryBtn">清空所有记录</button>
-                        <div id="historyDetailContainer" class="history-detail" style="display: none;"></div>
+                        <div class="dimension-summary">
+                            <div class="dimension-card"><h4>📊 方案差异度</h4><div class="dimension-value">${schemeDiffRounded !== null ? formatPercent(schemeDiffRounded) : (sizeReason === '微小' ? '微小' : '—')}</div><div class="sub-value">数量差 + 尺寸差(显著维度平均)</div></div>
+                            <div class="dimension-card"><h4>🎨 图案差异度</h4><div class="dimension-value">${formatPercent(appearanceDiff)}</div><div class="sub-value">豆包AI视觉分析</div></div>
+                            <div class="dimension-card"><h4>⚖️ 综合差异度</h4><div class="dimension-value">${formatPercent(combinedRounded)}</div><div class="sub-value">数量差 + 尺寸差 + 图案差</div></div>
+                        </div>
+                        <div class="formula-area">
+                            <div><strong>📐 计算过程：</strong></div>
+                            ${quantityDisplay}
+                            ${sizeDisplay}
+                            <div>图案差异 = ${formatPercent(appearanceDiff)} (豆包AI)</div>
+                            ${quantityDiff !== null && sizeDiff !== null ? `<div>综合差异 = ${formatPercent(quantityDiff)} + ${formatPercent(sizeDiff)} + ${formatPercent(appearanceDiff)} = ${formatPercent(combinedRounded)}</div>` : 
+                              (quantityDiff !== null ? `<div>综合差异 = ${formatPercent(quantityDiff)} + 0% + ${formatPercent(appearanceDiff)} = ${formatPercent(combinedRounded)}</div>` :
+                               (sizeDiff !== null ? `<div>综合差异 = 0% + ${formatPercent(sizeDiff)} + ${formatPercent(appearanceDiff)} = ${formatPercent(combinedRounded)}</div>` :
+                                (sizeReason === '微小' ? `<div>综合差异 = 0% + 微小 + ${formatPercent(appearanceDiff)} = ${formatPercent(combinedRounded)}</div>` :
+                                 `<div>综合差异 = 0% + 0% + ${formatPercent(appearanceDiff)} = ${formatPercent(combinedRounded)}</div>`)))}
+                        </div>
+                        <div class="diff-detail">
+                            ${functionHtml}
+                            ${sceneHtml}
+                            ${pioneerRuleHtml}
+                            <div class="diff-item"><div class="diff-label">整体目视化差异</div><div class="diff-desc">${result.visual_overall || '—'}</div></div>
+                            <div class="diff-item"><div class="diff-label">形状与轮廓</div><div class="diff-desc">${result.shape_contour || '—'}</div></div>
+                            <div class="diff-item"><div class="diff-label">图案与装饰</div><div class="diff-desc">${result.pattern_decoration || '—'}</div></div>
+                            <div class="diff-item"><div class="diff-label">结构与部件</div><div class="diff-desc">${result.structure_parts || '—'}</div></div>
+                            <div class="diff-item"><div class="diff-label">📌 总结性分析</div><div class="diff-desc">${result.summary || '—'}</div></div>
+                        </div>
+                        <div class="final-conclusion" style="margin-top: 8px;">
+                            <div class="conclusion-text ${isPass ? 'pass' : 'fail'}">${isPass ? '通过' : '不通过'}</div>
+                        </div>
                     </div>
+                `;
+                allDetailsHtml += itemDetailHtml;
+            }
+            
+            const finalPass = overallPass;
+            const productName = cachedUnbuiltInfo?.product_desc || '无';
+            // 首创对比不通过时，摘要中只显示“不通过 与首创款式差异不足”，不显示数值
+            let summaryStatsHtml = '';
+            if (pioneerFailExists) {
+                summaryStatsHtml = `
+                    <div class="summary-stats" style="display: flex; gap: 16px;">
+                        <div class="stat"><span class="stat-value">❌ 不通过</span></div>
+                        <div class="stat"><span class="stat-value">与首创款式差异不足</span></div>
+                    </div>
+                `;
+            } else {
+                summaryStatsHtml = `
+                    <div class="summary-stats" style="display: flex; gap: 16px;">
+                        <div class="stat"><span class="stat-value">${finalPass ? '✅ 通过' : '❌ 不通过'}</span></div>
+                        <div class="stat">${finalPass ? `<span class="stat-value">${formatPercent(finalCombinedMin)}</span><span class="stat-label">最小综合差异</span>` : `<span class="stat-value">${formatPercent(finalCombinedMin)}</span><span class="stat-label">最小综合差异</span>`}</div>
+                    </div>
+                `;
+            }
+            const summaryHtml = `
+                <div class="record-summary">
+                    <div class="record-info">
+                        <div class="image-row">
+                            <div class="thumb"><img src="${config.unbuiltThumb}" style="max-width:100%;max-height:100%;"></div>
+                            <span class="vs">VS</span>
+                            ${config.builtThumbs.map(thumb => `<div class="thumb"><img src="${thumb}" style="max-width:100%;max-height:100%;"></div>`).join('')}
+                        </div>
+                        <div class="record-desc">
+                            新品ID: ${config.newProductId || '未填'}<br>
+                            产品名称: ${productName}
+                        </div>
+                    </div>
+                    ${summaryStatsHtml}
+                    <span class="toggle-icon">▼</span>
                 </div>
+                <div class="record-detail" style="display: none;">${allDetailsHtml}</div>
             `;
-            document.body.appendChild(modalDiv);
-            return modalDiv;
+            
+            return { summaryHtml, detailHtml: allDetailsHtml, isPass: finalPass, combinedDiff: finalCombinedMin, productName };
         }
 
-        function renderHistoryPanel(searchTerm = '') {
-            const container = document.getElementById('historyListContainer');
-            if (!container) return;
-            let filtered = historyRecords;
-            if (searchTerm.trim()) {
-                const term = searchTerm.trim().toLowerCase();
-                filtered = historyRecords.filter(rec => 
-                    (rec.newProductId && rec.newProductId.toLowerCase().includes(term)) ||
-                    (rec.builtIds && rec.builtIds.some(id => id && id.toLowerCase().includes(term)))
-                );
+        // 重新分析记录（使用保存的原图）
+        async function retryAnalysis(record) {
+            if (!record || (record.status !== 'failed' && record.status !== 'done')) return;
+            await updateRecord(record.id, { status: 'analyzing', summaryHtml: '', detailHtml: '', isPass: false, combinedDiff: 0, productName: '' });
+            try {
+                const builtItemsData = record.builtConfigs.map((cfg, idx) => ({
+                    imageData: record.builtImagesData?.[idx] || null,
+                    text: cfg.text,
+                    compareType: cfg.compareType,
+                    buildDate: cfg.buildDate,
+                    productType: cfg.productType
+                })).filter(b => b.imageData);
+                if (!record.unbuiltImageData) throw new Error('未保存未建原图');
+                const config = {
+                    unbuiltImageData: record.unbuiltImageData,
+                    unbuiltText: record.unbuiltDesc,
+                    newProductId: record.newProductId,
+                    unbuiltThumb: record.unbuiltThumb,
+                    builtThumbs: record.builtThumbs,
+                    builtItemsData: builtItemsData
+                };
+                const result = await analyzeWithConfig(config);
+                await updateRecord(record.id, {
+                    status: 'done',
+                    summaryHtml: result.summaryHtml,
+                    detailHtml: result.detailHtml,
+                    isPass: result.isPass,
+                    combinedDiff: result.combinedDiff,
+                    productName: result.productName
+                });
+            } catch (error) {
+                console.error(error);
+                await updateRecord(record.id, {
+                    status: 'failed',
+                    summaryHtml: `<div class="record-summary">分析失败: ${error.message}</div>`,
+                    detailHtml: '',
+                    isPass: false,
+                    combinedDiff: 0,
+                    productName: '分析失败'
+                });
             }
-            if (filtered.length === 0) {
-                container.innerHTML = '<p style="text-align:center; color:#64748b;">暂无匹配记录</p>';
-                document.getElementById('historyDetailContainer').style.display = 'none';
+        }
+
+        // 初始化
+        initUnbuilt();
+        for (let i = 1; i <= 1; i++) {
+            builtItems[`built_${i}`] = { imageDataUrl: null, compressedBase64: null, text: '', compareType: 'non_pioneer', buildDate: '', productType: 'regular' };
+        }
+        rebuildBuiltItems(1);
+        builtCountSelect.addEventListener('change', () => {
+            const newCount = parseInt(builtCountSelect.value);
+            rebuildBuiltItems(newCount);
+        });
+
+        // 分析按钮
+        const compareBtn = document.getElementById('compareBtn');
+        compareBtn.onclick = async function() {
+            if (!unbuilt.imageDataUrl) {
+                alert('请上传未建产品图片');
                 return;
             }
-            let html = '<ul class="history-list">';
-            filtered.forEach((rec, idx) => {
-                const passClass = rec.isPass ? 'pass' : 'fail';
-                html += `
-                    <li class="history-item ${passClass}" data-original-idx="${historyRecords.findIndex(r => r.id === rec.id)}">
-                        <div class="history-header">
-                            <span>对比组 ${rec.groupId} ${rec.newProductId ? `(新品:${rec.newProductId})` : ''} ${rec.builtIds && rec.builtIds.length ? `(已建:${rec.builtIds.join(',')})` : ''}</span>
-                            <span>${rec.timestamp}</span>
+            const builtKeys = Object.keys(builtItems);
+            const anyBuiltImage = builtKeys.some(key => builtItems[key].imageDataUrl);
+            if (!anyBuiltImage) {
+                alert('请至少上传一个已建产品的图片');
+                return;
+            }
+
+            // 收集当前配置
+            const unbuiltImageData = unbuilt.imageDataUrl;
+            const unbuiltText = unbuilt.text;
+            const unbuiltThumb = unbuilt.compressedBase64 || '';
+            const newProductId = unbuilt.newProductId;
+            const builtItemsData = Object.keys(builtItems).map(key => ({
+                imageData: builtItems[key].imageDataUrl,
+                text: builtItems[key].text,
+                compareType: builtItems[key].compareType,
+                buildDate: builtItems[key].buildDate,
+                productType: builtItems[key].productType
+            }));
+            const builtThumbs = Object.keys(builtItems).map(key => builtItems[key].compressedBase64 || '');
+
+            // 立即清空对比组界面
+            clearComparisonGroup();
+
+            // 创建记录（分析中）
+            const recordId = Date.now() + '_' + Math.random();
+            const tempRecord = {
+                id: recordId,
+                newProductId: newProductId,
+                timestamp: new Date().toLocaleString(),
+                status: 'analyzing',
+                summaryHtml: '',
+                detailHtml: '',
+                isPass: false,
+                combinedDiff: 0,
+                unbuiltThumb: unbuiltThumb,
+                builtThumbs: builtThumbs,
+                unbuiltDesc: unbuiltText,
+                builtConfigs: builtItemsData.map(b => ({
+                    text: b.text,
+                    compareType: b.compareType,
+                    buildDate: b.buildDate,
+                    productType: b.productType
+                })),
+                productName: '',
+                unbuiltImageData: unbuiltImageData,
+                builtImagesData: builtItemsData.map(b => b.imageData)
+            };
+            await addRecord(tempRecord);
+
+            // 异步分析
+            (async () => {
+                try {
+                    const config = {
+                        unbuiltImageData: unbuiltImageData,
+                        unbuiltText: unbuiltText,
+                        newProductId: newProductId,
+                        unbuiltThumb: unbuiltThumb,
+                        builtThumbs: builtThumbs,
+                        builtItemsData: builtItemsData
+                    };
+                    const result = await analyzeWithConfig(config);
+                    await updateRecord(recordId, {
+                        status: 'done',
+                        summaryHtml: result.summaryHtml,
+                        detailHtml: result.detailHtml,
+                        isPass: result.isPass,
+                        combinedDiff: result.combinedDiff,
+                        productName: result.productName
+                    });
+                } catch (error) {
+                    console.error(error);
+                    await updateRecord(recordId, {
+                        status: 'failed',
+                        summaryHtml: `<div class="record-summary">分析失败: ${error.message}</div>`,
+                        detailHtml: '',
+                        isPass: false,
+                        combinedDiff: 0,
+                        productName: '分析失败'
+                    });
+                }
+            })();
+        };
+
+        // 渲染查重记录列表
+        function renderRecordsList(searchTerm = '') {
+            const container = document.getElementById('recordsList');
+            if (!container) return;
+            let filtered = [...historyRecords];
+            if (searchTerm.trim()) {
+                const term = searchTerm.trim().toLowerCase();
+                filtered = filtered.filter(rec => rec.newProductId && rec.newProductId.toLowerCase().includes(term));
+            }
+            if (filtered.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#64748b;">暂无记录</p>';
+                return;
+            }
+            let html = '';
+            filtered.forEach(rec => {
+                const statusText = rec.status === 'analyzing' ? 'AI分析中...' : (rec.isPass ? '通过' : '不通过');
+                const statusClass = rec.status === 'analyzing' ? 'analyzing' : (rec.isPass ? 'pass' : 'fail');
+                if (rec.summaryHtml) {
+                    html += `
+                        <div class="record-item" data-id="${rec.id}">
+                            ${rec.summaryHtml}
+                            ${rec.status === 'failed' ? `<div style="text-align:right; margin-top:8px;"><button class="retry-btn" data-id="${rec.id}">重新分析</button></div>` : ''}
                         </div>
-                        <div class="history-stats">
-                            最小综合差异: ${rec.combinedDiff}% | 
-                            ${rec.isPass ? '✅ 通过' : '❌ 不通过'}
+                    `;
+                } else {
+                    const productName = rec.productName || (rec.status === 'analyzing' ? '分析中...' : (rec.isPass ? '通过' : '不通过'));
+                    html += `
+                        <div class="record-item" data-id="${rec.id}">
+                            <div class="record-summary">
+                                <div class="record-info">
+                                    <div class="image-row">
+                                        <div class="thumb"><img src="${rec.unbuiltThumb || ''}" style="max-width:100%;max-height:100%;"></div>
+                                        <span class="vs">VS</span>
+                                        ${(rec.builtThumbs || []).map(thumb => `<div class="thumb"><img src="${thumb}" style="max-width:100%;max-height:100%;"></div>`).join('')}
+                                    </div>
+                                    <div class="record-desc">
+                                        新品ID: ${rec.newProductId || '未填'}<br>
+                                        产品名称: ${productName}
+                                    </div>
+                                </div>
+                                <div class="record-status ${statusClass}">${statusText}</div>
+                                ${rec.status === 'failed' ? `<button class="retry-btn" data-id="${rec.id}">重新分析</button>` : ''}
+                                <span class="toggle-icon">▼</span>
+                            </div>
+                            <div class="record-detail" style="display: none;"></div>
                         </div>
-                    </li>
-                `;
+                    `;
+                }
             });
-            html += '</ul>';
             container.innerHTML = html;
-            document.querySelectorAll('.history-item').forEach(item => {
-                item.addEventListener('click', () => {
-                    const originalIdx = parseInt(item.dataset.originalIdx);
-                    const rec = historyRecords[originalIdx];
-                    const detailContainer = document.getElementById('historyDetailContainer');
-                    detailContainer.innerHTML = `<div style="margin-bottom:12px;"><strong>📅 ${rec.timestamp} | 对比组 ${rec.groupId}</strong>${rec.newProductId ? ` | 新品ID: ${rec.newProductId}` : ''}${rec.builtIds && rec.builtIds.length ? ` | 已建ID: ${rec.builtIds.join(',')}` : ''}</div>${rec.detailHtml}`;
-                    detailContainer.style.display = 'block';
-                });
+            // 绑定事件
+            container.querySelectorAll('.record-item').forEach(item => {
+                const summary = item.querySelector('.record-summary');
+                const detail = item.querySelector('.record-detail');
+                if (summary && detail) {
+                    summary.addEventListener('click', (e) => {
+                        if (e.target.classList.contains('retry-btn')) return;
+                        const isHidden = detail.style.display === 'none';
+                        detail.style.display = isHidden ? 'block' : 'none';
+                        summary.querySelector('.toggle-icon').textContent = isHidden ? '▲' : '▼';
+                    });
+                }
+                const retryBtn = item.querySelector('.retry-btn');
+                if (retryBtn) {
+                    retryBtn.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        const recordId = retryBtn.dataset.id;
+                        const record = historyRecords.find(r => r.id === recordId);
+                        if (record) {
+                            await retryAnalysis(record);
+                        }
+                    });
+                }
             });
         }
 
-        // ---------- 初始化10个对比组 ----------
-        loadHistory();
-        const container = document.getElementById('comparisonContainer');
-        for (let i = 1; i <= 10; i++) {
-            const card = createComparisonCard(i);
-            container.appendChild(card);
-            initCard(i);
-        }
-        document.querySelectorAll('.card-header').forEach(header => {
-            header.addEventListener('click', (e) => {
-                const targetId = header.getAttribute('data-toggle');
-                const contentDiv = document.getElementById(targetId);
-                if (contentDiv) {
-                    const isVisible = contentDiv.style.display !== 'none';
-                    contentDiv.style.display = isVisible ? 'none' : 'block';
-                    header.querySelector('.toggle-icon').textContent = isVisible ? '▶' : '▼';
-                }
-            });
-        });
-        
-        const modal = createHistoryModal();
-        const openBtn = document.getElementById('openHistoryBtn');
-        openBtn.addEventListener('click', () => {
-            renderHistoryPanel();
-            modal.style.display = 'flex';
-        });
-        modal.querySelector('.close-modal').addEventListener('click', () => {
-            modal.style.display = 'none';
-        });
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) modal.style.display = 'none';
-        });
-        document.getElementById('clearHistoryBtn').addEventListener('click', () => {
-            if (confirm('确定清空所有历史记录吗？')) {
-                clearHistory();
-                renderHistoryPanel();
-            }
-        });
+        // 搜索功能
         const searchInput = document.getElementById('historySearchInput');
         const searchBtn = document.getElementById('historySearchBtn');
         const resetBtn = document.getElementById('historyResetBtn');
+        const clearBtn = document.getElementById('clearHistoryBtn');
+
         searchBtn.addEventListener('click', () => {
-            renderHistoryPanel(searchInput.value);
+            renderRecordsList(searchInput.value);
         });
         resetBtn.addEventListener('click', () => {
             searchInput.value = '';
-            renderHistoryPanel('');
+            renderRecordsList('');
+        });
+        clearBtn.addEventListener('click', async () => {
+            if (confirm('确定清空所有查重记录吗？')) {
+                await clearHistory();
+            }
         });
         searchInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') renderHistoryPanel(searchInput.value);
+            if (e.key === 'Enter') renderRecordsList(searchInput.value);
         });
+
+        // 问答模块
+        const qaAskBtn = document.getElementById('qaAskBtn');
+        const qaQuestion = document.getElementById('qaQuestion');
+        const qaAnswerDiv = document.getElementById('qaAnswer');
+
+        qaAskBtn.addEventListener('click', async () => {
+            const question = qaQuestion.value.trim();
+            if (!question) {
+                alert('请输入问题');
+                return;
+            }
+            qaAnswerDiv.style.display = 'block';
+            qaAnswerDiv.innerHTML = '🤔 思考中...';
+            qaAnswerDiv.classList.add('loading');
+            try {
+                const answer = await askQuestion(question);
+                qaAnswerDiv.innerHTML = answer;
+                qaAnswerDiv.classList.remove('loading');
+            } catch (error) {
+                qaAnswerDiv.innerHTML = `❌ 回答失败：${error.message}`;
+                qaAnswerDiv.classList.remove('loading');
+            }
+        });
+        qaQuestion.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') qaAskBtn.click();
+        });
+
+        // 初始加载历史
+        loadHistory().catch(console.error);
     })();
 </script>
 </body>
