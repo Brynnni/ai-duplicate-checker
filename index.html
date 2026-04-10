@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>AI查重助手v1.0 - 人工审核学习版</title>
+    <title>AI查重助手v1.0</title>
     <style>
-        /* 原有样式保持不变，新增人工审核区域样式 */
         * {
             margin: 0;
             padding: 0;
@@ -188,7 +187,6 @@
             background: #94a3b8;
             cursor: not-allowed;
         }
-        /* AI问答模块样式 */
         .qa-section {
             background: white;
             border-radius: 24px;
@@ -371,7 +369,6 @@
         .record-detail.show {
             display: block;
         }
-        /* 人工审核区域样式 */
         .human-review-section {
             margin-top: 16px;
             border-top: 1px dashed #cbd5e1;
@@ -393,6 +390,20 @@
             border-radius: 12px;
             padding: 12px;
             margin-top: 8px;
+        }
+        .review-radio-group {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .review-radio-group label {
+            font-size: 14px;
+            font-weight: normal;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
         }
         .human-review-textarea {
             width: 100%;
@@ -579,10 +590,9 @@
 <body>
 <div class="container">
     <h1>
-        AI查重助手<span class="version-badge">人工审核学习版</span>
+        AI查重助手<span class="version-badge">v1.0</span>
     </h1>
 
-    <!-- 单组对比卡片 -->
     <div class="comparison-card">
         <div class="card-header">
             <label>新品ID：</label>
@@ -622,7 +632,6 @@
         </div>
     </div>
 
-    <!-- AI问答模块 -->
     <div class="qa-section">
         <div class="qa-header">
             💬 AI智能问答
@@ -636,7 +645,6 @@
         </div>
     </div>
 
-    <!-- 查重记录区域 -->
     <div class="history-section">
         <div class="history-header">
             <span>📋 查重记录</span>
@@ -647,22 +655,18 @@
                 <button class="clear-history" id="clearHistoryBtn">清空记录</button>
             </div>
         </div>
-        <div id="recordsList" class="records-list">
-            <!-- 动态记录列表 -->
-        </div>
+        <div id="recordsList" class="records-list"></div>
     </div>
 </div>
 
 <script>
     (function(){
-        // ---------- 豆包API配置 ----------
         const API_KEY = "fbcfcc90-d805-42a1-9424-f983f423c09a";
         const ENDPOINT_ID = "ep-20260320164842-rsqff";
         const API_URL = "https://ark.cn-beijing.volces.com/api/v3/chat/completions";
 
-        // ---------- IndexedDB 存储 ----------
         const DB_NAME = "AIChatHistoryDB";
-        const DB_VERSION = 2;  // 升级版本以支持 humanReview 字段
+        const DB_VERSION = 2;
         const STORE_NAME = "records";
 
         let historyRecords = [];
@@ -684,10 +688,6 @@
                     const db = event.target.result;
                     if (!db.objectStoreNames.contains(STORE_NAME)) {
                         db.createObjectStore(STORE_NAME, { keyPath: "id" });
-                    } else {
-                        // 升级时确保所有记录有 humanReview 字段（可选）
-                        const store = event.target.transaction.objectStore(STORE_NAME);
-                        // 不需要额外操作，因为添加字段时自动支持
                     }
                 };
             });
@@ -756,7 +756,6 @@
             renderRecordsList();
         }
 
-        // ---------- 辅助函数 ----------
         function safeString(str) {
             return typeof str === 'string' ? str : '';
         }
@@ -913,7 +912,6 @@
             const monthsDiff = (now.getFullYear() - buildTime.getFullYear()) * 12 + (now.getMonth() - buildTime.getMonth());
             const protectionMonths = (productType === 'seasonal') ? 12 : 9;
             const inProtection = monthsDiff < protectionMonths;
-            
             if (inProtection) {
                 if (patternDiff !== null && patternDiff >= 50) {
                     return { pass: true, message: `保护期内，款式差异度${Math.round(patternDiff)}%≥50%，允许通过。` };
@@ -944,24 +942,25 @@
             return result;
         }
 
-        // 获取最近的人工审核示例（最多10条，按时间倒序）
-        async function getRecentHumanReviewExamples(limit = 10) {
+        // 获取所有人工审核示例（不限数量）
+        async function getAllHumanReviewExamples() {
             const examples = [];
-            // 从 historyRecords 中筛选出有人工审核且状态为 done 的记录
+            // 筛选有人工审核且状态为 done 的记录
             const reviewed = historyRecords.filter(r => r.humanReview && r.humanReview.trim() !== '' && r.status === 'done');
-            // 按时间倒序（已经是倒序）
-            for (let i = 0; i < Math.min(reviewed.length, limit); i++) {
-                const rec = reviewed[i];
-                // 构造示例文本
+            // 按时间倒序（最新的在前）
+            reviewed.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            for (const rec of reviewed) {
                 let example = `产品信息：${rec.productName || '未知'} (新品ID: ${rec.newProductId || '未知'})\n`;
                 example += `AI判断：综合差异度 ${rec.combinedDiff !== undefined ? formatPercent(rec.combinedDiff) : '?'}，结论：${rec.isPass ? '通过' : '不通过'}\n`;
-                example += `人工审核结论：${rec.humanReview}\n`;
+                example += `人工审核修正：${rec.humanReview}\n`;
                 examples.push(example);
+            }
+            if (examples.length > 30) {
+                console.warn(`人工审核示例数量较多(${examples.length})，可能超出Token限制，建议定期清理旧记录。`);
             }
             return examples;
         }
 
-        // 修改 API 调用函数，增加 humanExamples 参数
         async function callDoubaoProductComparison(imgBase64A, imgBase64B, textA, textB, isPioneer = false, humanExamples = []) {
             const base64A = imgBase64A.split(',')[1];
             const base64B = imgBase64B.split(',')[1];
@@ -977,7 +976,7 @@
 - 如果各组件数量相同，数量字段应填写“12个”；如果数量不同，则标记为“未识别数量”。
 - 请严格遵守此规则，不要输出相加后的总数。
 
-**参考以下人工审核案例，学习判断逻辑（这些是历史正确审核结果，请优先参考）**：
+**参考以下所有历史人工审核案例，学习正确的判断逻辑和修正方法（包括款式、数量、尺寸等方面的纠正）**：
 ${humanExamples.length > 0 ? humanExamples.map((ex, idx) => `${idx+1}. ${ex}`).join('\n') : '（暂无历史案例）'}
 
 任务：
@@ -1011,7 +1010,7 @@ ${humanExamples.length > 0 ? humanExamples.map((ex, idx) => `${idx+1}. ${ex}`).j
 - 如果各组件数量相同，数量字段应填写“12个”；如果数量不同，则标记为“未识别数量”。
 - 请严格遵守此规则，不要输出相加后的总数。
 
-**参考以下人工审核案例，学习判断逻辑（这些是历史正确审核结果，请优先参考）**：
+**参考以下所有历史人工审核案例，学习正确的判断逻辑和修正方法（包括款式、数量、尺寸等方面的纠正）**：
 ${humanExamples.length > 0 ? humanExamples.map((ex, idx) => `${idx+1}. ${ex}`).join('\n') : '（暂无历史案例）'}
 
 任务：
@@ -1152,7 +1151,6 @@ ${humanExamples.length > 0 ? humanExamples.map((ex, idx) => `${idx+1}. ${ex}`).j
             });
         }
 
-        // ---------- 动态生成已建卡片 ----------
         let builtItems = {};
         let currentBuiltCount = 1;
         const builtArea = document.getElementById('builtArea');
@@ -1298,7 +1296,6 @@ ${humanExamples.length > 0 ? humanExamples.map((ex, idx) => `${idx+1}. ${ex}`).j
             updatePioneerFields();
         }
 
-        // 未建交互
         const unbuilt = {
             imageDataUrl: null,
             compressedBase64: null,
@@ -1390,12 +1387,18 @@ ${humanExamples.length > 0 ? humanExamples.map((ex, idx) => `${idx+1}. ${ex}`).j
             rebuildBuiltItems(1);
         }
 
-        // 保存人工审核结果
-        async function saveHumanReview(recordId, reviewText) {
-            await updateRecord(recordId, { humanReview: reviewText });
+        async function saveHumanReview(recordId, verdict, detailText) {
+            let reviewContent = '';
+            if (verdict === 'pass') {
+                reviewContent = `[通过] ${detailText}`;
+            } else if (verdict === 'fail') {
+                reviewContent = `[不通过] ${detailText}`;
+            } else {
+                reviewContent = detailText;
+            }
+            await updateRecord(recordId, { humanReview: reviewContent });
         }
 
-        // 执行分析（使用当前配置）
         async function analyzeWithConfig(config) {
             const unbuiltImageData = config.unbuiltImageData;
             const unbuiltText = config.unbuiltText;
@@ -1407,8 +1410,8 @@ ${humanExamples.length > 0 ? humanExamples.map((ex, idx) => `${idx+1}. ${ex}`).j
             let pioneerFailExists = false;
             let cachedUnbuiltInfo = null;
 
-            // 获取最近的人工审核示例（用于 AI 学习）
-            const humanExamples = await getRecentHumanReviewExamples(10);
+            // 获取所有人工审核示例（不限数量）
+            const humanExamples = await getAllHumanReviewExamples();
             
             for (let i = 0; i < builtItemsData.length; i++) {
                 const built = builtItemsData[i];
@@ -1417,14 +1420,12 @@ ${humanExamples.length > 0 ? humanExamples.map((ex, idx) => `${idx+1}. ${ex}`).j
                 let result = await callDoubaoProductComparison(built.imageData, unbuiltImageData, built.text, unbuiltText, isPioneer, humanExamples);
                 result = enforceGenderAudienceDiff(result);
                 
-                // 强制修正数量
                 if (unbuiltText) {
                     const correctUnbuilt = parseQuantity(unbuiltText);
                     if (correctUnbuilt.status === 'ok' && correctUnbuilt.value !== null) {
                         const aiUnbuiltParsed = parseQuantity(result.unbuilt_quantity);
                         if (aiUnbuiltParsed.status !== 'ok' || aiUnbuiltParsed.value !== correctUnbuilt.value) {
                             result.unbuilt_quantity = `${correctUnbuilt.value}个`;
-                            console.log(`[数量修正] 未建数量从 ${aiUnbuiltParsed.value} 修正为 ${correctUnbuilt.value}`);
                         }
                     }
                 }
@@ -1434,7 +1435,6 @@ ${humanExamples.length > 0 ? humanExamples.map((ex, idx) => `${idx+1}. ${ex}`).j
                         const aiBuiltParsed = parseQuantity(result.built_quantity);
                         if (aiBuiltParsed.status !== 'ok' || aiBuiltParsed.value !== correctBuilt.value) {
                             result.built_quantity = `${correctBuilt.value}个`;
-                            console.log(`[数量修正] 已建数量从 ${aiBuiltParsed.value} 修正为 ${correctBuilt.value}`);
                         }
                     }
                 }
@@ -1690,7 +1690,6 @@ ${humanExamples.length > 0 ? humanExamples.map((ex, idx) => `${idx+1}. ${ex}`).j
             }
         }
 
-        // 渲染查重记录列表（增加人工审核UI）
         function renderRecordsList(searchTerm = '') {
             let expandedRecordId = null;
             const allDetails = document.querySelectorAll('.record-detail');
@@ -1720,6 +1719,17 @@ ${humanExamples.length > 0 ? humanExamples.map((ex, idx) => `${idx+1}. ${ex}`).j
                 const statusText = rec.status === 'analyzing' ? 'AI分析中...' : (rec.isPass ? '通过' : '不通过');
                 const statusClass = rec.status === 'analyzing' ? 'analyzing' : (rec.isPass ? 'pass' : 'fail');
                 const hasReview = rec.humanReview && rec.humanReview.trim() !== '';
+                let existingVerdict = '';
+                let existingDetail = '';
+                if (hasReview) {
+                    const match = rec.humanReview.match(/^\[(通过|不通过)\]\s*(.*)$/);
+                    if (match) {
+                        existingVerdict = match[1] === '通过' ? 'pass' : 'fail';
+                        existingDetail = match[2];
+                    } else {
+                        existingDetail = rec.humanReview;
+                    }
+                }
                 
                 if (rec.summaryHtml) {
                     html += `
@@ -1731,7 +1741,11 @@ ${humanExamples.length > 0 ? humanExamples.map((ex, idx) => `${idx+1}. ${ex}`).j
                                     📝 人工审核 ${hasReview ? '<span class="review-saved-badge">已审核</span>' : ''}
                                 </div>
                                 <div class="human-review-content" style="display: none;">
-                                    <textarea class="human-review-textarea" id="review_${rec.id}" placeholder="输入人工审核结论，例如：数量、尺寸差异小，整体差异不足，不可建；款式、数量差异，可尝试；款式、数量、尺寸一致，图文设计差异不足，不可建..." rows="3">${rec.humanReview || ''}</textarea>
+                                    <div class="review-radio-group">
+                                        <label><input type="radio" name="verdict_${rec.id}" value="pass" ${existingVerdict === 'pass' ? 'checked' : ''}> 通过</label>
+                                        <label><input type="radio" name="verdict_${rec.id}" value="fail" ${existingVerdict === 'fail' ? 'checked' : ''}> 不通过</label>
+                                    </div>
+                                    <textarea class="human-review-textarea" id="review_${rec.id}" placeholder="输入审核详细说明，例如：数量、尺寸差异小，整体差异不足，不可建..." rows="3">${existingDetail}</textarea>
                                     <button class="save-review-btn" data-id="${rec.id}">保存审核结果</button>
                                 </div>
                             </div>
@@ -1763,7 +1777,11 @@ ${humanExamples.length > 0 ? humanExamples.map((ex, idx) => `${idx+1}. ${ex}`).j
                                     📝 人工审核 ${hasReview ? '<span class="review-saved-badge">已审核</span>' : ''}
                                 </div>
                                 <div class="human-review-content" style="display: none;">
-                                    <textarea class="human-review-textarea" id="review_${rec.id}" placeholder="输入人工审核结论，例如：数量、尺寸差异小，整体差异不足，不可建；款式、数量差异，可尝试；款式、数量、尺寸一致，图文设计差异不足，不可建..." rows="3">${rec.humanReview || ''}</textarea>
+                                    <div class="review-radio-group">
+                                        <label><input type="radio" name="verdict_${rec.id}" value="pass" ${existingVerdict === 'pass' ? 'checked' : ''}> 通过</label>
+                                        <label><input type="radio" name="verdict_${rec.id}" value="fail" ${existingVerdict === 'fail' ? 'checked' : ''}> 不通过</label>
+                                    </div>
+                                    <textarea class="human-review-textarea" id="review_${rec.id}" placeholder="输入审核详细说明，例如：数量、尺寸差异小，整体差异不足，不可建..." rows="3">${existingDetail}</textarea>
                                     <button class="save-review-btn" data-id="${rec.id}">保存审核结果</button>
                                 </div>
                             </div>
@@ -1773,13 +1791,12 @@ ${humanExamples.length > 0 ? humanExamples.map((ex, idx) => `${idx+1}. ${ex}`).j
             });
             container.innerHTML = html;
             
-            // 绑定事件
             container.querySelectorAll('.record-item').forEach(item => {
                 const summary = item.querySelector('.record-summary');
                 const detail = item.querySelector('.record-detail');
                 if (summary && detail) {
                     summary.addEventListener('click', (e) => {
-                        if (e.target.classList.contains('retry-btn') || e.target.closest('.save-review-btn')) return;
+                        if (e.target.classList.contains('retry-btn') || e.target.closest('.save-review-btn') || e.target.closest('.human-review-header')) return;
                         const isHidden = detail.style.display === 'none';
                         detail.style.display = isHidden ? 'block' : 'none';
                         summary.querySelector('.toggle-icon').textContent = isHidden ? '▲' : '▼';
@@ -1801,12 +1818,18 @@ ${humanExamples.length > 0 ? humanExamples.map((ex, idx) => `${idx+1}. ${ex}`).j
                     saveBtn.addEventListener('click', async (e) => {
                         e.stopPropagation();
                         const recordId = saveBtn.dataset.id;
+                        const radioGroup = item.querySelector(`.review-radio-group`);
+                        const selectedRadio = radioGroup.querySelector('input:checked');
+                        const verdict = selectedRadio ? selectedRadio.value : '';
                         const textarea = item.querySelector(`.human-review-textarea`);
-                        const reviewText = textarea.value.trim();
-                        await saveHumanReview(recordId, reviewText);
-                        // 更新界面上的已审核标记
+                        const detailText = textarea.value.trim();
+                        if (!verdict) {
+                            alert('请选择通过/不通过');
+                            return;
+                        }
+                        await saveHumanReview(recordId, verdict, detailText);
                         const header = item.querySelector('.human-review-header');
-                        if (reviewText) {
+                        if (verdict && detailText) {
                             if (!header.querySelector('.review-saved-badge')) {
                                 const badge = document.createElement('span');
                                 badge.className = 'review-saved-badge';
@@ -1822,7 +1845,6 @@ ${humanExamples.length > 0 ? humanExamples.map((ex, idx) => `${idx+1}. ${ex}`).j
                 }
             });
             
-            // 恢复展开状态
             if (expandedRecordId) {
                 const targetItem = container.querySelector(`.record-item[data-id="${expandedRecordId}"]`);
                 if (targetItem) {
@@ -1837,7 +1859,6 @@ ${humanExamples.length > 0 ? humanExamples.map((ex, idx) => `${idx+1}. ${ex}`).j
             }
         }
 
-        // 初始化
         initUnbuilt();
         for (let i = 1; i <= 1; i++) {
             builtItems[`built_${i}`] = { imageDataUrl: null, compressedBase64: null, text: '', compareType: 'non_pioneer', buildDate: '', productType: 'regular' };
@@ -1898,7 +1919,7 @@ ${humanExamples.length > 0 ? humanExamples.map((ex, idx) => `${idx+1}. ${ex}`).j
                 productName: '',
                 unbuiltImageData: unbuiltImageData,
                 builtImagesData: builtItemsData.map(b => b.imageData),
-                humanReview: ''  // 初始化人工审核字段
+                humanReview: ''
             };
             await addRecord(tempRecord);
 
@@ -1935,7 +1956,6 @@ ${humanExamples.length > 0 ? humanExamples.map((ex, idx) => `${idx+1}. ${ex}`).j
             })();
         };
 
-        // 搜索功能
         const searchInput = document.getElementById('historySearchInput');
         const searchBtn = document.getElementById('historySearchBtn');
         const resetBtn = document.getElementById('historyResetBtn');
@@ -1957,7 +1977,6 @@ ${humanExamples.length > 0 ? humanExamples.map((ex, idx) => `${idx+1}. ${ex}`).j
             if (e.key === 'Enter') renderRecordsList(searchInput.value);
         });
 
-        // 问答模块
         const qaAskBtn = document.getElementById('qaAskBtn');
         const qaQuestion = document.getElementById('qaQuestion');
         const qaAnswerDiv = document.getElementById('qaAnswer');
