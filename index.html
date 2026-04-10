@@ -71,6 +71,47 @@
             align-items: center;
             flex-wrap: wrap;
         }
+        /* 蓝色重点标识样式 - 增大字号 */
+        .blue-hint {
+            color: #1e40af;
+            font-size: 14px;
+            font-weight: 500;
+            margin-left: 8px;
+            background: #dbeafe;
+            padding: 3px 10px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+        .pioneer-hint {
+            color: #1e40af;
+            font-size: 13px;
+            background: #dbeafe;
+            padding: 3px 8px;
+            border-radius: 16px;
+            margin-left: 8px;
+        }
+        /* 带蓝色底色的标签样式 */
+        .highlight-label {
+            background: #dbeafe;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #1e40af;
+            display: inline-block;
+        }
+        .radio-label-highlight {
+            background: #dbeafe;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 15px;
+            font-weight: 500;
+            color: #1e40af;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-right: 12px;
+        }
         .compare-layout {
             display: flex;
             gap: 24px;
@@ -369,68 +410,6 @@
         .record-detail.show {
             display: block;
         }
-        .human-review-section {
-            margin-top: 16px;
-            border-top: 1px dashed #cbd5e1;
-            padding-top: 12px;
-        }
-        .human-review-header {
-            font-size: 14px;
-            font-weight: bold;
-            color: #1e40af;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            margin-bottom: 8px;
-        }
-        .human-review-content {
-            display: none;
-            background: #fefce8;
-            border-radius: 12px;
-            padding: 12px;
-            margin-top: 8px;
-        }
-        .review-radio-group {
-            display: flex;
-            gap: 16px;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        .review-radio-group label {
-            font-size: 14px;
-            font-weight: normal;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            cursor: pointer;
-        }
-        .human-review-textarea {
-            width: 100%;
-            padding: 8px;
-            border-radius: 12px;
-            border: 1px solid #cbd5e1;
-            font-size: 13px;
-            resize: vertical;
-            margin-bottom: 8px;
-        }
-        .save-review-btn {
-            background: #10b981;
-            color: white;
-            border: none;
-            border-radius: 20px;
-            padding: 4px 12px;
-            font-size: 12px;
-            cursor: pointer;
-        }
-        .review-saved-badge {
-            background: #d1fae5;
-            color: #065f46;
-            border-radius: 20px;
-            padding: 2px 8px;
-            font-size: 11px;
-            margin-left: 8px;
-        }
         .clear-history {
             background: #ef4444;
             color: white;
@@ -561,13 +540,19 @@
             padding-top: 12px;
             border-top: 1px solid #e2e8f0;
             display: flex;
-            gap: 12px;
+            gap: 16px;
             flex-wrap: wrap;
             align-items: center;
         }
         .pioneer-controls label {
-            font-size: 12px;
+            font-size: 14px;
             font-weight: normal;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .pioneer-controls input[type="radio"] {
+            margin: 0;
         }
         .pioneer-controls input[type="date"] {
             padding: 4px 8px;
@@ -601,7 +586,7 @@
         <div class="card-content">
             <div class="config-bar">
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <label>已建数量：</label>
+                    <span class="highlight-label">已建数量：</span>
                     <select id="builtCount" class="built-count-select">
                         <option value="1">1</option>
                         <option value="2">2</option>
@@ -609,6 +594,7 @@
                         <option value="4">4</option>
                         <option value="5">5</option>
                     </select>
+                    <span class="blue-hint">🔹 可调整对比数量</span>
                 </div>
             </div>
             <div class="compare-layout">
@@ -661,12 +647,14 @@
 
 <script>
     (function(){
+        // ---------- 豆包API配置 ----------
         const API_KEY = "fbcfcc90-d805-42a1-9424-f983f423c09a";
         const ENDPOINT_ID = "ep-20260320164842-rsqff";
         const API_URL = "https://ark.cn-beijing.volces.com/api/v3/chat/completions";
 
+        // ---------- IndexedDB 存储 ----------
         const DB_NAME = "AIChatHistoryDB";
-        const DB_VERSION = 2;
+        const DB_VERSION = 1;
         const STORE_NAME = "records";
 
         let historyRecords = [];
@@ -756,6 +744,7 @@
             renderRecordsList();
         }
 
+        // ---------- 辅助函数 ----------
         function safeString(str) {
             return typeof str === 'string' ? str : '';
         }
@@ -764,19 +753,6 @@
             if (value === null || value === undefined) return '—';
             if (value > 100) return '100%+';
             return Math.round(value) + '%';
-        }
-
-        function extractNumber(str) {
-            const s = safeString(str);
-            if (!s) return null;
-            let cardMatch = s.match(/(\d+(?:\.\d+)?)\s*张/);
-            if (cardMatch) return parseFloat(cardMatch[1]);
-            let pieceMatch = s.match(/(\d+(?:\.\d+)?)\s*个/);
-            if (pieceMatch) return parseFloat(pieceMatch[1]);
-            let setMatch = s.match(/(\d+(?:\.\d+)?)\s*套/);
-            if (setMatch) return parseFloat(setMatch[1]);
-            let simple = s.match(/(\d+(?:\.\d+)?)/);
-            return simple ? parseFloat(simple[1]) : null;
         }
 
         function parseQuantity(quantityStr) {
@@ -831,6 +807,19 @@
             if (b === 0) return { diff: null, reason: '已建数量为0' };
             const diff = Math.abs(u - b) / b * 100;
             return { diff: diff, reason: null };
+        }
+
+        function extractNumber(str) {
+            const s = safeString(str);
+            if (!s) return null;
+            let cardMatch = s.match(/(\d+(?:\.\d+)?)\s*张/);
+            if (cardMatch) return parseFloat(cardMatch[1]);
+            let pieceMatch = s.match(/(\d+(?:\.\d+)?)\s*个/);
+            if (pieceMatch) return parseFloat(pieceMatch[1]);
+            let setMatch = s.match(/(\d+(?:\.\d+)?)\s*套/);
+            if (setMatch) return parseFloat(setMatch[1]);
+            let simple = s.match(/(\d+(?:\.\d+)?)/);
+            return simple ? parseFloat(simple[1]) : null;
         }
 
         function convertToCm(str) {
@@ -912,6 +901,7 @@
             const monthsDiff = (now.getFullYear() - buildTime.getFullYear()) * 12 + (now.getMonth() - buildTime.getMonth());
             const protectionMonths = (productType === 'seasonal') ? 12 : 9;
             const inProtection = monthsDiff < protectionMonths;
+            
             if (inProtection) {
                 if (patternDiff !== null && patternDiff >= 50) {
                     return { pass: true, message: `保护期内，款式差异度${Math.round(patternDiff)}%≥50%，允许通过。` };
@@ -942,26 +932,7 @@
             return result;
         }
 
-        // 获取所有人工审核示例（不限数量）
-        async function getAllHumanReviewExamples() {
-            const examples = [];
-            // 筛选有人工审核且状态为 done 的记录
-            const reviewed = historyRecords.filter(r => r.humanReview && r.humanReview.trim() !== '' && r.status === 'done');
-            // 按时间倒序（最新的在前）
-            reviewed.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-            for (const rec of reviewed) {
-                let example = `产品信息：${rec.productName || '未知'} (新品ID: ${rec.newProductId || '未知'})\n`;
-                example += `AI判断：综合差异度 ${rec.combinedDiff !== undefined ? formatPercent(rec.combinedDiff) : '?'}，结论：${rec.isPass ? '通过' : '不通过'}\n`;
-                example += `人工审核修正：${rec.humanReview}\n`;
-                examples.push(example);
-            }
-            if (examples.length > 30) {
-                console.warn(`人工审核示例数量较多(${examples.length})，可能超出Token限制，建议定期清理旧记录。`);
-            }
-            return examples;
-        }
-
-        async function callDoubaoProductComparison(imgBase64A, imgBase64B, textA, textB, isPioneer = false, humanExamples = []) {
+        async function callDoubaoProductComparison(imgBase64A, imgBase64B, textA, textB, isPioneer = false) {
             const base64A = imgBase64A.split(',')[1];
             const base64B = imgBase64B.split(',')[1];
             
@@ -971,20 +942,12 @@
 
 你必须严格按照这种逻辑理解实际款式，优先采纳产品方案文字，忽略图片视觉上不一致的误导。
 
-**关于数量的提取规则（极其重要）**：
-- 对于由多个组件组成的组合产品（例如“12个鸡蛋 + 12个木片 + 12个袋子”），数量应取单个组件的数量，即 **12**，严禁将所有组件的数量相加（如 12+12+12=36）。
-- 如果各组件数量相同，数量字段应填写“12个”；如果数量不同，则标记为“未识别数量”。
-- 请严格遵守此规则，不要输出相加后的总数。
-
-**参考以下所有历史人工审核案例，学习正确的判断逻辑和修正方法（包括款式、数量、尺寸等方面的纠正）**：
-${humanExamples.length > 0 ? humanExamples.map((ex, idx) => `${idx+1}. ${ex}`).join('\n') : '（暂无历史案例）'}
-
 任务：
 
 1. 识别图片中的产品形态、图案、结构，以及图片中可能出现的文字描述（如“做成右边灯笼款式”、“数量10个”、“1套12个”等）。数量描述中若出现“X套Y个”，实际数量应为Y个（总个数），而不是套数。
 2. 对于每个产品，请提取以下信息（如有，若没有则标注“未识别”）：
    - 产品简短描述（30字以内，概括理解后的款式、特征，必须基于产品方案文字优先，再结合图片文字综合判断）
-   - 数量：提取实际总数量（数字+单位，例如“12个”）。如果出现“1套12个”，则数量为“12个”。**组合产品取单个组件的数量，不要相加。**
+   - 数量：提取实际总数量（数字+单位，例如“12个”）。如果出现“1套12个”，则数量为“12个”。
    - 尺寸：请根据产品形状，尽可能提取关键维度的数值，格式为对象。例如：
        * 长方体/立方体：{"length": "30cm", "width": "20cm", "height": "10cm"}
        * 圆形/圆柱：{"diameter": "15cm", "height": "20cm"}
@@ -993,7 +956,7 @@ ${humanExamples.length > 0 ? humanExamples.map((ex, idx) => `${idx+1}. ${ex}`).j
    - 颜色（如“红色”、“白+金”等）
    - 材质（如“不锈钢”、“木质”等）
 3. 分析产品的核心功能与用途：该产品主要用来做什么？解决什么问题？功能上有何特点？请分别描述两个产品，并给出总结性判断（例如“功能一致”、“功能差异较小”、“功能差异较大”）。同时，请分析材质差异对功能用途的影响，并输出材质影响分析。
-4. 分析产品的使用人群与场景：适合哪些人使用？在什么场景下使用？请分别描述两个产品，并给出总结性判断。**特别注意：如果一方产品明确面向男性群体（如“男士”、“男性”、“男孩”），另一方明确面向女性群体（如“女士”、“女性”、“女孩”），则必须判定为“人群差异较大”。** 判断标准：人群类型明显不同（儿童 vs 成人、专业人士 vs 大众等）或场景明显不同（室内 vs 户外、商用 vs 家用等）为“差异较大”；细微差别为“差异较小”；基本一致为“一致”。同时分析材质差异对人群场景的影响。
+4. 分析产品的使用人群与场景：适合哪些人使用？在什么场景下使用？请分别描述两个产品，并给出总结性判断。判断标准：人群类型明显不同（儿童 vs 成人、专业人士 vs 大众等）或场景明显不同（室内 vs 户外、商用 vs 家用等）为“差异较大”；细微差别为“差异较小”；基本一致为“一致”。同时分析材质差异对人群场景的影响。
 5. 对产品进行成本智能判断：基于产品材质、工艺、复杂度、尺寸等，分析产品成本水平（高/中/低），并分析成本差异对功能用途和人群场景的影响。
 6. 然后从以下维度详细对比两个实际产品的差异（忽略拍摄角度、构图、背景、2D/3D渲染效果，不分析材质）。在分析“整体目视化差异”时，请忽略产品在图片中的摆放、排版等非产品本身的因素，只对比产品本身的视觉特征，并明确给出定性判断（例如“目视化差异较大”、“目视化差异较小”、“目视化差异中等”）：
    - 整体目视化差异：先给出定性判断，然后具体描述。
@@ -1005,20 +968,12 @@ ${humanExamples.length > 0 ? humanExamples.map((ex, idx) => `${idx+1}. ${ex}`).j
             if (isPioneer) {
                 prompt = `请对比以下两张产品图片（分别对应【已建产品】和【未建产品】），结合可能提供的文字说明，分析两个产品的实际产品设计差异。**重点分析产品的款式（外形特征）**，即整体形状、轮廓、结构、组合方式等。**忽略颜色差异**，**对图案装饰的差异权重降至最低**。你需要结合用户输入的【产品方案】文字说明和图片中的文字描述，判断最终产品的实际款式。**再次强调：必须优先采纳产品方案文字**，如果产品方案明确写了款式（如“扇形边壁挂篮”），则以此为准，即使图片视觉看起来不同。
 
-**关于数量的提取规则（极其重要）**：
-- 对于由多个组件组成的组合产品（例如“12个鸡蛋 + 12个木片 + 12个袋子”），数量应取单个组件的数量，即 **12**，严禁将所有组件的数量相加（如 12+12+12=36）。
-- 如果各组件数量相同，数量字段应填写“12个”；如果数量不同，则标记为“未识别数量”。
-- 请严格遵守此规则，不要输出相加后的总数。
-
-**参考以下所有历史人工审核案例，学习正确的判断逻辑和修正方法（包括款式、数量、尺寸等方面的纠正）**：
-${humanExamples.length > 0 ? humanExamples.map((ex, idx) => `${idx+1}. ${ex}`).join('\n') : '（暂无历史案例）'}
-
 任务：
 
 1. 识别图片中的产品形态、结构，以及图片中可能出现的文字描述（如“做成右边灯笼款式”、“扇形边”等），这些文字是对最终产品款式的指示。请结合图片、文字和产品方案，理解实际要做的产品款式。
 2. 对于每个产品，请提取以下信息（如有，若没有则标注“未识别”）：
    - 产品简短描述（30字以内，重点概括款式、外形特征，例如“扇形边壁挂篮”）
-   - 数量：提取实际总数量（数字+单位，例如“12个”）。如果出现“1套12个”，则数量为“12个”。**组合产品取单个组件的数量，不要相加。**
+   - 数量：提取实际总数量（数字+单位，例如“12个”）。如果出现“1套12个”，则数量为“12个”。
    - 尺寸：请根据产品形状，尽可能提取关键维度的数值，格式为对象。例如：
        * 长方体/立方体：{"length": "30cm", "width": "20cm", "height": "10cm"}
        * 圆形/圆柱：{"diameter": "15cm", "height": "20cm"}
@@ -1027,7 +982,7 @@ ${humanExamples.length > 0 ? humanExamples.map((ex, idx) => `${idx+1}. ${ex}`).j
    - 颜色（可忽略，但若提取也不作为主要对比依据）
    - 材质（如“不锈钢”、“木质”等）
 3. 分析产品的核心功能与用途：该产品主要用来做什么？解决什么问题？功能上有何特点？请分别描述两个产品，并给出总结性判断（例如“功能一致”、“功能差异较小”、“功能差异较大”）。同时，请分析材质差异对功能用途的影响，并输出材质影响分析。
-4. 分析产品的使用人群与场景：适合哪些人使用？在什么场景下使用？请分别描述两个产品，并给出总结性判断。**特别注意：如果一方产品明确面向男性群体（如“男士”、“男性”、“男孩”），另一方明确面向女性群体（如“女士”、“女性”、“女孩”），则必须判定为“人群差异较大”。** 判断标准：人群类型明显不同（儿童 vs 成人、专业人士 vs 大众等）或场景明显不同（室内 vs 户外、商用 vs 家用等）为“差异较大”；细微差别为“差异较小”；基本一致为“一致”。同时分析材质差异对人群场景的影响。
+4. 分析产品的使用人群与场景：适合哪些人使用？在什么场景下使用？请分别描述两个产品，并给出总结性判断。判断标准：人群类型明显不同（儿童 vs 成人、专业人士 vs 大众等）或场景明显不同（室内 vs 户外、商用 vs 家用等）为“差异较大”；细微差别为“差异较小”；基本一致为“一致”。同时分析材质差异对人群场景的影响。
 5. 对产品进行成本智能判断：基于产品材质、工艺、复杂度、尺寸等，分析产品成本水平（高/中/低），并分析成本差异对功能用途和人群场景的影响。
 6. 然后从以下维度详细对比两个实际产品的差异（忽略拍摄角度、构图、背景、2D/3D渲染效果，不分析材质）。**重点对比形状与轮廓、结构与部件**，图案与装饰仅作参考，颜色完全忽略：
    - 整体目视化差异：先给出定性判断，然后具体描述（主要基于外形）。
@@ -1187,8 +1142,8 @@ ${humanExamples.length > 0 ? humanExamples.map((ex, idx) => `${idx+1}. ${ex}`).j
                     </div>
                     <div class="paste-hint">💡 提示：上传已建产品的实际图片，如有文字说明请填写在上方文本框</div>
                     <div class="pioneer-controls">
-                        <label><input type="radio" name="compareType_${i}" value="non_pioneer" ${data.compareType === 'non_pioneer' ? 'checked' : ''}> 非首创对比</label>
-                        <label><input type="radio" name="compareType_${i}" value="pioneer" ${data.compareType === 'pioneer' ? 'checked' : ''}> 首创对比</label>
+                        <label class="radio-label-highlight"><input type="radio" name="compareType_${i}" value="non_pioneer" ${data.compareType === 'non_pioneer' ? 'checked' : ''}> 非首创对比</label>
+                        <label class="radio-label-highlight"><input type="radio" name="compareType_${i}" value="pioneer" ${data.compareType === 'pioneer' ? 'checked' : ''}> 首创对比 <span class="pioneer-hint">⭐ 首创规则请勾选</span></label>
                         <div id="pioneerFields_${i}" style="display: ${data.compareType === 'pioneer' ? 'flex' : 'none'}; gap: 8px; flex-wrap: wrap;">
                             <label>建SKU时间：</label>
                             <input type="date" id="built_${i}_buildDate" value="${data.buildDate || ''}" style="padding: 4px 8px; border-radius: 8px; border: 1px solid #cbd5e1;">
@@ -1387,18 +1342,6 @@ ${humanExamples.length > 0 ? humanExamples.map((ex, idx) => `${idx+1}. ${ex}`).j
             rebuildBuiltItems(1);
         }
 
-        async function saveHumanReview(recordId, verdict, detailText) {
-            let reviewContent = '';
-            if (verdict === 'pass') {
-                reviewContent = `[通过] ${detailText}`;
-            } else if (verdict === 'fail') {
-                reviewContent = `[不通过] ${detailText}`;
-            } else {
-                reviewContent = detailText;
-            }
-            await updateRecord(recordId, { humanReview: reviewContent });
-        }
-
         async function analyzeWithConfig(config) {
             const unbuiltImageData = config.unbuiltImageData;
             const unbuiltText = config.unbuiltText;
@@ -1410,14 +1353,11 @@ ${humanExamples.length > 0 ? humanExamples.map((ex, idx) => `${idx+1}. ${ex}`).j
             let pioneerFailExists = false;
             let cachedUnbuiltInfo = null;
 
-            // 获取所有人工审核示例（不限数量）
-            const humanExamples = await getAllHumanReviewExamples();
-            
             for (let i = 0; i < builtItemsData.length; i++) {
                 const built = builtItemsData[i];
                 if (!built.imageData) continue;
                 const isPioneer = (built.compareType === 'pioneer');
-                let result = await callDoubaoProductComparison(built.imageData, unbuiltImageData, built.text, unbuiltText, isPioneer, humanExamples);
+                let result = await callDoubaoProductComparison(built.imageData, unbuiltImageData, built.text, unbuiltText, isPioneer);
                 result = enforceGenderAudienceDiff(result);
                 
                 if (unbuiltText) {
@@ -1692,15 +1632,10 @@ ${humanExamples.length > 0 ? humanExamples.map((ex, idx) => `${idx+1}. ${ex}`).j
 
         function renderRecordsList(searchTerm = '') {
             let expandedRecordId = null;
-            const allDetails = document.querySelectorAll('.record-detail');
-            for (let detail of allDetails) {
-                if (detail.style.display === 'block') {
-                    const recordItem = detail.closest('.record-item');
-                    if (recordItem) {
-                        expandedRecordId = recordItem.getAttribute('data-id');
-                        break;
-                    }
-                }
+            const existingExpanded = document.querySelector('.record-detail[style*="display: block"]');
+            if (existingExpanded) {
+                const recordItem = existingExpanded.closest('.record-item');
+                if (recordItem) expandedRecordId = recordItem.getAttribute('data-id');
             }
 
             const container = document.getElementById('recordsList');
@@ -1718,37 +1653,11 @@ ${humanExamples.length > 0 ? humanExamples.map((ex, idx) => `${idx+1}. ${ex}`).j
             filtered.forEach(rec => {
                 const statusText = rec.status === 'analyzing' ? 'AI分析中...' : (rec.isPass ? '通过' : '不通过');
                 const statusClass = rec.status === 'analyzing' ? 'analyzing' : (rec.isPass ? 'pass' : 'fail');
-                const hasReview = rec.humanReview && rec.humanReview.trim() !== '';
-                let existingVerdict = '';
-                let existingDetail = '';
-                if (hasReview) {
-                    const match = rec.humanReview.match(/^\[(通过|不通过)\]\s*(.*)$/);
-                    if (match) {
-                        existingVerdict = match[1] === '通过' ? 'pass' : 'fail';
-                        existingDetail = match[2];
-                    } else {
-                        existingDetail = rec.humanReview;
-                    }
-                }
-                
                 if (rec.summaryHtml) {
                     html += `
                         <div class="record-item" data-id="${rec.id}">
                             ${rec.summaryHtml}
                             ${rec.status === 'failed' ? `<div style="text-align:right; margin-top:8px;"><button class="retry-btn" data-id="${rec.id}">重新分析</button></div>` : ''}
-                            <div class="human-review-section">
-                                <div class="human-review-header" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'block' ? 'none' : 'block'">
-                                    📝 人工审核 ${hasReview ? '<span class="review-saved-badge">已审核</span>' : ''}
-                                </div>
-                                <div class="human-review-content" style="display: none;">
-                                    <div class="review-radio-group">
-                                        <label><input type="radio" name="verdict_${rec.id}" value="pass" ${existingVerdict === 'pass' ? 'checked' : ''}> 通过</label>
-                                        <label><input type="radio" name="verdict_${rec.id}" value="fail" ${existingVerdict === 'fail' ? 'checked' : ''}> 不通过</label>
-                                    </div>
-                                    <textarea class="human-review-textarea" id="review_${rec.id}" placeholder="输入审核详细说明，例如：数量、尺寸差异小，整体差异不足，不可建..." rows="3">${existingDetail}</textarea>
-                                    <button class="save-review-btn" data-id="${rec.id}">保存审核结果</button>
-                                </div>
-                            </div>
                         </div>
                     `;
                 } else {
@@ -1772,31 +1681,17 @@ ${humanExamples.length > 0 ? humanExamples.map((ex, idx) => `${idx+1}. ${ex}`).j
                                 <span class="toggle-icon">▼</span>
                             </div>
                             <div class="record-detail" style="display: none;"></div>
-                            <div class="human-review-section">
-                                <div class="human-review-header" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'block' ? 'none' : 'block'">
-                                    📝 人工审核 ${hasReview ? '<span class="review-saved-badge">已审核</span>' : ''}
-                                </div>
-                                <div class="human-review-content" style="display: none;">
-                                    <div class="review-radio-group">
-                                        <label><input type="radio" name="verdict_${rec.id}" value="pass" ${existingVerdict === 'pass' ? 'checked' : ''}> 通过</label>
-                                        <label><input type="radio" name="verdict_${rec.id}" value="fail" ${existingVerdict === 'fail' ? 'checked' : ''}> 不通过</label>
-                                    </div>
-                                    <textarea class="human-review-textarea" id="review_${rec.id}" placeholder="输入审核详细说明，例如：数量、尺寸差异小，整体差异不足，不可建..." rows="3">${existingDetail}</textarea>
-                                    <button class="save-review-btn" data-id="${rec.id}">保存审核结果</button>
-                                </div>
-                            </div>
                         </div>
                     `;
                 }
             });
             container.innerHTML = html;
-            
             container.querySelectorAll('.record-item').forEach(item => {
                 const summary = item.querySelector('.record-summary');
                 const detail = item.querySelector('.record-detail');
                 if (summary && detail) {
                     summary.addEventListener('click', (e) => {
-                        if (e.target.classList.contains('retry-btn') || e.target.closest('.save-review-btn') || e.target.closest('.human-review-header')) return;
+                        if (e.target.classList.contains('retry-btn')) return;
                         const isHidden = detail.style.display === 'none';
                         detail.style.display = isHidden ? 'block' : 'none';
                         summary.querySelector('.toggle-icon').textContent = isHidden ? '▲' : '▼';
@@ -1813,38 +1708,7 @@ ${humanExamples.length > 0 ? humanExamples.map((ex, idx) => `${idx+1}. ${ex}`).j
                         }
                     });
                 }
-                const saveBtn = item.querySelector('.save-review-btn');
-                if (saveBtn) {
-                    saveBtn.addEventListener('click', async (e) => {
-                        e.stopPropagation();
-                        const recordId = saveBtn.dataset.id;
-                        const radioGroup = item.querySelector(`.review-radio-group`);
-                        const selectedRadio = radioGroup.querySelector('input:checked');
-                        const verdict = selectedRadio ? selectedRadio.value : '';
-                        const textarea = item.querySelector(`.human-review-textarea`);
-                        const detailText = textarea.value.trim();
-                        if (!verdict) {
-                            alert('请选择通过/不通过');
-                            return;
-                        }
-                        await saveHumanReview(recordId, verdict, detailText);
-                        const header = item.querySelector('.human-review-header');
-                        if (verdict && detailText) {
-                            if (!header.querySelector('.review-saved-badge')) {
-                                const badge = document.createElement('span');
-                                badge.className = 'review-saved-badge';
-                                badge.textContent = '已审核';
-                                header.appendChild(badge);
-                            }
-                        } else {
-                            const badge = header.querySelector('.review-saved-badge');
-                            if (badge) badge.remove();
-                        }
-                        alert('人工审核结果已保存，后续分析将学习此案例');
-                    });
-                }
             });
-            
             if (expandedRecordId) {
                 const targetItem = container.querySelector(`.record-item[data-id="${expandedRecordId}"]`);
                 if (targetItem) {
@@ -1918,8 +1782,7 @@ ${humanExamples.length > 0 ? humanExamples.map((ex, idx) => `${idx+1}. ${ex}`).j
                 })),
                 productName: '',
                 unbuiltImageData: unbuiltImageData,
-                builtImagesData: builtItemsData.map(b => b.imageData),
-                humanReview: ''
+                builtImagesData: builtItemsData.map(b => b.imageData)
             };
             await addRecord(tempRecord);
 
