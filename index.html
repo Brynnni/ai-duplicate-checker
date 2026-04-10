@@ -71,7 +71,6 @@
             align-items: center;
             flex-wrap: wrap;
         }
-        /* 蓝色重点标识样式 - 增大字号 */
         .blue-hint {
             color: #1e40af;
             font-size: 14px;
@@ -90,7 +89,6 @@
             border-radius: 16px;
             margin-left: 8px;
         }
-        /* 带蓝色底色的标签样式 */
         .highlight-label {
             background: #dbeafe;
             padding: 4px 12px;
@@ -755,13 +753,23 @@
             return Math.round(value) + '%';
         }
 
+        // 增强的数量解析函数
         function parseQuantity(quantityStr) {
             const s = safeString(quantityStr);
             if (!s) return { value: null, status: 'none', reason: '' };
             if (s.includes('点胶')) {
                 return { value: null, status: 'ignore', reason: '含点胶数量，已忽略' };
             }
-            const matches = [...s.matchAll(/(\d+(?:\.\d+)?)\s*(?:个|张)/g)];
+            // 匹配“共X件”、“总计X个”等
+            const chineseMatch = s.match(/(?:共|总计|合计)\s*(\d+(?:\.\d+)?)\s*(?:件|个|套|条|把)/);
+            if (chineseMatch) {
+                const val = parseFloat(chineseMatch[1]);
+                if (!isNaN(val)) {
+                    return { value: val, status: 'ok', reason: `从“${chineseMatch[0]}”提取数量${val}` };
+                }
+            }
+            // 匹配所有“数字+个/张/条/把”
+            const matches = [...s.matchAll(/(\d+(?:\.\d+)?)\s*(?:个|张|条|把|件|套)/g)];
             if (matches.length > 1) {
                 const values = matches.map(m => parseFloat(m[1]));
                 const allSame = values.every(v => v === values[0]);
@@ -771,22 +779,17 @@
                     return { value: null, status: 'ambiguous', reason: '组合产品各组件数量不一致，不便计算数量差异' };
                 }
             }
-            const comboMatch = s.match(/(\d+(?:\.\d+)?)\s*个\s*[^和]+和\s*(\d+(?:\.\d+)?)\s*个\s*[^为]+为一套/);
-            if (comboMatch) {
-                const num1 = parseFloat(comboMatch[1]);
-                const num2 = parseFloat(comboMatch[2]);
-                if (num1 === num2) {
-                    return { value: num1, status: 'ok', reason: `组合产品，${num1}套` };
-                } else {
-                    return { value: null, status: 'ambiguous', reason: '组合产品组件数量不匹配，不便计算数量差异' };
-                }
-            }
+            // 常规单个
             let cardMatch = s.match(/(\d+(?:\.\d+)?)\s*张/);
             if (cardMatch) return { value: parseFloat(cardMatch[1]), status: 'ok', reason: '' };
             let pieceMatch = s.match(/(\d+(?:\.\d+)?)\s*个/);
             if (pieceMatch) return { value: parseFloat(pieceMatch[1]), status: 'ok', reason: '' };
             let setMatch = s.match(/(\d+(?:\.\d+)?)\s*套/);
             if (setMatch) return { value: parseFloat(setMatch[1]), status: 'ok', reason: '' };
+            let stripMatch = s.match(/(\d+(?:\.\d+)?)\s*条/);
+            if (stripMatch) return { value: parseFloat(stripMatch[1]), status: 'ok', reason: '' };
+            let handleMatch = s.match(/(\d+(?:\.\d+)?)\s*把/);
+            if (handleMatch) return { value: parseFloat(handleMatch[1]), status: 'ok', reason: '' };
             let simple = s.match(/(\d+(?:\.\d+)?)/);
             if (simple) return { value: parseFloat(simple[1]), status: 'ok', reason: '' };
             return { value: null, status: 'none', reason: '未识别数量' };
@@ -843,13 +846,15 @@
             return num;
         }
 
+        // 修改尺寸差异判断：只保留绝对差值小于4cm为微小，去掉相对差异小于10%的条件
         function calcSingleDimDiff(builtVal, unbuiltVal) {
             const bCm = convertToCm(builtVal);
             const uCm = convertToCm(unbuiltVal);
             if (bCm === null || uCm === null || bCm === 0) return null;
             const absDiffCm = Math.abs(uCm - bCm);
+            // 微小差异条件：绝对差值 < 4cm
+            if (absDiffCm < 4) return null;
             const diffPercent = absDiffCm / bCm * 100;
-            if (diffPercent < 10 || absDiffCm < 4) return null;
             return diffPercent;
         }
 
@@ -932,6 +937,7 @@
             return result;
         }
 
+        // 豆包API调用（完整prompt，已包含数量提取规则）
         async function callDoubaoProductComparison(imgBase64A, imgBase64B, textA, textB, isPioneer = false) {
             const base64A = imgBase64A.split(',')[1];
             const base64B = imgBase64B.split(',')[1];
@@ -942,12 +948,17 @@
 
 你必须严格按照这种逻辑理解实际款式，优先采纳产品方案文字，忽略图片视觉上不一致的误导。
 
+**关于数量的提取规则（极其重要）**：
+- 对于由多个组件组成的组合产品（例如“12个鸡蛋 + 12个木片 + 12个袋子”），数量应取单个组件的数量，即 **12**，严禁将所有组件的数量相加（如 12+12+12=36）。
+- 如果各组件数量相同，数量字段应填写“12个”；如果数量不同，则标记为“未识别数量”。
+- 请严格遵守此规则，不要输出相加后的总数。
+
 任务：
 
 1. 识别图片中的产品形态、图案、结构，以及图片中可能出现的文字描述（如“做成右边灯笼款式”、“数量10个”、“1套12个”等）。数量描述中若出现“X套Y个”，实际数量应为Y个（总个数），而不是套数。
 2. 对于每个产品，请提取以下信息（如有，若没有则标注“未识别”）：
    - 产品简短描述（30字以内，概括理解后的款式、特征，必须基于产品方案文字优先，再结合图片文字综合判断）
-   - 数量：提取实际总数量（数字+单位，例如“12个”）。如果出现“1套12个”，则数量为“12个”。
+   - 数量：提取实际总数量（数字+单位，例如“12个”）。如果出现“1套12个”，则数量为“12个”。**组合产品取单个组件的数量，不要相加。**
    - 尺寸：请根据产品形状，尽可能提取关键维度的数值，格式为对象。例如：
        * 长方体/立方体：{"length": "30cm", "width": "20cm", "height": "10cm"}
        * 圆形/圆柱：{"diameter": "15cm", "height": "20cm"}
@@ -968,12 +979,17 @@
             if (isPioneer) {
                 prompt = `请对比以下两张产品图片（分别对应【已建产品】和【未建产品】），结合可能提供的文字说明，分析两个产品的实际产品设计差异。**重点分析产品的款式（外形特征）**，即整体形状、轮廓、结构、组合方式等。**忽略颜色差异**，**对图案装饰的差异权重降至最低**。你需要结合用户输入的【产品方案】文字说明和图片中的文字描述，判断最终产品的实际款式。**再次强调：必须优先采纳产品方案文字**，如果产品方案明确写了款式（如“扇形边壁挂篮”），则以此为准，即使图片视觉看起来不同。
 
+**关于数量的提取规则（极其重要）**：
+- 对于由多个组件组成的组合产品（例如“12个鸡蛋 + 12个木片 + 12个袋子”），数量应取单个组件的数量，即 **12**，严禁将所有组件的数量相加（如 12+12+12=36）。
+- 如果各组件数量相同，数量字段应填写“12个”；如果数量不同，则标记为“未识别数量”。
+- 请严格遵守此规则，不要输出相加后的总数。
+
 任务：
 
 1. 识别图片中的产品形态、结构，以及图片中可能出现的文字描述（如“做成右边灯笼款式”、“扇形边”等），这些文字是对最终产品款式的指示。请结合图片、文字和产品方案，理解实际要做的产品款式。
 2. 对于每个产品，请提取以下信息（如有，若没有则标注“未识别”）：
    - 产品简短描述（30字以内，重点概括款式、外形特征，例如“扇形边壁挂篮”）
-   - 数量：提取实际总数量（数字+单位，例如“12个”）。如果出现“1套12个”，则数量为“12个”。
+   - 数量：提取实际总数量（数字+单位，例如“12个”）。如果出现“1套12个”，则数量为“12个”。**组合产品取单个组件的数量，不要相加。**
    - 尺寸：请根据产品形状，尽可能提取关键维度的数值，格式为对象。例如：
        * 长方体/立方体：{"length": "30cm", "width": "20cm", "height": "10cm"}
        * 圆形/圆柱：{"diameter": "15cm", "height": "20cm"}
@@ -1106,6 +1122,7 @@
             });
         }
 
+        // ---------- 动态生成已建卡片 ----------
         let builtItems = {};
         let currentBuiltCount = 1;
         const builtArea = document.getElementById('builtArea');
@@ -1251,6 +1268,7 @@
             updatePioneerFields();
         }
 
+        // 未建交互
         const unbuilt = {
             imageDataUrl: null,
             compressedBase64: null,
@@ -1342,6 +1360,7 @@
             rebuildBuiltItems(1);
         }
 
+        // 执行分析（强制数量修正）
         async function analyzeWithConfig(config) {
             const unbuiltImageData = config.unbuiltImageData;
             const unbuiltText = config.unbuiltText;
@@ -1360,6 +1379,7 @@
                 let result = await callDoubaoProductComparison(built.imageData, unbuiltImageData, built.text, unbuiltText, isPioneer);
                 result = enforceGenderAudienceDiff(result);
                 
+                // 强制修正数量（基于原始文本）
                 if (unbuiltText) {
                     const correctUnbuilt = parseQuantity(unbuiltText);
                     if (correctUnbuilt.status === 'ok' && correctUnbuilt.value !== null) {
@@ -1723,6 +1743,7 @@
             }
         }
 
+        // 初始化
         initUnbuilt();
         for (let i = 1; i <= 1; i++) {
             builtItems[`built_${i}`] = { imageDataUrl: null, compressedBase64: null, text: '', compareType: 'non_pioneer', buildDate: '', productType: 'regular' };
