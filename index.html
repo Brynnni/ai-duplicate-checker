@@ -243,21 +243,23 @@
         else if(uPrice!==null) priceInfo=`\n用户提供价格：未建 $${uPrice}，已建未知。`;
         else priceInfo=`\n用户未提供价格。`;
 
-        const marketHint=`\n**市场元素识别**：若图片中出现“十字架”“四叶草”等元素，即使方案未写明，也需识别对应市场（宗教/爱尔兰节等），并在竞争分析中体现。`;
+        const marketHint=`\n**市场元素识别**：若图片中出现明显的特定市场元素（如“十字架”“四叶草”等暗示宗教/爱尔兰节等市场的元素），必须在竞争分析中识别并讨论对应的细分市场。如果产品中不包含任何宗教、节日、特殊人群指向的元素，则不要在分析中主动提及“无特殊元素”之类的否定陈述——只描述确实存在的市场特征。`;
         const consistencyRule = `\n**重要一致性要求**：
 - 竞争程度判定与细分市场差异结论必须逻辑自洽。
 - 如果竞争程度为“高度竞争”或“较高竞争”，则细分市场差异必须为“较小”或“无明显差异”。
 - 如果细分市场差异为“较大”，则竞争程度不能是“高度竞争”或“较高竞争”。
 - 请确保两段分析的目标受众、使用场景等描述不互相矛盾。`;
+        const noMetaComment = `\n**输出风格约束**：不要在分析内容中包含关于自身分析逻辑是否自洽的评论，例如“与较高竞争的判定逻辑完全自洽”“逻辑一致”等元分析语句，只输出实质性的分析内容。`;
+        const competitionFocusRule = `\n**竞争分析聚焦约束**：上架竞争程度分析必须严格限定在【未建产品】与【已建产品】两个独立产品之间的直接竞争关系。禁止分析“同类产品供给量”“同质化产品是否泛滥”“同款式产品供应商数量”“市场是否空白”“价格战程度”“商家操作空间”等宏观市场状况。只需基于双方的目标市场、价格、功能、使用场景、差异化程度来判断竞争强度。`;
 
-        let prompt=`对比已建与未建产品图片及文字。优先采纳产品方案文字。${marketHint}${consistencyRule}
+        let prompt=`对比已建与未建产品图片及文字。优先采纳产品方案文字。${marketHint}${consistencyRule}${noMetaComment}${competitionFocusRule}
 数量提取：组合产品取单个组件数量，勿相加；若组件数量不同则标“未识别数量”。${priceInfo}
 竞争程度分5级：高度/较高/一般/较低/无竞争。详细分析(≥150字)。细分市场差异分析以“细分市场差异：较大/较小/无明显差异”开头(≥80字)。
 任务：1.提取产品描述(30字内)、数量、尺寸、颜色、材质、成本水平。
 2.核心功能用途总结。3.人群场景总结。4.对比整体目视化、形状轮廓、图案装饰、结构部件。
 5.总结(20-40字)及外观差异百分比(0-100)。6.竞争程度等级与分析。7.细分市场差异分析。`;
 
-        if(isPioneer) prompt=`对比产品款式（外形），忽略颜色，图案权重最低。优先采纳方案文字。${marketHint}${consistencyRule}
+        if(isPioneer) prompt=`对比产品款式（外形），忽略颜色，图案权重最低。优先采纳方案文字。${marketHint}${consistencyRule}${noMetaComment}${competitionFocusRule}
 数量规则同上。${priceInfo}
 竞争程度5级。详细分析(≥150字)。细分市场差异分析(≥80字)。
 任务：1.提取描述(30字内)、数量、尺寸、材质、成本。2.功能总结。3.人群总结。4.对比外形(形状轮廓、结构部件为主)。5.总结及外观差异%。6.竞争程度。7.细分市场差异。`;
@@ -427,7 +429,12 @@
             if(res.built_quantity) bAttr.push(`📦 数量：${res.built_quantity}`); if(bSizeStr) bAttr.push(`📏 尺寸：${bSizeStr}`); if(res.built_color) bAttr.push(`🎨 颜色：${res.built_color}`); if(res.built_material) bAttr.push(`🔧 材质：${res.built_material}`); if(res.built_cost_level) bAttr.push(`💰 成本：${res.built_cost_level}`);
 
             let sizeDisp=''; if(sizeReason==='未识别') sizeDisp='<div>尺寸差异 = 未识别</div>'; else if(sizeReason==='微小') sizeDisp='<div>尺寸差异 = 微小</div>'; else if(sizeReason==='复杂组合产品') sizeDisp='<div>尺寸差异 = 复杂组合产品，不参与计算</div>'; else sizeDisp=`<div>尺寸差异（显著维度平均） = ${formatPercent(sizeDiff)}</div>`;
-            let qDisp=''; if(skipQ&&qReason==='复杂组合产品，不参与计算') qDisp='<div>数量差异 = 复杂组合产品，不参与计算</div>'; else if(skipQ&&qReason.includes('组合产品无明确数量配套关系')) qDisp='<div>数量差异 = 组合产品无明确数量配套关系，不参与计算</div>'; else if(qReason) qDisp=`<div>数量差异 = ${qReason}</div>`; else if(qDiff!==null) qDisp=`<div>数量差异 = |${extractNumber(res.unbuilt_quantity)} - ${extractNumber(res.built_quantity)}| / ${extractNumber(res.built_quantity)} × 100% = ${formatPercent(qDiff)}</div>`; else qDisp='<div>数量差异 = 数据缺失</div>';
+            let qDisp=''; 
+            if(skipQ && qReason==='复杂组合产品，不参与计算') qDisp='<div>数量差异 = 复杂组合产品，不参与计算</div>'; 
+            else if(skipQ && qReason.includes('组合产品无明确数量配套关系')) qDisp='<div>数量差异 = 组合产品无明确数量配套关系，不参与计算</div>'; 
+            else if(qReason) qDisp=`<div>数量差异 = ${qReason}</div>`; 
+            else if(qDiff !== null && !isNaN(qDiff)) qDisp=`<div>数量差异 = |${extractNumber(res.unbuilt_quantity)} - ${extractNumber(res.built_quantity)}| / ${extractNumber(res.built_quantity)} × 100% = ${formatPercent(qDiff)}</div>`; 
+            else qDisp='<div>数量差异 = 数据缺失</div>';
 
             const funcHtml=`<div class="diff-item"><div class="diff-label">核心功能与用途</div><div class="diff-desc"><span class="summary-badge">${res.function_usage_summary?res.function_usage_summary.split('。')[0]:'分析中'}</span>${(!res.function_usage_summary||!res.function_usage_summary.includes('一致'))?`<br><strong>未建：</strong> ${res.unbuilt_function_usage||'—'}<br><strong>已建：</strong> ${res.built_function_usage||'—'}`:''}</div></div>`;
             const sceneHtml=`<div class="diff-item"><div class="diff-label">使用人群与场景</div><div class="diff-desc"><span class="summary-badge">${res.scene_audience_summary?res.scene_audience_summary.split('。')[0]:'分析中'}</span>${(!res.scene_audience_summary||!res.scene_audience_summary.includes('一致'))?`<br><strong>未建：</strong> ${res.unbuilt_scene_audience||'—'}<br><strong>已建：</strong> ${res.built_scene_audience||'—'}`:''}</div></div>`;
