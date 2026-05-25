@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>AI查重助手 v1.0</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; font-family:"Microsoft YaHei","Segoe UI",Arial,sans-serif; }
+        body { width:100%; max-width:1200px; margin:0 auto; padding:30px 20px; background:#f8fafc; }
+        .container { display:flex; flex-direction:column; gap:24px; }
+        h1 { text-align:center; color:#0f172a; font-size:28px; }
+        .version-badge { font-size:14px; background:#eef2ff; padding:2px 12px; border-radius:30px; margin-left:10px; }
+        .comparison-card { background:white; border-radius:24px; box-shadow:0 4px 12px rgba(0,0,0,0.08); overflow:hidden; }
+        .card-header { background:#f1f5f9; padding:12px 20px; font-weight:bold; font-size:18px; border-bottom:1px solid #e2e8f0; display:flex; align-items:center; gap:12px; }
+        .card-header label { font-weight:500; }
+        .card-header input { padding:4px 8px; border-radius:30px; border:1px solid #cbd5e1; width:140px; }
+        .card-content { padding:20px; }
+        .config-bar { display:flex; justify-content:flex-end; margin-bottom:20px; gap:20px; align-items:center; flex-wrap:wrap; }
+        .blue-hint { color:#1e40af; font-size:14px; font-weight:500; margin-left:8px; background:#dbeafe; padding:3px 10px; border-radius:20px; display:inline-block; }
+        .highlight-label { background:#dbeafe; padding:4px 12px; border-radius:20px; font-size:15px; font-weight:600; color:#1e40af; display:inline-block; }
+        .radio-label-highlight { background:#dbeafe; padding:4px 12px; border-radius:20px; font-size:15px; font-weight:500; color:#1e40af; display:inline-flex; align-items:center; gap:6px; margin-right:12px; }
+        .compare-layout { display:flex; gap:24px; flex-wrap:wrap; }
+        .unbuilt-area, .built-item { flex:1; min-width:280px; border:2px solid #e2e8f0; border-radius:20px; padding:16px; background:#ffffff; transition:all 0.2s; }
+        .built-area { flex:1; display:flex; flex-direction:column; gap:20px; }
+        .zone.active { border-color:#3b82f6; background:#f0f9ff; }
+        .zone-header { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; }
+        .zone-header h3 { font-size:1.2rem; margin:0; }
+        .text-area { width:100%; height:80px; padding:10px; border:1px solid #cbd5e1; border-radius:14px; resize:vertical; font-size:14px; margin-bottom:12px; }
+        .price-input { margin:8px 0; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+        .price-input label { font-size:13px; font-weight:500; color:#1e40af; background:#dbeafe; padding:2px 8px; border-radius:16px; }
+        .price-input input { width:130px; padding:4px 8px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; }
+        .dropzone { position:relative; height:140px; background:#fafcff; border:1px dashed #94a3b8; border-radius:16px; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+        .preview-img { max-width:100%; max-height:100%; object-fit:contain; display:none; }
+        .instructions { text-align:center; color:#475569; font-size:13px; }
+        .upload-link { color:#2563eb; cursor:pointer; text-decoration:underline; }
+        .delete-img-btn { position:absolute; top:6px; right:6px; background:rgba(0,0,0,0.6); color:white; border:none; border-radius:30px; width:26px; height:26px; font-size:14px; cursor:pointer; display:none; align-items:center; justify-content:center; z-index:10; }
+        .delete-img-btn:hover { background:#dc2626; }
+        .compare-btn { width:100%; padding:12px; background:#1e40af; color:white; border:none; border-radius:40px; font-size:16px; font-weight:bold; cursor:pointer; margin-top:12px; }
+        .compare-btn:disabled { background:#94a3b8; cursor:not-allowed; }
+        .qa-section { background:white; border-radius:24px; box-shadow:0 4px 12px rgba(0,0,0,0.08); overflow:hidden; margin-top:16px; }
+        .qa-header { background:#f1f5f9; padding:12px 20px; font-weight:bold; font-size:18px; border-bottom:1px solid #e2e8f0; }
+        .qa-body { padding:16px 20px; }
+        .qa-input-group { display:flex; gap:12px; margin-bottom:16px; }
+        .qa-input-group input { flex:1; padding:10px 12px; border:1px solid #cbd5e1; border-radius:30px; font-size:14px; }
+        .qa-input-group button { background:#1e40af; color:white; border:none; border-radius:30px; padding:8px 20px; cursor:pointer; }
+        .qa-answer { background:#f9fafb; border-radius:16px; padding:12px; font-size:14px; line-height:1.5; color:#1e293b; border-left:3px solid #3b82f6; }
+        .qa-answer.loading { color:#2563eb; }
+        .history-section { margin-top:24px; background:white; border-radius:24px; box-shadow:0 4px 12px rgba(0,0,0,0.08); overflow:hidden; }
+        .history-header { background:#f1f5f9; padding:12px 20px; font-weight:bold; font-size:18px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; }
+        .search-box { display:flex; gap:8px; align-items:center; }
+        .search-box input { padding:6px 12px; border-radius:30px; border:1px solid #cbd5e1; width:200px; }
+        .search-box button { background:#3b82f6; color:white; border:none; border-radius:30px; padding:6px 16px; cursor:pointer; }
+        .records-list { padding:20px; }
+        .record-item { background:#f9fafb; border-radius:16px; margin-bottom:16px; border:1px solid #e2e8f0; }
+        .record-summary { padding:12px 16px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; background:#ffffff; border-radius:16px; }
+        .record-summary:hover { background:#f1f5f9; }
+        .record-info { display:flex; gap:20px; flex-wrap:wrap; align-items:center; }
+        .image-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+        .thumb { width:50px; height:50px; background:#e2e8f0; border-radius:8px; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+        .thumb img { max-width:100%; max-height:100%; object-fit:cover; }
+        .vs { font-weight:bold; color:#475569; }
+        .record-desc { font-size:13px; color:#334155; }
+        .price-display { font-size:13px; color:#1e40af; background:#e0f2fe; padding:2px 8px; border-radius:16px; display:inline-block; margin-left:12px; }
+        .record-status { font-weight:bold; padding:4px 12px; border-radius:30px; background:#e2e8f0; }
+        .record-status.pass { background:#15803d; color:white; }
+        .record-status.fail { background:#b91c1c; color:white; }
+        .record-status.analyzing { background:#eab308; color:white; }
+        .retry-btn { background:#3b82f6; color:white; border:none; border-radius:30px; padding:4px 12px; font-size:12px; cursor:pointer; }
+        .record-detail { padding:16px; border-top:1px solid #e2e8f0; display:none; background:#f9fafb; }
+        .record-detail.show { display:block; }
+        .clear-history { background:#ef4444; color:white; border:none; border-radius:30px; padding:6px 16px; font-size:13px; cursor:pointer; margin-left:16px; }
+        .product-descriptions { display:flex; gap:20px; margin-bottom:20px; flex-wrap:wrap; }
+        .product-card { flex:1; background:#f1f5f9; border-radius:16px; padding:12px; }
+        .product-card h4 { margin-bottom:8px; font-size:15px; }
+        .product-desc-text { font-size:13px; background:white; padding:10px; border-radius:12px; line-height:1.6; }
+        .product-desc-text .attr { margin-top:6px; padding-top:6px; border-top:1px solid #e2e8f0; font-size:12px; }
+        .product-desc-text .sub-items { margin-top:8px; padding-left:8px; border-left:2px solid #94a3b8; }
+        .product-desc-text .sub-item { padding:2px 0; font-size:12px; color:#334155; }
+        .product-desc-text .sub-item.duplicate-item { background:#fee2e2; border-left:3px solid #ef4444; padding-left:5px; margin:2px 0; border-radius:0 4px 4px 0; }
+        .product-desc-text .sub-item .primary-badge { background:#fbbf24; color:#000; padding:1px 6px; border-radius:12px; margin-left:8px; font-weight:600; font-size:11px; display:inline-block; }
+        .product-desc-text .sub-item .duplicate-badge { background:#ef4444; color:#fff; padding:1px 6px; border-radius:12px; margin-left:8px; font-weight:600; font-size:11px; display:inline-block; }
+        .duplicate-note { font-size:11px; color:#ef4444; margin-top:6px; padding-top:4px; border-top:1px solid #fee2e2; }
+        .dimension-summary { display:flex; justify-content:center; gap:16px; margin-bottom:16px; flex-wrap:wrap; }
+        .dimension-card { background:#f1f5f9; border-radius:16px; padding:12px; text-align:center; min-width:140px; }
+        .dimension-value { font-size:26px; font-weight:800; }
+        .formula-area { background:#f9fafb; border-radius:12px; padding:10px; font-size:12px; font-family:monospace; margin-bottom:16px; }
+        .diff-detail { background:#f9fafb; border-radius:16px; padding:12px; }
+        .diff-item { border-bottom:1px solid #e2e8f0; padding:10px 0; }
+        .diff-label { font-weight:700; margin-bottom:4px; font-size:13px; }
+        .diff-desc { font-size:13px; line-height:1.4; }
+        .product-images-compare { display:flex; gap:16px; margin-bottom:20px; }
+        .product-image-box { flex:1; text-align:center; }
+        .product-image-box img { max-width:100%; max-height:200px; border-radius:12px; border:1px solid #e2e8f0; }
+        .product-image-box p { margin-top:8px; font-weight:500; }
+        .summary-badge { background:#e2e8f0; display:inline-block; padding:2px 8px; border-radius:20px; font-size:13px; font-weight:600; margin-right:8px; }
+        .final-conclusion { background:#fef9e3; border-radius:16px; padding:12px; text-align:center; margin-top:16px; }
+        .conclusion-text { font-size:24px; font-weight:800; }
+        .conclusion-text.pass { color:#15803d; }
+        .conclusion-text.fail { color:#b91c1c; }
+        .loading { text-align:center; padding:20px; color:#2563eb; }
+        .built-item-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+        .built-item-header h4 { font-size:16px; }
+        .pioneer-controls { margin-top:12px; padding-top:12px; border-top:1px solid #e2e8f0; display:flex; gap:16px; flex-wrap:wrap; align-items:center; }
+        .pioneer-controls label { font-size:14px; display:inline-flex; align-items:center; gap:6px; }
+        .pioneer-controls input[type="radio"] { margin:0; }
+        .pioneer-controls input[type="date"] { padding:4px 8px; border-radius:8px; border:1px solid #cbd5e1; }
+        .pioneer-controls select { padding:4px 8px; border-radius:8px; border:1px solid #cbd5e1; }
+        .competition-level-box { background:#f0f9ff; padding:8px 12px; border-radius:12px; margin-bottom:12px; border-left:4px solid #0284c7; }
+        .competition-level-box .label { font-weight:700; color:#0369a1; margin-bottom:6px; font-size:13px; }
+        .competition-analysis-text { margin-bottom:12px; }
+        .submarket-box { background:#e0f2fe; border-left:4px solid #0284c7; padding:10px 12px; border-radius:12px; margin-top:12px; }
+        .submarket-box .label { font-weight:700; color:#0369a1; margin-bottom:6px; font-size:13px; }
+        .submarket-box .content { font-size:13px; line-height:1.5; color:#0c4a6e; }
+        @media (max-width:700px) {
+            .compare-layout { flex-direction:column; }
+            .product-descriptions { flex-direction:column; }
+            .dimension-summary { flex-direction:column; align-items:center; }
+            .record-info { flex-direction:column; align-items:flex-start; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>AI查重助手<span class="version-badge">v1.0</span></h1>
+    <div class="comparison-card">
+        <div class="card-header"><label>新品ID：</label><input type="text" id="newProductId" placeholder="如 2424704"></div>
+        <div class="card-content">
+            <div class="config-bar">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span class="highlight-label">已建数量：</span>
+                    <select id="builtCount"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
+                    <span class="blue-hint">🔹 可调整对比数量</span>
+                </div>
+            </div>
+            <div class="compare-layout">
+                <div class="unbuilt-area">
+                    <div class="zone-header"><h3>📦 未建</h3></div>
+                    <textarea placeholder="输入产品方案" class="text-area" id="unbuiltText"></textarea>
+                    <div class="price-input"><label>💰 价格 (美元)</label><input type="number" step="0.01" id="unbuiltPrice" placeholder="如 19.99（选填）"></div>
+                    <div class="dropzone" id="unbuiltDropzone">
+                        <img id="unbuiltPreview" class="preview-img">
+                        <div class="instructions" id="unbuiltInstructions">拖拽图片到此 或 Ctrl+V 粘贴<br><span class="upload-link" id="unbuiltUploadBtn">点击上传</span></div>
+                        <button class="delete-img-btn" id="unbuiltDeleteBtn" style="display:none;">✕</button>
+                        <input type="file" accept="image/*" id="unbuiltFileInput" style="display:none">
+                    </div>
+                </div>
+                <div class="built-area" id="builtArea"></div>
+            </div>
+            <button class="compare-btn" id="compareBtn">🔍 启动AI对比分析</button>
+        </div>
+    </div>
+    <div class="qa-section">
+        <div class="qa-header">💬 AI智能问答</div>
+        <div class="qa-body">
+            <div class="qa-input-group"><input type="text" id="qaQuestion" placeholder="输入您的问题，例如：炻器是否属于陶瓷材质？"><button id="qaAskBtn">提问</button></div>
+            <div id="qaAnswer" class="qa-answer" style="display:none;"></div>
+        </div>
+    </div>
+    <div class="history-section">
+        <div class="history-header">
+            <span>📋 查重记录</span>
+            <div class="search-box">
+                <input type="text" id="historySearchInput" placeholder="按新品ID搜索">
+                <button id="historySearchBtn">搜索</button>
+                <button id="historyResetBtn">重置</button>
+                <button class="clear-history" id="clearHistoryBtn">清空记录</button>
+            </div>
+        </div>
+        <div id="recordsList" class="records-list"></div>
+    </div>
+</div>
+<script>
+(function(){
+    "use strict";
+
+    // ---------- API 配置 ----------
+    const DOUBAO_API_KEY = "fbcfcc90-d805-42a1-9424-f983f423c09a";
+    const DOUBAO_ENDPOINT_ID = "ep-20260320164842-rsqff";
+    const DOUBAO_URL = "https://ark.cn-beijing.volces.com/api/v3/chat/completions";
+
+    const DB_NAME = "AIChatHistoryDB", DB_VERSION = 2, STORE_NAME = "records";
+    let historyRecords = [], db = null;
+
+    // ---------- IndexedDB 操作 ----------
+    function openDB() { return new Promise((resolve, reject) => { if (db && db.name === DB_NAME) { resolve(db); return; } const r = indexedDB.open(DB_NAME, DB_VERSION); r.onerror = e => reject(e.target.error); r.onsuccess = e => { db = e.target.result; resolve(db); }; r.onupgradeneeded = e => { const db = e.target.result; if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME, { keyPath: "id" }); }; }); }
+    async function loadHistory() { try { const database = await openDB(); const tx = database.transaction(STORE_NAME, "readonly"); const store = tx.objectStore(STORE_NAME); const req = store.getAll(); const rec = await new Promise((res, rej) => { req.onsuccess = () => res(req.result); req.onerror = () => rej(req.error); }); rec.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)); historyRecords = rec; renderRecordsList(); } catch (e) { console.error(e); historyRecords = []; renderRecordsList(); } }
+    async function saveHistory() { try { const database = await openDB(); const tx = database.transaction(STORE_NAME, "readwrite"); const store = tx.objectStore(STORE_NAME); await new Promise((res, rej) => { const cr = store.clear(); cr.onsuccess = () => res(); cr.onerror = () => rej(cr.error); }); for (const r of historyRecords) store.add(r); await new Promise((res, rej) => { tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error); }); } catch (e) { console.error(e); } }
+    async function addRecord(r) { historyRecords.unshift(r); await saveHistory(); renderRecordsList(); }
+    async function updateRecord(id, upd) { const idx = historyRecords.findIndex(r => r.id === id); if (idx !== -1) { historyRecords[idx] = { ...historyRecords[idx], ...upd }; await saveHistory(); renderRecordsList(); } }
+    async function clearHistory() { historyRecords = []; await saveHistory(); renderRecordsList(); }
+
+    // ---------- 辅助函数 ----------
+    function safeString(s) { return typeof s === 'string' ? s : ''; }
+    function formatPercent(v) { if (v === null || v === undefined) return '—'; if (v > 100) return '100%+'; return Math.round(v) + '%'; }
+    
+    // 强化总数提取：优先“X款共Y个”等表述
+    function extractPrimaryQuantity(text) {
+        const s = safeString(text);
+        if (!s) return null;
+        let m = s.match(/\d+\s*(?:款|件|个|套|包|盒|箱|组)\s*[共总计合计一共总共]+\s*(\d+)\s*(?:件|个|张|条|把|套|片|包|支|枝|束|只|卷)/i);
+        if (m) return parseFloat(m[1]);
+        m = s.match(/(?:共|总计|合计|一共|总共)\s*(\d+(?:\.\d+)?)\s*(?:件|个|张|条|把|套|片|包|支|枝|束|只|卷|款|种|类)/i);
+        if (m) return parseFloat(m[1]);
+        m = s.match(/(?:共|总计|合计|一共|总共)?\s*(\d+(?:\.\d+)?)\s*(?:件|个|张|条|把|套|片|包|支|枝|束|只|卷|款|种|类)\s*(?:打包|一套|一组|一盒|一包|一箱|装|组合)/i);
+        if (m) return parseFloat(m[1]);
+        m = s.match(/(\d+(?:\.\d+)?)\s*(?:件|个|张|条|把|套|片|包|支|枝|束|只|卷|款|种|类)\s*(?:，|。|$)/);
+        if (m) return parseFloat(m[1]);
+        m = s.match(/(\d+(?:\.\d+)?)\s*(?:件|个|张|条|把|套|片|包|支|枝|束|只|卷|款|种|类)/);
+        if (m) return parseFloat(m[1]);
+        m = s.match(/[：:]\s*(\d+(?:\.\d+)?)\s*(?:件|个|张|条|把|套|片|包|支|枝|束|只|卷|款|种|类)/);
+        if (m) return parseFloat(m[1]);
+        return null;
+    }
+    
+    function extractUnit(text) {
+        const s = safeString(text);
+        const match = s.match(/(?:共|总计|合计|一共|总共)?\s*\d+(?:\.\d+)?\s*([件个张条把套片包支枝束只卷款种类]+)/i);
+        if (match) return match[1];
+        return null;
+    }
+    
+    function convertToCm(input) {
+        if (input === null || input === undefined) return null;
+        if (typeof input === 'number') return input;
+        let str = String(input).trim();
+        if (!str) return null;
+        let m = str.match(/^([\d.]+)\s*(?:''|″|英寸|inch|in)\b/i);
+        if (m) return parseFloat(m[1]) * 2.54;
+        m = str.match(/^([\d.]+)\s*(?:'|′|英尺|ft|foot)\b/i);
+        if (m) return parseFloat(m[1]) * 30.48;
+        m = str.match(/^([\d.]+)\s*(?:cm|厘米)\b/i);
+        if (m) return parseFloat(m[1]);
+        m = str.match(/^([\d.]+)\s*(?:mm|毫米)\b/i);
+        if (m) return parseFloat(m[1]) / 10;
+        m = str.match(/^([\d.]+)\s*(?:m|米)\b/i);
+        if (m) return parseFloat(m[1]) * 100;
+        m = str.match(/^([\d.]+)$/);
+        if (m) return parseFloat(m[1]);
+        return null;
+    }
+    
+    const dimensionMap = {
+        'length': 'length', 'long': 'length', '长': 'length',
+        'width': 'width', 'wide': 'width', '宽': 'width',
+        'height': 'height', 'high': 'height', '高': 'height',
+        'diameter': 'diameter', 'dia': 'diameter', '直径': 'diameter'
+    };
+    
+    function calcSizeDiffStructured(bObj, uObj) {
+        if (!bObj || !uObj) return { diff: null, reason: '未识别', details: [], weightedDetails: [] };
+        const normBuilt = {}, normUnbuilt = {};
+        const bUnit = (bObj.unit || bObj.单位 || '').toLowerCase();
+        const uUnit = (uObj.unit || uObj.单位 || '').toLowerCase();
+        const inchUnits = ['inch', 'inches', 'in', '英寸', '寸'];
+        const bIsInch = inchUnits.some(u => bUnit.includes(u));
+        const uIsInch = inchUnits.some(u => uUnit.includes(u));
+        const bConvert = bIsInch ? 2.54 : 1;
+        const uConvert = uIsInch ? 2.54 : 1;
+        
+        for (let key in bObj) {
+            const normKey = dimensionMap[key.toLowerCase()] || key;
+            if (normKey === 'unit' || normKey === '单位') continue;
+            let val = bObj[key];
+            if (typeof val === 'number') val *= bConvert;
+            else if (typeof val === 'string') { const cm = convertToCm(val); val = (cm !== null) ? cm : null; }
+            if (val !== null && val > 0) normBuilt[normKey] = val;
+        }
+        for (let key in uObj) {
+            const normKey = dimensionMap[key.toLowerCase()] || key;
+            if (normKey === 'unit' || normKey === '单位') continue;
+            let val = uObj[key];
+            if (typeof val === 'number') val *= uConvert;
+            else if (typeof val === 'string') { const cm = convertToCm(val); val = (cm !== null) ? cm : null; }
+            if (val !== null && val > 0) normUnbuilt[normKey] = val;
+        }
+        const builtKeys = Object.keys(normBuilt), unbuiltKeys = Object.keys(normUnbuilt);
+        if (builtKeys.length === 1 && unbuiltKeys.length > 1) {
+            const singleKey = builtKeys[0];
+            const bestKey = unbuiltKeys.find(k => k === singleKey) || unbuiltKeys.find(k => k.includes(singleKey) || singleKey.includes(k)) || (unbuiltKeys.includes('length') ? 'length' : unbuiltKeys[0]);
+            normUnbuilt = { [bestKey]: normUnbuilt[bestKey] };
+        }
+        if (unbuiltKeys.length === 1 && builtKeys.length > 1) {
+            const singleKey = unbuiltKeys[0];
+            const bestKey = builtKeys.find(k => k === singleKey) || builtKeys.find(k => k.includes(singleKey) || singleKey.includes(k)) || (builtKeys.includes('length') ? 'length' : builtKeys[0]);
+            normBuilt = { [bestKey]: normBuilt[bestKey] };
+        }
+        const allKeys = new Set([...Object.keys(normBuilt), ...Object.keys(normUnbuilt)]);
+        let totalWeight = 0, weightedDiffSum = 0;
+        let hasValidDim = false;
+        const details = [], weightedDetails = [];
+        for (let key of allKeys) {
+            const bVal = normBuilt[key], uVal = normUnbuilt[key];
+            if (bVal === undefined || uVal === undefined || bVal === 0) continue;
+            hasValidDim = true;
+            const diffCm = Math.abs(uVal - bVal);
+            const diffPercent = diffCm / bVal * 100;
+            details.push({ key, built: bVal, unbuilt: uVal, diffCm, diffPercent });
+            totalWeight += bVal;
+            weightedDiffSum += diffPercent * bVal;
+            weightedDetails.push({ key, built: bVal, unbuilt: uVal, diffPercent, weight: bVal });
+        }
+        if (!hasValidDim) return { diff: null, reason: '未识别', details: [], weightedDetails: [] };
+        const weightedAvgDiff = totalWeight > 0 ? weightedDiffSum / totalWeight : 0;
+        let allDimsBelowThreshold = true;
+        for (let d of details) { if (d.diffCm >= 4) { allDimsBelowThreshold = false; break; } }
+        if (weightedAvgDiff < 4 && allDimsBelowThreshold) return { diff: null, reason: '微小', details, weightedDetails };
+        return { diff: weightedAvgDiff, reason: null, details, weightedDetails };
+    }
+    
+    const materialCategories = { '金属':['铁','钢','不锈钢','铝','铜','金属','合金','锌合金'], '木材':['木','木质','竹','实木','密度板'], '塑料':['塑料','PP','PVC','ABS','亚克力','树脂','硅胶','橡胶'], '玻璃':['玻璃','钢化玻璃','水晶'], '陶瓷':['陶瓷','瓷','陶','炻器'], '布艺':['布','棉','麻','绒','毛毡'], '纸':['纸','卡纸','牛皮纸'], '其他':[] };
+    function getMaterialCategory(m) { const s = safeString(m); if(!s) return '未知'; for(let [cat,kws] of Object.entries(materialCategories)) if(kws.some(kw=>s.includes(kw))) return cat; return '其他'; }
+
+    function mapCompetitionLevel(level) {
+        if (!level) return '未判定';
+        const lvl = String(level).trim();
+        if (/^[1-5]$/.test(lvl) || lvl.includes('级')) { const num = parseInt(lvl.replace(/[^0-9]/g, '')) || 0; if (num === 1) return '高度竞争'; if (num === 2) return '较高竞争'; if (num === 3) return '一般竞争'; if (num === 4) return '较低竞争'; if (num === 5) return '无竞争'; return '未判定'; }
+        if (lvl.includes('高度')) return '高度竞争';
+        if (lvl.includes('较高')) return '较高竞争';
+        if (lvl.includes('一般')) return '一般竞争';
+        if (lvl.includes('较低')) return '较低竞争';
+        if (lvl.includes('无竞争')) return '无竞争';
+        return lvl;
+    }
+
+    function isInProtection(buildDate, productType) { if (!buildDate) return true; const now = new Date(), build = new Date(buildDate); const months = (now.getFullYear() - build.getFullYear()) * 12 + (now.getMonth() - build.getMonth()); const prot = productType === 'seasonal' ? 12 : 9; return months < prot; }
+
+    function evaluateOutOfProtectionRule(res, builtComps, unbuiltComps, builtHasPrimary, unbuiltHasPrimary, isClothing = false) {
+        const appearDiff = res.overall_percent || 0;
+        const qDiff = Math.abs((parseFloat(res.unbuilt_quantity)||0) - (parseFloat(res.built_quantity)||0)) / (parseFloat(res.built_quantity)||1) * 100;
+        const sizeResult = calcSizeDiffStructured(res.built_size, res.unbuilt_size);
+        const sizeDiff = sizeResult.diff; const colorDiff = (res.built_color !== res.unbuilt_color) ? 100 : 0;
+        const isMultiComponent = (builtComps && builtComps.length > 1) || (unbuiltComps && unbuiltComps.length > 1);
+        const overlapRatio = res.component_overlap_ratio || 0;
+        if (!isMultiComponent) {
+            const dims = []; if (qDiff>0) dims.push({name:'数量',diff:qDiff}); if (colorDiff>0) dims.push({name:'颜色',diff:colorDiff}); if (sizeDiff&&sizeDiff>0) dims.push({name:'尺寸',diff:sizeDiff}); if (appearDiff>0) dims.push({name:'图案',diff:appearDiff});
+            const significantDims = dims.filter(d=>d.diff>=50);
+            if (significantDims.length>=1 && dims.length>=2) return {pass:true, reason:`满足2个维度差异且其中一个维度≥50% (${significantDims.map(d=>d.name).join('、')})`};
+            if (dims.some(d=>d.diff>=50)) return {pass:true, reason:`与已建产品对比满足某一维度差异≥50%`};
+            return {pass:false, reason:`单品单维度不满足条件`};
+        }
+        const dims = [appearDiff,qDiff,sizeDiff,colorDiff].filter(v=>!isNaN(v)&&v>0);
+        const maxDim = Math.max(...dims,0), sumDim = dims.reduce((a,b)=>a+b,0);
+        const hasAny50 = dims.some(d=>d>=50), allBelow50 = dims.every(d=>d<50);
+        if (allBelow50 && sumDim < 50) return {pass:false, reason:`所有维度<50%且综合<50%`};
+        if (allBelow50 && sumDim >= 50) { if (overlapRatio > 0.5) return {pass:false, reason:`所有维度<50%但综合≥50%，重复度${Math.round(overlapRatio*100)}%>50%，不通过`}; else return {pass:true, reason:`所有维度<50%但综合≥50%，且重复度≤50%，通过`}; }
+        if (hasAny50) return {pass:true, reason:`存在某一维度差异≥50%`};
+        if (isClothing) { if (maxDim>=50) return {pass:true, reason:`服装产品最大维度差异≥50%`}; else return {pass:false, reason:`服装产品最大维度差异不足50%`}; }
+        if (isMultiComponent) {
+            const hasPrimary = builtHasPrimary || unbuiltHasPrimary;
+            if (!hasPrimary) { if (overlapRatio<=0.5) return {pass:true, reason:`不区分主次组合，款式重复度≤50%`}; const repeatPortion = overlapRatio; if (repeatPortion<=0.5) return {pass:true, reason:`重复款数量占比≤50%`}; else return {pass:false, reason:`重复款数量占比>50%`}; }
+            else { const combinedDiff = (appearDiff + (isNaN(qDiff)?0:qDiff) + (sizeDiff||0)) / 3; if (combinedDiff>=50) return {pass:true, reason:`区分主次组合，综合差异度≥50%`}; else return {pass:false, reason:`区分主次组合，综合差异度<50%`}; }
+        }
+        return {pass:false, reason:`未满足任何通过条件`};
+    }
+
+    function safeParseJSON(str) {
+        str = str.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+        if (str.charCodeAt(0) === 0xFEFF) str = str.slice(1);
+        const firstBrace = str.indexOf('{'), lastBrace = str.lastIndexOf('}');
+        if (firstBrace === -1 || lastBrace === -1) throw new Error('未找到JSON对象');
+        let jsonStr = str.substring(firstBrace, lastBrace + 1);
+        jsonStr = jsonStr.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+        jsonStr = jsonStr.replace(/[\n\r\t]/g, ' ');
+        jsonStr = jsonStr.replace(/([{,]\s*)([a-zA-Z0-9_]+)(\s*:)/g, '$1"$2"$3');
+        jsonStr = jsonStr.replace(/:\s*([a-zA-Z\u4e00-\u9fa5][a-zA-Z0-9\u4e00-\u9fa5\s]*)(,|\n|})/g, (_, p1, p2) => (p1 === 'true' || p1 === 'false' || p1 === 'null' || !isNaN(p1)) ? `:${p1}${p2}` : `: "${p1.trim()}"${p2}`);
+        jsonStr = jsonStr.replace(/'([^'\\]*(\\.[^'\\]*)*)'/g, (_, inner) => '"' + inner.replace(/"/g, '\\"') + '"');
+        jsonStr = jsonStr.replace(/:\s*"([^"]*?)"([^,}\]]*?)"/g, (_, p1, p2) => ': "' + p1 + p2.replace(/"/g, '\\"') + '"');
+        jsonStr = jsonStr.replace(/,(\s*[}\]])/g, '$1');
+        try { return JSON.parse(jsonStr); } catch (e) { try { return (new Function('return (' + jsonStr + ');'))(); } catch (e2) { throw new Error('JSON解析失败'); } }
+    }
+
+    function areCostsSimilar(components) { if (!components || components.length < 2) return true; const costOrder = { '高':3, '中高':2.5, '中':2, '中低':1.5, '低':1 }; const levels = components.map(c => costOrder[c.cost_level] || 2); return (Math.max(...levels) - Math.min(...levels)) < 0.5; }
+    function hasSinglePrimary(components) { if (!components || components.length === 0) return false; if (areCostsSimilar(components)) return false; const costOrder = { '高':3, '中高':2.5, '中':2, '中低':1.5, '低':1 }; let maxLevel = -1, primaryCount = 0; components.forEach(c => { const level = costOrder[c.cost_level] || 0; if (level > maxLevel) { maxLevel = level; primaryCount = 1; } else if (level === maxLevel) primaryCount++; }); return primaryCount === 1; }
+    function getPrimaryComponentName(components) { if (!components || components.length === 0) return null; const costOrder = { '高':3, '中高':2.5, '中':2, '中低':1.5, '低':1 }; let maxLevel = -1, primary = null; components.forEach(c => { const level = costOrder[c.cost_level] || 0; if (level > maxLevel) { maxLevel = level; primary = c; } }); return primary ? (primary.name || primary.color || '组件') : null; }
+    function normalizePrimaryConsistency(builtComps, unbuiltComps) { const builtHasSingle = hasSinglePrimary(builtComps); const unbuiltHasSingle = hasSinglePrimary(unbuiltComps); if (!builtHasSingle || !unbuiltHasSingle) return { builtPrimary: false, unbuiltPrimary: false }; const builtPrimaryName = getPrimaryComponentName(builtComps); const unbuiltPrimaryName = getPrimaryComponentName(unbuiltComps); const isSameType = builtPrimaryName && unbuiltPrimaryName && (builtPrimaryName.includes(unbuiltPrimaryName) || unbuiltPrimaryName.includes(builtPrimaryName)); if (!isSameType) return { builtPrimary: false, unbuiltPrimary: false }; return { builtPrimary: true, unbuiltPrimary: true }; }
+
+    // 修复尺寸显示：支持字符串值带单位
+    function formatSize(sizeObj, globalUnit = 'cm') {
+        if (sizeObj === null || sizeObj === undefined) return '-';
+        if (typeof sizeObj === 'string') {
+            let str = sizeObj.trim();
+            if (str === '' || str === '[object Object]') return '-';
+            const numbers = str.match(/[\d.]+/g);
+            if (!numbers || numbers.length === 0) return '-';
+            let unit = '';
+            if (str.includes('英寸') || str.includes('inch')) unit = '英寸';
+            else if (str.includes('英尺') || str.includes('ft')) unit = '英尺';
+            else if (str.includes('厘米') || str.includes('cm')) unit = 'cm';
+            else if (str.includes('寸')) unit = '寸';
+            if (!unit) unit = globalUnit;
+            return numbers.join('×') + unit;
+        }
+        if (typeof sizeObj === 'object') {
+            const dims = [];
+            const order = ['length', 'width', 'height', 'diameter', '长', '宽', '高', '直径'];
+            // 收集所有维度的原始值（可能包含单位字符串）
+            let rawValues = [];
+            for (let key of order) {
+                let val = sizeObj[key];
+                if (val !== undefined && val !== null) rawValues.push(val);
+            }
+            if (rawValues.length === 0) {
+                for (let key in sizeObj) {
+                    if (key === 'unit' || key === '单位') continue;
+                    rawValues.push(sizeObj[key]);
+                }
+            }
+            if (rawValues.length === 0) return '-';
+            // 处理每个值，提取数字和单位
+            const displayParts = [];
+            let overallUnit = '';
+            for (let val of rawValues) {
+                if (typeof val === 'number') {
+                    displayParts.push(val);
+                } else if (typeof val === 'string') {
+                    const match = val.match(/^([\d.]+)\s*([a-zA-Z]*)$/);
+                    if (match) {
+                        displayParts.push(parseFloat(match[1]));
+                        const u = match[2].toLowerCase();
+                        if (u && !overallUnit) {
+                            if (u === 'ft' || u === 'feet') overallUnit = '英尺';
+                            else if (u === 'in' || u === 'inch') overallUnit = '英寸';
+                            else if (u === 'cm') overallUnit = 'cm';
+                            else overallUnit = u;
+                        }
+                    } else {
+                        const num = parseFloat(val);
+                        if (!isNaN(num)) displayParts.push(num);
+                    }
+                }
+            }
+            if (displayParts.length === 0) return '-';
+            // 若未从值中提取到单位，则使用对象的 unit 字段
+            if (!overallUnit) {
+                overallUnit = sizeObj.unit || sizeObj.单位 || globalUnit;
+            }
+            return displayParts.join('×') + (overallUnit ? overallUnit : '');
+        }
+        return '-';
+    }
+
+    function filterMinorAccessories(components) {
+        if (!components || components.length === 0) return components;
+        const minorKeywords = ['点胶', '胶水', '胶棒', '透明胶'];
+        return components.filter(c => {
+            const isLowCost = (c.cost_level === '低' || c.cost_level === '较低');
+            const name = (c.name || '').toLowerCase();
+            const hasMinorKeyword = minorKeywords.some(kw => name.includes(kw));
+            const isTapeOrFilm = name.includes('胶带') || name.includes('胶片') || name.includes('胶条');
+            if (isTapeOrFilm) return true;
+            return !(isLowCost && hasMinorKeyword);
+        });
+    }
+
+    function formatSubItemsWithDuplicates(components, forceNoPrimary = false, overlapDetails = [], counterpartComps = [], isBuiltSide = false, isUnbuiltSide = false) {
+        if (!components || components.length === 0) return { html: '' };
+        const costOrder = { '高':3, '中高':2.5, '中':2, '中低':1.5, '低':1 };
+        let maxLevel = -1;
+        if (!forceNoPrimary && !areCostsSimilar(components)) { components.forEach(c => { const level = costOrder[c.cost_level] || 0; if (level > maxLevel) maxLevel = level; }); }
+        let primaryMarked = false;
+        const duplicateMap = new Map();
+        overlapDetails.forEach(d => { if (d.name) duplicateMap.set(d.name, { builtQty: d.built_qty || 0, unbuiltQty: d.unbuilt_qty || 0 }); });
+        const itemsHtml = components.map((item, idx) => {
+            let isPrimary = false;
+            if (!forceNoPrimary && maxLevel > -1) { const level = costOrder[item.cost_level] || 0; if (level === maxLevel && !primaryMarked) { isPrimary = true; primaryMarked = true; } }
+            const badge = isPrimary ? ' <span class="primary-badge">主</span>' : '';
+            let nameStr = item.name;
+            if (!nameStr || nameStr === '未知' || nameStr === '未命名' || nameStr.trim() === '') {
+                if (item.color && item.color !== '-' && item.color !== '未知') nameStr = item.color + '款';
+                else if (item.size && item.size !== '-' && item.size !== '未知') nameStr = formatSize(item.size);
+                else nameStr = '组件' + (idx + 1);
+            }
+            let matchedDetail = null;
+            for (let [dupName, detail] of duplicateMap.entries()) {
+                if (nameStr.includes(dupName) || dupName.includes(nameStr) || (item.name && (item.name.includes(dupName) || dupName.includes(item.name)))) { matchedDetail = detail; break; }
+            }
+            if (!matchedDetail && counterpartComps.length > 0) {
+                counterpartComps.some(cc => { const ccName = cc.name || ''; if (nameStr.includes(ccName) || ccName.includes(nameStr) || (item.name && (item.name.includes(ccName) || ccName.includes(item.name)))) { matchedDetail = { builtQty: cc.quantity || 0, unbuiltQty: item.quantity || 0 }; return true; } return false; });
+            }
+            const isDuplicate = !!matchedDetail;
+            const duplicateBadge = (isDuplicate && isUnbuiltSide) ? ' <span class="duplicate-badge">🔁重复款</span>' : '';
+            const itemClass = (isDuplicate && isUnbuiltSide) ? 'sub-item duplicate-item' : 'sub-item';
+            let sizeStr = (item.size === undefined || item.size === null || item.size === '未知') ? '-' : formatSize(item.size);
+            let colorStr = (item.color === undefined || item.color === null || item.color === '未知') ? '-' : item.color;
+            let qtyStr = (item.quantity !== undefined && item.quantity !== null) ? item.quantity + '个' : '-';
+            return `<div class="${itemClass}">${nameStr}：${qtyStr} · ${sizeStr} · ${colorStr}${badge}${duplicateBadge}</div>`;
+        }).join('');
+        return { html: itemsHtml };
+    }
+
+    function computeCompositeQuantity(components, hasPrimary) { if (!components || components.length === 0) return 1; if (!hasPrimary) return components.reduce((sum, c) => sum + (parseFloat(c.quantity) || 0), 0); const costOrder = { '高':3, '中高':2.5, '中':2, '中低':1.5, '低':1 }; let maxCost = -1, primaryQty = 0; components.forEach(c => { const lvl = costOrder[c.cost_level] || 0; const qty = parseFloat(c.quantity) || 0; if (lvl > maxCost) { maxCost = lvl; primaryQty = qty; } else if (lvl === maxCost) primaryQty += qty; }); return primaryQty; }
+    function getPrimaryQuantity(components, hasPrimary) { if (!components || components.length === 0) return 0; if (!hasPrimary) return components.reduce((sum, c) => sum + (parseFloat(c.quantity) || 0), 0); const costOrder = { '高':3, '中高':2.5, '中':2, '中低':1.5, '低':1 }; let maxCost = -1, primaryQty = 0; components.forEach(c => { const lvl = costOrder[c.cost_level] || 0; const qty = parseFloat(c.quantity) || 0; if (lvl > maxCost) { maxCost = lvl; primaryQty = qty; } else if (lvl === maxCost) primaryQty += qty; }); return primaryQty; }
+
+    async function callDoubaoProductComparison(imgA, imgB, txtA, txtB, isPioneer = false, bPrice = null, uPrice = null) {
+        const b64A = imgA.split(',')[1], b64B = imgB.split(',')[1];
+        let priceInfo = ""; if (bPrice !== null && uPrice !== null) priceInfo = `\n用户提供价格：已建 $${bPrice}，未建 $${uPrice}。`; else if (bPrice !== null) priceInfo = `\n用户提供价格：已建 $${bPrice}，未建未知。`; else if (uPrice !== null) priceInfo = `\n用户提供价格：未建 $${uPrice}，已建未知。`; else priceInfo = `\n用户未提供价格。`;
+
+        const marketHint = `\n**市场元素识别**：若图片中出现明显的特定市场元素（如“十字架”“四叶草”等暗示宗教/爱尔兰节等市场的元素），必须在竞争分析中识别并讨论对应的细分市场。如果产品中不包含任何宗教、节日、特殊人群指向的元素，则不要在分析中主动提及“无特殊元素”之类的否定陈述——只描述确实存在的市场特征。`;
+        const consistencyRule = `\n**重要一致性要求**：竞争程度判定与细分市场差异结论必须逻辑自洽。`;
+        const noMetaComment = `\n**输出风格约束**：不要包含元分析语句，只输出实质内容。`;
+        const competitionFocusRule = `\n**竞争分析聚焦约束**：只分析两个产品间的直接竞争关系，禁止分析市场供给量、竞品数量等宏观状况。`;
+        const overlapRule = `\n**方案重复度计算**：请对比已建和未建的组件列表，找出图案差异度<50%的重复组件。返回 component_overlap_ratio = 未建重复款的总数量 / 已建总数量。同时返回 overlap_details 数组，包含每个重复组件的名称(name)、已建数量(built_qty)、未建数量(unbuilt_qty)。`;
+        const imageQuantityRule = `\n**图片数量识别强化**：如果产品方案的文字描述中未明确写明各配件的数量，你必须仔细观察产品图片上标注的数量信息（如数字标签、文字说明等），并以此为准提取每个配件的准确数量。`;
+        const componentRule = `\n**组件拆分严格限制**：- 仅当产品包含多个可物理分离的独立实体部件时，才输出 components 数组。- 必须按产品方案文字的原始表述逐项列出每一个独立组件，严禁将多个不同款式、颜色、规格的组件合并为一个条目。- 每个组件的名称需保留原始描述中的关键特征（颜色/规格），数量必须准确对应。- 若产品为单一实体，components 必须为空数组。`;
+        const sizeFormatRule = `\n**重要尺寸格式约束**：- built_size 和 unbuilt_size 必须为 JSON 对象，结构如：{"length": 20.5, "width": 15.0, "height": 10.0, "unit": "cm"}- 所有尺寸数值必须是纯数字，严禁包含单位文字- 如果单位是英寸，请在 unit 字段指明 "英寸" 或 "inch"，数值仍为纯数字。- 如果无法识别单位，请默认使用 "cm" 并输出纯数字- 如果图片和文字均未提供尺寸信息，请不要主观猜测，尺寸字段返回空对象 {}`;
+        const pairRule = `\n**成对物品数量规则**：手套、袜子、袖套、耳环等通常成对销售的物品，除非明确标注“单只”，否则数量应按“1双/1套/1对”计数。`;
+        const mappingRule = `\n**图文组件对应流程**：1. 首先，将产品方案文字中描述的各个组件与产品图片中实际出现的组件进行一一对应，确保文字描述的组件与图片中的组件匹配准确。2. 然后，对比已建产品与未建产品的组件列表，找出图案差异度<50%的重复组件。3. 重复组件的判定基于视觉图案相似度，颜色差异不计入图案差异。`;
+
+        let prompt = `对比已建与未建产品图片及文字。优先采纳产品方案文字，但若文字中缺少数量信息，务必从图片中识别。${marketHint}${consistencyRule}${noMetaComment}${competitionFocusRule}${overlapRule}${imageQuantityRule}${componentRule}${sizeFormatRule}${pairRule}${mappingRule}
+【组合产品数量提取规则】若产品包含多个组件，请分析各组件的成本水平（高/中/低）。若成本差异明显，则最终数量取成本最高组件的数量（若多个最高则累加）；若成本相近，则最终数量取所有组件数量之和。
+其他信息正常提取。${priceInfo}
+竞争程度分5级：高度/较高/一般/较低/无竞争。详细分析(≥150字)。细分市场差异分析以“细分市场差异：较大/较小/无明显差异”开头(≥80字)。
+任务：1.提取产品描述(30字内)、数量、尺寸、颜色、材质、成本水平。若是组合产品，还需输出子体列表（每个子体包含名称、数量、尺寸、颜色、成本水平）。2.核心功能用途总结。3.人群场景总结。4.对比整体目视化、形状轮廓、图案装饰、结构部件。5.总结(20-40字)及外观差异百分比(0-100)。6.竞争程度等级与分析。7.细分市场差异分析。8.方案重复度：返回 component_overlap_ratio 数值（0-1），以及 overlap_details 数组。`;
+
+        if (isPioneer) prompt = `对比产品款式（外形），忽略颜色，图案权重最低。优先采纳方案文字，但若文字中缺少数量信息，务必从图片中识别。${marketHint}${consistencyRule}${noMetaComment}${competitionFocusRule}${overlapRule}${imageQuantityRule}${componentRule}${sizeFormatRule}${pairRule}${mappingRule}
+【组合产品数量提取规则】同上。
+其他信息正常提取。${priceInfo}
+竞争程度5级。详细分析(≥150字)。细分市场差异分析以“细分市场差异：较大/较小/无明显差异”开头(≥80字)。
+任务：1.提取描述(30字内)、数量、尺寸、材质、成本。若是组合产品，还需输出子体列表。2.功能总结。3.人群总结。4.对比外形(形状轮廓、结构部件为主)。5.总结及外观差异%。6.竞争程度。7.细分市场差异。8.方案重复度：返回 component_overlap_ratio 数值及 overlap_details 数组。`;
+
+        prompt += `\n\n只输出JSON：{
+  "built_product_desc":"", "built_quantity":"", "built_size":{}, "built_color":"", "built_material":"", "built_cost_level":"",
+  "built_function_usage":"", "built_scene_audience":"",
+  "unbuilt_product_desc":"", "unbuilt_quantity":"", "unbuilt_size":{}, "unbuilt_color":"", "unbuilt_material":"", "unbuilt_cost_level":"",
+  "unbuilt_function_usage":"", "unbuilt_scene_audience":"",
+  "function_usage_summary":"", "scene_audience_summary":"",
+  "visual_overall":"", "shape_contour":"", "pattern_decoration":"", "structure_parts":"",
+  "summary":"", "overall_percent":0,
+  "competition_level":"", "competition_analysis":"", "submarket_difference_analysis":"",
+  "built_components": [], "unbuilt_components": [], "component_overlap_ratio":0, "overlap_details": []
+}`;
+
+        const userText = `已建文字：${safeString(txtA) || '无'}；未建文字：${safeString(txtB) || '无'}`;
+        const messages = [{ role: "user", content: [{ type: "text", text: prompt + "\n\n" + userText }, { type: "image_url", image_url: { url: `data:image/jpeg;base64,${b64A}` } }, { type: "image_url", image_url: { url: `data:image/jpeg;base64,${b64B}` } }] }];
+        const reqBody = { model: DOUBAO_ENDPOINT_ID, messages, max_tokens: 3500, temperature: 0.3 };
+        const resp = await fetch(DOUBAO_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${DOUBAO_API_KEY}` }, body: JSON.stringify(reqBody) });
+        if (!resp.ok) throw new Error(`豆包请求失败: ${resp.status}`);
+        const data = await resp.json();
+        const content = data.choices[0].message.content;
+        let m = content.match(/\{[\s\S]*\}/);
+        if (m) return safeParseJSON(m[0]);
+        else throw new Error("豆包返回格式异常");
+    }
+
+    async function askQuestion(q) { const messages = [{ role: "user", content: `请简洁准确回答：${q}` }]; const req = { model: DOUBAO_ENDPOINT_ID, messages, max_tokens: 800, temperature: 0.3 }; const resp = await fetch(DOUBAO_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${DOUBAO_API_KEY}` }, body: JSON.stringify(req) }); if (!resp.ok) throw new Error(`请求失败: ${resp.status}`); const data = await resp.json(); return data.choices[0].message.content; }
+    async function compressToThumbnail(dataUrl, max = 80, q = 0.6) { return new Promise(res => { const img = new Image(); img.onload = () => { const c = document.createElement('canvas'); let w = img.width, h = img.height; if (w > max || h > max) { if (w > h) { h = h * (max / w); w = max; } else { w = w * (max / h); h = max; } } c.width = w; c.height = h; c.getContext('2d').drawImage(img, 0, 0, w, h); res(c.toDataURL('image/jpeg', q)); }; img.src = dataUrl; }); }
+
+    // ---------- 界面构建 ----------
+    let builtItems = {}, currentBuiltCount = 1;
+    const builtArea = document.getElementById('builtArea'), builtCountSelect = document.getElementById('builtCount');
+    function rebuildBuiltItems(count) { const newItems = {}; for (let i = 1; i <= count; i++) { const k = `built_${i}`; newItems[k] = builtItems[k] || { imageDataUrl: null, compressedBase64: null, text: '', price: '', compareType: 'non_pioneer', buildDate: '', productType: 'regular' }; } builtItems = newItems; currentBuiltCount = count; builtArea.innerHTML = ''; for (let i = 1; i <= count; i++) { const d = builtItems[`built_${i}`]; const div = document.createElement('div'); div.className = 'built-item'; div.id = `built_${i}`; div.innerHTML = ` <div class="built-item-header"><h4>🏷️ 已建 ${i}</h4></div> <textarea placeholder="输入产品方案" class="text-area" id="built_${i}_Text">${d.text || ''}</textarea> <div class="price-input"><label>💰 价格 (美元)</label><input type="number" step="0.01" id="built_${i}_Price" value="${d.price || ''}" placeholder="如 19.99（选填）"></div> <div class="dropzone" id="built_${i}_Dropzone"> <img id="built_${i}_Preview" class="preview-img" src="${d.imageDataUrl || ''}" style="${d.imageDataUrl ? 'display:block' : 'display:none'}"> <div class="instructions" id="built_${i}_Instructions" style="${d.imageDataUrl ? 'display:none' : 'display:block'}">拖拽图片或Ctrl+V<br><span class="upload-link" id="built_${i}_UploadBtn">点击上传</span></div> <button class="delete-img-btn" id="built_${i}_DeleteBtn" style="${d.imageDataUrl ? 'display:flex' : 'display:none'}">✕</button> <input type="file" accept="image/*" id="built_${i}_FileInput" style="display:none"> </div> <div class="pioneer-controls"> <label class="radio-label-highlight"><input type="radio" name="compareType_${i}" value="non_pioneer" ${d.compareType === 'non_pioneer' ? 'checked' : ''}> 非首创</label> <label class="radio-label-highlight"><input type="radio" name="compareType_${i}" value="pioneer" ${d.compareType === 'pioneer' ? 'checked' : ''}> 首创</label> <div id="pioneerFields_${i}" style="display:${d.compareType === 'pioneer' ? 'flex' : 'none'}; gap:8px; flex-wrap:wrap;"> <label>建SKU时间：</label><input type="date" id="built_${i}_buildDate" value="${d.buildDate || ''}"> <label>类型：</label><select id="built_${i}_productType"><option value="regular" ${d.productType === 'regular' ? 'selected' : ''}>常规</option><option value="seasonal" ${d.productType === 'seasonal' ? 'selected' : ''}>节气</option></select> </div> </div>`; builtArea.appendChild(div); attachBuiltHandlers(i, d); } }
+    function attachBuiltHandlers(idx, data) { const zone = `built_${idx}`; const upBtn = document.getElementById(`${zone}_UploadBtn`), fileInp = document.getElementById(`${zone}_FileInput`), delBtn = document.getElementById(`${zone}_DeleteBtn`), drop = document.getElementById(`${zone}_Dropzone`), preview = document.getElementById(`${zone}_Preview`), instr = document.getElementById(`${zone}_Instructions`), ta = document.getElementById(`${zone}_Text`), priceInp = document.getElementById(`${zone}_Price`); const radioNon = document.querySelector(`input[name="compareType_${idx}"][value="non_pioneer"]`), radioPio = document.querySelector(`input[name="compareType_${idx}"][value="pioneer"]`), pioFields = document.getElementById(`pioneerFields_${idx}`), dateInp = document.getElementById(`${zone}_buildDate`), typeSel = document.getElementById(`${zone}_productType`); if (dateInp) dateInp.addEventListener('input', function () { if (this.value && this.value.length === 4 && /^\d{4}$/.test(this.value)) { const n = this.nextElementSibling; if (n && n.tagName === 'INPUT') n.focus(); } }); function updatePio() { if (radioPio.checked) { pioFields.style.display = 'flex'; builtItems[zone].compareType = 'pioneer'; } else { pioFields.style.display = 'none'; builtItems[zone].compareType = 'non_pioneer'; } } radioNon?.addEventListener('change', updatePio); radioPio?.addEventListener('change', updatePio); dateInp?.addEventListener('change', () => { builtItems[zone].buildDate = dateInp.value; }); typeSel?.addEventListener('change', () => { builtItems[zone].productType = typeSel.value; }); priceInp?.addEventListener('input', () => { builtItems[zone].price = priceInp.value; }); async function setImage(dataUrl) { builtItems[zone].imageDataUrl = dataUrl; builtItems[zone].compressedBase64 = await compressToThumbnail(dataUrl); preview.src = dataUrl; preview.style.display = 'block'; instr.style.display = 'none'; delBtn.style.display = 'flex'; } function delImage() { builtItems[zone].imageDataUrl = null; builtItems[zone].compressedBase64 = null; preview.src = ''; preview.style.display = 'none'; instr.style.display = 'block'; delBtn.style.display = 'none'; } function handleFile(f) { if (!f || !f.type.startsWith('image/')) return; const r = new FileReader(); r.onload = async e => { await setImage(e.target.result); }; r.readAsDataURL(f); } upBtn.addEventListener('click', e => { e.stopPropagation(); fileInp.click(); }); fileInp.addEventListener('change', e => { if (e.target.files.length) handleFile(e.target.files[0]); fileInp.value = ''; }); delBtn.addEventListener('click', e => { e.stopPropagation(); delImage(); }); drop.addEventListener('paste', async e => { e.stopPropagation(); for (let i = 0; i < e.clipboardData.items.length; i++) { if (e.clipboardData.items[i].type.indexOf('image') !== -1) { const b = e.clipboardData.items[i].getAsFile(); const r = new FileReader(); r.onload = async ev => { await setImage(ev.target.result); }; r.readAsDataURL(b); break; } } }); drop.addEventListener('dragover', e => e.preventDefault()); drop.addEventListener('drop', e => { e.preventDefault(); if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]); }); ta.addEventListener('input', () => { builtItems[zone].text = ta.value; }); if (data.imageDataUrl) setImage(data.imageDataUrl); if (data.buildDate && dateInp) dateInp.value = data.buildDate; if (data.productType && typeSel) typeSel.value = data.productType; if (data.price && priceInp) priceInp.value = data.price; updatePio(); }
+    const unbuilt = { imageDataUrl: null, compressedBase64: null, text: '', price: '', newProductId: '' };
+    function initUnbuilt() { const upBtn = document.getElementById('unbuiltUploadBtn'), fileInp = document.getElementById('unbuiltFileInput'), delBtn = document.getElementById('unbuiltDeleteBtn'), drop = document.getElementById('unbuiltDropzone'), preview = document.getElementById('unbuiltPreview'), instr = document.getElementById('unbuiltInstructions'), ta = document.getElementById('unbuiltText'), priceInp = document.getElementById('unbuiltPrice'), idInp = document.getElementById('newProductId'); async function setImage(dataUrl) { unbuilt.imageDataUrl = dataUrl; unbuilt.compressedBase64 = await compressToThumbnail(dataUrl); preview.src = dataUrl; preview.style.display = 'block'; instr.style.display = 'none'; delBtn.style.display = 'flex'; } function delImage() { unbuilt.imageDataUrl = null; unbuilt.compressedBase64 = null; preview.src = ''; preview.style.display = 'none'; instr.style.display = 'block'; delBtn.style.display = 'none'; } function handleFile(f) { if (!f || !f.type.startsWith('image/')) return; const r = new FileReader(); r.onload = async e => { await setImage(e.target.result); }; r.readAsDataURL(f); } upBtn.addEventListener('click', e => { e.stopPropagation(); fileInp.click(); }); fileInp.addEventListener('change', e => { if (e.target.files.length) handleFile(e.target.files[0]); fileInp.value = ''; }); delBtn.addEventListener('click', e => { e.stopPropagation(); delImage(); }); drop.addEventListener('paste', async e => { e.stopPropagation(); for (let i = 0; i < e.clipboardData.items.length; i++) { if (e.clipboardData.items[i].type.indexOf('image') !== -1) { const b = e.clipboardData.items[i].getAsFile(); const r = new FileReader(); r.onload = async ev => { await setImage(ev.target.result); }; r.readAsDataURL(b); break; } } }); drop.addEventListener('dragover', e => e.preventDefault()); drop.addEventListener('drop', e => { e.preventDefault(); if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]); }); ta.addEventListener('input', () => { unbuilt.text = ta.value; }); priceInp.addEventListener('input', () => { unbuilt.price = priceInp.value; }); idInp.addEventListener('input', () => { unbuilt.newProductId = idInp.value.trim(); }); }
+    function clearComparisonGroup() { unbuilt.imageDataUrl = null; unbuilt.compressedBase64 = null; unbuilt.text = ''; unbuilt.price = ''; unbuilt.newProductId = ''; document.getElementById('unbuiltText').value = ''; document.getElementById('unbuiltPrice').value = ''; document.getElementById('newProductId').value = ''; document.getElementById('unbuiltPreview').src = ''; document.getElementById('unbuiltPreview').style.display = 'none'; document.getElementById('unbuiltInstructions').style.display = 'block'; document.getElementById('unbuiltDeleteBtn').style.display = 'none'; builtCountSelect.value = '1'; for (let i = 1; i <= 5; i++) if (builtItems[`built_${i}`]) { builtItems[`built_${i}`].imageDataUrl = null; builtItems[`built_${i}`].compressedBase64 = null; builtItems[`built_${i}`].text = ''; builtItems[`built_${i}`].price = ''; builtItems[`built_${i}`].compareType = 'non_pioneer'; builtItems[`built_${i}`].buildDate = ''; builtItems[`built_${i}`].productType = 'regular'; } rebuildBuiltItems(1); }
+
+    // ---------- 核心分析流程 ----------
+    async function analyzeWithConfig(cfg) {
+        const unbuiltImg = cfg.unbuiltImageData, unbuiltTxt = cfg.unbuiltText, unbuiltPr = cfg.unbuiltPrice;
+        const builtData = cfg.builtItemsData;
+        let allHtml = '', overallPass = true, finalMin = 100, pioneerFail = false, cachedUnbuilt = null, finalCompLevel = null;
+        const uPriceDisp = unbuiltPr ? `$${parseFloat(unbuiltPr).toFixed(2)}` : '未填';
+        const bPricesDisp = builtData.map(b => b.price ? `$${parseFloat(b.price).toFixed(2)}` : '未填').join(', ');
+        for (let i = 0; i < builtData.length; i++) {
+            const b = builtData[i]; if (!b.imageData) continue;
+            const isPio = b.compareType === 'pioneer';
+            let res = await callDoubaoProductComparison(b.imageData, unbuiltImg, b.text, unbuiltTxt, isPio, b.price ? parseFloat(b.price) : null, unbuiltPr ? parseFloat(unbuiltPr) : null);
+            let builtComps = res.built_components || [], unbuiltComps = res.unbuilt_components || [];
+            builtComps = filterMinorAccessories(builtComps); unbuiltComps = filterMinorAccessories(unbuiltComps);
+            const pairKeywords = ['手套', '袜子', '袖套', '耳环', '手袜', 'glove', 'sock', 'earring'];
+            const isPairItem = (name) => pairKeywords.some(kw => name.toLowerCase().includes(kw));
+            if (builtComps.length) builtComps.forEach(c => { if (isPairItem(c.name||'') && parseFloat(c.quantity) === 2) c.quantity = 1; });
+            if (unbuiltComps.length) unbuiltComps.forEach(c => { if (isPairItem(c.name||'') && parseFloat(c.quantity) === 2) c.quantity = 1; });
+            const unbuiltTextQty = extractPrimaryQuantity(unbuiltTxt), builtTextQty = extractPrimaryQuantity(b.text);
+            const unbuiltUnit = extractUnit(unbuiltTxt) || '个', builtUnit = extractUnit(b.text) || '个';
+            const builtHasPlus = /\+/.test(b.text || ''), unbuiltHasPlus = /\+/.test(unbuiltTxt || '');
+            if (!builtHasPlus && builtComps.length <= 1) builtComps = [];
+            if (!unbuiltHasPlus && unbuiltComps.length <= 1) unbuiltComps = [];
+            const primaryConsistency = normalizePrimaryConsistency(builtComps, unbuiltComps);
+            const builtHasPrimary = primaryConsistency.builtPrimary, unbuiltHasPrimary = primaryConsistency.unbuiltPrimary;
+            const builtPrimaryQty = builtComps.length > 0 ? getPrimaryQuantity(builtComps, builtHasPrimary) : 0;
+            const unbuiltPrimaryQty = unbuiltComps.length > 0 ? getPrimaryQuantity(unbuiltComps, unbuiltHasPrimary) : 0;
+            const unbuiltCompsTotal = unbuiltComps.reduce((sum, c) => sum + (parseFloat(c.quantity) || 0), 0);
+            const builtCompsTotal = builtComps.reduce((sum, c) => sum + (parseFloat(c.quantity) || 0), 0);
+            // 显示数优先用文字提取总数，其次用组件总数
+            if (unbuiltTextQty !== null && unbuiltTextQty !== undefined) { res.unbuilt_quantity = String(unbuiltTextQty) + unbuiltUnit; } else if (unbuiltCompsTotal > 0) { res.unbuilt_quantity = String(unbuiltCompsTotal) + unbuiltUnit; } else { res.unbuilt_quantity = '1' + unbuiltUnit; }
+            if (builtTextQty !== null && builtTextQty !== undefined) { res.built_quantity = String(builtTextQty) + builtUnit; } else if (builtCompsTotal > 0) { res.built_quantity = String(builtCompsTotal) + builtUnit; } else { res.built_quantity = '1' + builtUnit; }
+            const overlapDetails = res.overlap_details || [];
+            const unbuiltResult = formatSubItemsWithDuplicates(unbuiltComps, !unbuiltHasPrimary, overlapDetails, builtComps, false, true);
+            const builtResult = formatSubItemsWithDuplicates(builtComps, !builtHasPrimary, overlapDetails, unbuiltComps, true, false);
+            res.built_product_desc = (res.built_product_desc || '—') + (builtResult.html ? `<div class="sub-items">${builtResult.html}</div>` : '');
+            res.unbuilt_product_desc = (res.unbuilt_product_desc || '—') + (unbuiltResult.html ? `<div class="sub-items">${unbuiltResult.html}</div>` : '');
+            const isMultiComponent = (builtComps && builtComps.length > 1) || (unbuiltComps && unbuiltComps.length > 1);
+            if (!res.unbuilt_color || res.unbuilt_color === '未知') res.unbuilt_color = '-';
+            if (!res.built_color || res.built_color === '未知') res.built_color = '-';
+            const uSizeStr = formatSize(res.unbuilt_size, 'cm'), bSizeStr = formatSize(res.built_size, 'cm');
+            let shortDesc = res.unbuilt_product_desc.replace(/<[^>]+>/g, '').split('<br>')[0].trim(); if (shortDesc.length > 50) shortDesc = shortDesc.substring(0, 47) + '...';
+            if (!cachedUnbuilt) cachedUnbuilt = { product_desc: res.unbuilt_product_desc, short_desc: shortDesc, quantity: res.unbuilt_quantity, size: res.unbuilt_size, color: res.unbuilt_color, material: res.unbuilt_material, cost_level: res.unbuilt_cost_level, function_usage: res.unbuilt_function_usage, scene_audience: res.unbuilt_scene_audience };
+            res.unbuilt_product_desc = cachedUnbuilt.product_desc; res.unbuilt_quantity = cachedUnbuilt.quantity; res.unbuilt_size = cachedUnbuilt.size; res.unbuilt_color = cachedUnbuilt.color; res.unbuilt_material = cachedUnbuilt.material; res.unbuilt_cost_level = cachedUnbuilt.cost_level; res.unbuilt_function_usage = cachedUnbuilt.function_usage; res.unbuilt_scene_audience = cachedUnbuilt.scene_audience;
+            const appearDiff = res.overall_percent;
+            const builtNum = parseFloat(res.built_quantity) || 0, unbuiltNum = parseFloat(res.unbuilt_quantity) || 0;
+            const isReferenceQ = builtHasPrimary && unbuiltHasPrimary;
+            let usePrimaryQty = isMultiComponent && (builtHasPrimary || unbuiltHasPrimary);
+            let qtyBuilt = usePrimaryQty ? builtPrimaryQty : builtNum, qtyUnbuilt = usePrimaryQty ? unbuiltPrimaryQty : unbuiltNum;
+            let qDiff = null, skipQ = false;
+            if (qtyBuilt > 0) { qDiff = Math.abs(qtyUnbuilt - qtyBuilt) / qtyBuilt * 100; if (qDiff >= 100) skipQ = true; }
+            const skipSizeDiff = builtHasPrimary || unbuiltHasPrimary;
+            let sizeDiff = null, sizeReason = '', sizeDetails = [], weightedDetails = [];
+            if (skipSizeDiff) sizeReason = '复杂组合产品，不参与计算';
+            else { const sizeResult = calcSizeDiffStructured(res.built_size, res.unbuilt_size); sizeDiff = sizeResult.diff; sizeReason = sizeResult.reason; sizeDetails = sizeResult.details; weightedDetails = sizeResult.weightedDetails; }
+            let schemeDiff = 0, combined = 0;
+            if (!skipQ && qDiff !== null && !isReferenceQ) { schemeDiff += qDiff; combined += qDiff; }
+            if (!skipSizeDiff && sizeDiff !== null) { schemeDiff += sizeDiff; combined += sizeDiff; }
+            combined += appearDiff;
+            const schemeRounded = schemeDiff !== 0 ? Math.round(schemeDiff) : null;
+            const combinedRounded = Math.round(combined);
+            const compLevel = mapCompetitionLevel(res.competition_level); if (compLevel && !finalCompLevel) finalCompLevel = compLevel;
+            let submarketLevel = ''; const subMatch = (res.submarket_difference_analysis || '').match(/细分市场差异[：:]\s*(较大|较小|无明显差异)/); if (subMatch) submarketLevel = subMatch[1];
+            let isPass = false, passReason = '';
+            // 删除了一般竞争+细分市场较大的自动通过
+            const inProt = isPio ? isInProtection(b.buildDate, b.productType) : true;
+            if (isPio && !inProt) {
+                const rule = evaluateOutOfProtectionRule(res, builtComps, unbuiltComps, builtHasPrimary, unbuiltHasPrimary, /服装|衣服|衬衫|裤/.test(b.text + unbuiltTxt));
+                isPass = rule.pass; passReason = rule.reason;
+            } else if (compLevel === '较低竞争' || compLevel === '无竞争') { isPass = true; passReason = `竞争程度“${compLevel}”，不构成直接竞争，通过。`; }
+            else { isPass = combined >= 50; passReason = isPass ? `综合差异度${formatPercent(combinedRounded)}≥50%` : `综合差异度${formatPercent(combinedRounded)}<50%`; }
+            if (!isPass) overallPass = false; if (combined < finalMin) finalMin = combined;
+            const uAttr = [], bAttr = [];
+            if (res.unbuilt_quantity) uAttr.push(`📦 数量：${res.unbuilt_quantity}`); if (uSizeStr !== '-') uAttr.push(`📏 尺寸：${uSizeStr}`); if (res.unbuilt_color && res.unbuilt_color !== '-') uAttr.push(`🎨 颜色：${res.unbuilt_color}`); if (res.unbuilt_material) uAttr.push(`🔧 材质：${res.unbuilt_material}`); if (res.unbuilt_cost_level) uAttr.push(`💰 成本：${res.unbuilt_cost_level}`);
+            if (res.built_quantity) bAttr.push(`📦 数量：${res.built_quantity}`); if (bSizeStr !== '-') bAttr.push(`📏 尺寸：${bSizeStr}`); if (res.built_color && res.built_color !== '-') bAttr.push(`🎨 颜色：${res.built_color}`); if (res.built_material) bAttr.push(`🔧 材质：${res.built_material}`); if (res.built_cost_level) bAttr.push(`💰 成本：${res.built_cost_level}`);
+            const hasUnbuiltDuplicates = overlapDetails && overlapDetails.length > 0;
+            const duplicateNoteHtml = hasUnbuiltDuplicates ? '<div class="duplicate-note">图案差异<50%为重复款</div>' : '';
+            let sizeDisp = '';
+            if (skipSizeDiff) sizeDisp = '<div>尺寸差异 = 复杂组合产品，不参与计算</div>';
+            else if (sizeReason === '未识别') sizeDisp = '<div>尺寸差异 = 未识别</div>';
+            else if (sizeReason === '微小') sizeDisp = '<div>尺寸差异 = 微小</div>';
+            else if (sizeDiff !== null) {
+                let detailHtml = '', totalWeight = 0, weightedSum = 0;
+                weightedDetails.forEach(d => {
+                    const keyName = d.key === 'length' ? '长度' : (d.key === 'width' ? '宽度' : (d.key === 'height' ? '高度' : d.key));
+                    detailHtml += `<div>${keyName}差异 = |${d.unbuilt.toFixed(1)} - ${d.built.toFixed(1)}| / ${d.built.toFixed(1)} × 100% = ${Math.round(d.diffPercent)}% (权重 ${d.weight.toFixed(1)})</div>`;
+                    totalWeight += d.weight; weightedSum += d.diffPercent * d.weight;
+                });
+                if (totalWeight > 0) detailHtml += `<div>加权平均差异 = ${weightedSum.toFixed(1)} / ${totalWeight.toFixed(1)} = ${Math.round(sizeDiff)}%</div>`;
+                sizeDisp = `<div>尺寸差异（加权平均） = ${formatPercent(sizeDiff)}</div>${detailHtml}`;
+            } else sizeDisp = '<div>尺寸差异 = 未识别</div>';
+            let qDisp = '';
+            if (skipQ && qDiff >= 100) qDisp = '<div>数量差异 = 数量差异过大，可能识别错误，不参与计算</div>';
+            else if (qDiff !== null && !isNaN(qDiff)) {
+                const refSuffix = isReferenceQ ? '（参考数值）' : '';
+                qDisp = `<div>数量差异 = |${qtyUnbuilt} - ${qtyBuilt}| / ${qtyBuilt} × 100% = ${formatPercent(qDiff)}${refSuffix}${usePrimaryQty ? ` (主产品数量: 未建${qtyUnbuilt} / 已建${qtyBuilt})` : ''}</div>`;
+            } else qDisp = '<div>数量差异 = 数据缺失</div>';
+            let schemeSubValue = '';
+            if (isReferenceQ) schemeSubValue = '数量差(参考)不计 + 尺寸差不计';
+            else schemeSubValue = `数量差 ${qDiff !== null ? formatPercent(qDiff) : '—'} + 尺寸差 ${sizeDiff !== null ? formatPercent(sizeDiff) : '—'}`;
+            const imagesHtml = `<div class="product-images-compare"><div class="product-image-box"><img src="${unbuiltImg}" alt="未建产品图"><p>📦 未建产品</p></div><div class="product-image-box"><img src="${b.imageData}" alt="已建产品图"><p>🏷️ 已建产品</p></div></div>`;
+            const funcHtml = `<div class="diff-item"><div class="diff-label">核心功能与用途</div><div class="diff-desc"><span class="summary-badge">${res.function_usage_summary ? res.function_usage_summary.split('。')[0] : '分析中'}</span>${(!res.function_usage_summary || !res.function_usage_summary.includes('一致')) ? `<br><strong>未建：</strong> ${res.unbuilt_function_usage || '—'}<br><strong>已建：</strong> ${res.built_function_usage || '—'}` : ''}</div></div>`;
+            const sceneHtml = `<div class="diff-item"><div class="diff-label">使用人群与场景</div><div class="diff-desc"><span class="summary-badge">${res.scene_audience_summary ? res.scene_audience_summary.split('。')[0] : '分析中'}</span>${(!res.scene_audience_summary || !res.scene_audience_summary.includes('一致')) ? `<br><strong>未建：</strong> ${res.unbuilt_scene_audience || '—'}<br><strong>已建：</strong> ${res.built_scene_audience || '—'}` : ''}</div></div>`;
+            const compHtml = `<div class="diff-item"><div class="diff-label">🏆 上架竞争程度分析</div><div class="diff-desc"><div class="competition-level-box"><div class="label">判定等级</div><div>${compLevel}</div></div><div class="competition-analysis-text"><strong>详细分析：</strong><br>${(res.competition_analysis || '无详细分析').replace(/\n/g, '<br>')}</div>${res.submarket_difference_analysis ? `<div class="submarket-box"><div class="label">细分市场差异分析</div><div class="content">${res.submarket_difference_analysis.replace(/\n/g, '<br>')}</div></div>` : ''}</div></div>`;
+            const pioneerHtml = isPio ? `<div class="diff-item"><div class="diff-label">📋 首创规则判定</div><div class="diff-desc">${passReason}</div></div>` : '';
+            allHtml += `<div style="margin-bottom:20px; border:1px solid #e2e8f0; border-radius:16px; padding:12px;"><h4 style="margin-bottom:12px;">📊 对比已建 ${i+1}</h4>${imagesHtml}<div class="product-descriptions"><div class="product-card"><h4>📦 未建</h4><div class="product-desc-text">${res.unbuilt_product_desc || '—'}${uAttr.length ? `<div class="attr">${uAttr.join(' · ')}</div>` : ''}${duplicateNoteHtml}</div></div><div class="product-card"><h4>🏷️ 已建</h4><div class="product-desc-text">${res.built_product_desc || '—'}${bAttr.length ? `<div class="attr">${bAttr.join(' · ')}</div>` : ''}</div></div></div><div class="dimension-summary"><div class="dimension-card"><h4>📊 方案差异度</h4><div class="dimension-value">${isReferenceQ ? '—' : (schemeRounded !== null ? formatPercent(schemeRounded) : (sizeReason === '微小' ? '微小' : '—'))}</div><div class="sub-value">${schemeSubValue}</div></div><div class="dimension-card"><h4>🎨 图案差异度</h4><div class="dimension-value">${formatPercent(appearDiff)}</div><div class="sub-value">豆包AI视觉分析</div></div><div class="dimension-card"><h4>⚖️ 综合差异度</h4><div class="dimension-value">${formatPercent(combinedRounded)}</div><div class="sub-value">${!isReferenceQ && !skipSizeDiff ? '数量差 + 尺寸差 + 图案差' : (isReferenceQ ? '数量差(参考)不计 + 尺寸差不计 + 图案差' : (skipSizeDiff ? '尺寸差不计 + 图案差' : '数量差 + 尺寸差 + 图案差'))}</div></div></div><div class="formula-area"><div><strong>📐 计算过程：</strong></div>${qDisp}${sizeDisp}<div>图案差异 = ${formatPercent(appearDiff)} (豆包AI)</div><div>综合差异 = ${formatPercent(combinedRounded)}</div></div><div class="diff-detail">${funcHtml} ${sceneHtml}<div class="diff-item"><div class="diff-label">整体目视化差异</div><div class="diff-desc">${res.visual_overall || '—'}</div></div><div class="diff-item"><div class="diff-label">形状与轮廓</div><div class="diff-desc">${res.shape_contour || '—'}</div></div><div class="diff-item"><div class="diff-label">图案与装饰</div><div class="diff-desc">${res.pattern_decoration || '—'}</div></div><div class="diff-item"><div class="diff-label">结构与部件</div><div class="diff-desc">${res.structure_parts || '—'}</div></div><div class="diff-item"><div class="diff-label">📌 总结性分析</div><div class="diff-desc">${res.summary || '—'}</div></div>${pioneerHtml}${compHtml}</div><div class="final-conclusion"><div class="conclusion-text ${isPass ? 'pass' : 'fail'}">${isPass ? '通过' : '不通过'}</div>${!isPass && passReason ? `<div style="font-size:12px;color:#6b7280;">${passReason}</div>` : (isPass && passReason ? `<div style="font-size:12px;color:#15803d;">${passReason}</div>` : '')}</div></div>`;
+        }
+        const finalPass = overallPass, shortDesc = cachedUnbuilt?.short_desc || '无';
+        let statsHtml = ''; if (pioneerFail) statsHtml = `<div class="summary-stats" style="display:flex;gap:16px;"><div class="stat"><span class="stat-value">❌ 不通过</span></div><div class="stat"><span class="stat-value">与首创款式差异不足</span></div></div>`;
+        else { let passExtra = ''; if (finalCompLevel === '较低竞争' || finalCompLevel === '无竞争') passExtra = `（竞争程度${finalCompLevel}，不构成直接竞争）`; statsHtml = `<div class="summary-stats" style="display:flex;gap:16px;"><div class="stat"><span class="stat-value">${finalPass ? '✅ 通过' : '❌ 不通过'}</span></div><div class="stat">${finalPass ? `<span class="stat-value">${formatPercent(finalMin)}</span><span class="stat-label">最小综合差异</span>` : `<span class="stat-value">${formatPercent(finalMin)}</span><span class="stat-label">最小综合差异</span>`}</div></div>${finalPass && passExtra ? `<div style="font-size:12px;color:#15803d;">${passExtra}</div>` : ''}`; }
+        const summaryHtml = `<div class="record-summary"><div class="record-info"><div class="image-row"><div class="thumb"><img src="${cfg.unbuiltThumb}"></div><span class="vs">VS</span>${cfg.builtThumbs.map(t => `<div class="thumb"><img src="${t}"></div>`).join('')}</div><div class="record-desc">新品ID: ${cfg.newProductId||'未填'}<br>产品名称: ${shortDesc}</div></div><div class="price-display">💰 未建: ${uPriceDisp} &nbsp;|&nbsp; 已建: ${bPricesDisp}</div>${statsHtml}<span class="toggle-icon">▼</span></div><div class="record-detail" style="display:none;">${allHtml}</div>`;
+        return { summaryHtml, detailHtml: allHtml, isPass: finalPass, combinedDiff: finalMin, productName: shortDesc };
+    }
+
+    async function retryAnalysis(rec) { if (!rec || (rec.status !== 'failed' && rec.status !== 'done')) return; await updateRecord(rec.id, { status: 'analyzing', summaryHtml: '', detailHtml: '', isPass: false, combinedDiff: 0, productName: '' }); try { const builtCfg = rec.builtConfigs.map((c, idx) => ({ imageData: rec.builtImagesData?.[idx] || null, text: c.text, price: c.price, compareType: c.compareType, buildDate: c.buildDate, productType: c.productType })).filter(b => b.imageData); if (!rec.unbuiltImageData) throw new Error('缺少未建原图'); const cfg = { unbuiltImageData: rec.unbuiltImageData, unbuiltText: rec.unbuiltDesc, unbuiltPrice: rec.unbuiltPrice, newProductId: rec.newProductId, unbuiltThumb: rec.unbuiltThumb, builtThumbs: rec.builtThumbs, builtItemsData: builtCfg }; const r = await analyzeWithConfig(cfg); await updateRecord(rec.id, { status: 'done', summaryHtml: r.summaryHtml, detailHtml: r.detailHtml, isPass: r.isPass, combinedDiff: r.combinedDiff, productName: r.productName }); } catch (e) { console.error(e); await updateRecord(rec.id, { status: 'failed', summaryHtml: `<div class="record-summary">分析失败: ${e.message}</div>`, detailHtml: '', isPass: false, combinedDiff: 0, productName: '分析失败' }); } }
+
+    function renderRecordsList(searchTerm = '') { let expandedId = null; const exist = document.querySelector('.record-detail[style*="display: block"]'); if (exist) { const item = exist.closest('.record-item'); if (item) expandedId = item.getAttribute('data-id'); } const cont = document.getElementById('recordsList'); if (!cont) return; let filtered = [...historyRecords]; if (searchTerm.trim()) { const t = searchTerm.trim().toLowerCase(); filtered = filtered.filter(r => r.newProductId && r.newProductId.toLowerCase().includes(t)); } if (filtered.length === 0) { cont.innerHTML = '<p style="text-align:center;color:#64748b;">暂无记录</p>'; return; } let html = ''; filtered.forEach(rec => { const statText = rec.status === 'analyzing' ? 'AI分析中...' : (rec.isPass ? '通过' : '不通过'); const statClass = rec.status === 'analyzing' ? 'analyzing' : (rec.isPass ? 'pass' : 'fail'); const uPriceDisp = rec.unbuiltPrice ? `$${parseFloat(rec.unbuiltPrice).toFixed(2)}` : '未填'; const bPricesDisp = (rec.builtConfigs || []).map(c => c.price ? `$${parseFloat(c.price).toFixed(2)}` : '未填').join(', '); if (rec.summaryHtml) html += `<div class="record-item" data-id="${rec.id}">${rec.summaryHtml}${rec.status === 'failed' ? `<div style="text-align:right;"><button class="retry-btn" data-id="${rec.id}">重新分析</button></div>` : ''}</div>`; else { const prodName = rec.productName || (rec.status === 'analyzing' ? '分析中...' : (rec.isPass ? '通过' : '不通过')); html += `<div class="record-item" data-id="${rec.id}"><div class="record-summary"><div class="record-info"><div class="image-row"><div class="thumb"><img src="${rec.unbuiltThumb || ''}"></div><span class="vs">VS</span>${(rec.builtThumbs || []).map(t => `<div class="thumb"><img src="${t}"></div>`).join('')}</div><div class="record-desc">新品ID: ${rec.newProductId || '未填'}<br>产品名称: ${prodName}</div></div><div class="price-display">💰 未建: ${uPriceDisp} &nbsp;|&nbsp; 已建: ${bPricesDisp}</div><div class="record-status ${statClass}">${statText}</div>${rec.status === 'failed' ? `<button class="retry-btn" data-id="${rec.id}">重新分析</button>` : ''}<span class="toggle-icon">▼</span></div><div class="record-detail" style="display:none;"></div></div>`; } }); cont.innerHTML = html; cont.querySelectorAll('.record-item').forEach(item => { const sum = item.querySelector('.record-summary'), det = item.querySelector('.record-detail'); if (sum && det) sum.addEventListener('click', e => { if (e.target.classList.contains('retry-btn')) return; const hidden = det.style.display === 'none'; det.style.display = hidden ? 'block' : 'none'; sum.querySelector('.toggle-icon').textContent = hidden ? '▲' : '▼'; }); const retry = item.querySelector('.retry-btn'); if (retry) retry.addEventListener('click', async e => { e.stopPropagation(); const id = retry.dataset.id; const rec = historyRecords.find(r => r.id === id); if (rec) await retryAnalysis(rec); }); }); if (expandedId) { const tgt = cont.querySelector(`.record-item[data-id="${expandedId}"]`); if (tgt) { const det = tgt.querySelector('.record-detail'), sum = tgt.querySelector('.record-summary'); if (det && sum && det.style.display !== 'block') { det.style.display = 'block'; sum.querySelector('.toggle-icon').textContent = '▲'; } } } }
+
+    // ---------- 启动 ----------
+    initUnbuilt(); for (let i = 1; i <= 1; i++) builtItems[`built_${i}`] = { imageDataUrl: null, compressedBase64: null, text: '', price: '', compareType: 'non_pioneer', buildDate: '', productType: 'regular' }; rebuildBuiltItems(1);
+    builtCountSelect.addEventListener('change', () => { rebuildBuiltItems(parseInt(builtCountSelect.value)); });
+    document.getElementById('compareBtn').onclick = async function() { if (!unbuilt.imageDataUrl) { alert('请上传未建产品图片'); return; } const anyBuilt = Object.keys(builtItems).some(k => builtItems[k].imageDataUrl); if (!anyBuilt) { alert('请至少上传一个已建图片'); return; } const uImg = unbuilt.imageDataUrl, uTxt = unbuilt.text, uPrice = unbuilt.price, uThumb = unbuilt.compressedBase64 || '', newId = unbuilt.newProductId; const builtData = Object.keys(builtItems).map(k => ({ imageData: builtItems[k].imageDataUrl, text: builtItems[k].text, price: builtItems[k].price, compareType: builtItems[k].compareType, buildDate: builtItems[k].buildDate, productType: builtItems[k].productType })); const bThumbs = Object.keys(builtItems).map(k => builtItems[k].compressedBase64 || ''); clearComparisonGroup(); const recId = Date.now() + '_' + Math.random(); const tmp = { id: recId, newProductId: newId, timestamp: new Date().toLocaleString(), status: 'analyzing', summaryHtml: '', detailHtml: '', isPass: false, combinedDiff: 0, unbuiltThumb: uThumb, builtThumbs: bThumbs, unbuiltDesc: uTxt, unbuiltPrice: uPrice, builtConfigs: builtData.map(b => ({ text: b.text, price: b.price, compareType: b.compareType, buildDate: b.buildDate, productType: b.productType })), productName: '', unbuiltImageData: uImg, builtImagesData: builtData.map(b => b.imageData) }; await addRecord(tmp); (async () => { try { const cfg = { unbuiltImageData: uImg, unbuiltText: uTxt, unbuiltPrice: uPrice, newProductId: newId, unbuiltThumb: uThumb, builtThumbs: bThumbs, builtItemsData: builtData }; const r = await analyzeWithConfig(cfg); await updateRecord(recId, { status: 'done', summaryHtml: r.summaryHtml, detailHtml: r.detailHtml, isPass: r.isPass, combinedDiff: r.combinedDiff, productName: r.productName }); } catch (e) { console.error(e); await updateRecord(recId, { status: 'failed', summaryHtml: `<div class="record-summary">分析失败: ${e.message}</div>`, detailHtml: '', isPass: false, combinedDiff: 0, productName: '分析失败' }); } })(); };
+    const searchInp = document.getElementById('historySearchInput'), searchBtn = document.getElementById('historySearchBtn'), resetBtn = document.getElementById('historyResetBtn'), clearBtn = document.getElementById('clearHistoryBtn');
+    searchBtn.addEventListener('click', () => renderRecordsList(searchInp.value)); resetBtn.addEventListener('click', () => { searchInp.value = ''; renderRecordsList(''); }); clearBtn.addEventListener('click', async () => { if (confirm('确定清空所有记录？')) await clearHistory(); }); searchInp.addEventListener('keypress', e => { if (e.key === 'Enter') renderRecordsList(searchInp.value); });
+    const qaBtn = document.getElementById('qaAskBtn'), qaQ = document.getElementById('qaQuestion'), qaA = document.getElementById('qaAnswer');
+    qaBtn.addEventListener('click', async () => { const q = qaQ.value.trim(); if (!q) { alert('请输入问题'); return; } qaA.style.display = 'block'; qaA.innerHTML = '🤔 思考中...'; qaA.classList.add('loading'); try { const a = await askQuestion(q); qaA.innerHTML = a; qaA.classList.remove('loading'); } catch (e) { qaA.innerHTML = `❌ 回答失败：${e.message}`; qaA.classList.remove('loading'); } }); qaQ.addEventListener('keypress', e => { if (e.key === 'Enter') qaBtn.click(); });
+    loadHistory().catch(console.error);
+})();
+</script>
+</body>
+</html>
