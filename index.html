@@ -76,11 +76,12 @@
         .product-desc-text .attr { margin-top:8px; padding-top:7px; border-top:1px solid #e2e8f0; font-size:12px; color:#475569; display:flex; flex-direction:column; gap:6px; align-items:flex-start; }
         .attr-row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; line-height:1.35; }
         .qty-edit, .size-edit { display:inline-flex; align-items:center; gap:5px; min-height:26px; padding:3px 7px; border-radius:10px; background:#eff6ff; border:1px solid #93c5fd; box-shadow:inset 0 0 0 1px rgba(255,255,255,0.65); vertical-align:middle; }
-        .qty-edit input, .size-edit input { height:20px; padding:2px 7px; border:1px solid #60a5fa; border-radius:7px; font-size:12px; color:#0f172a; background:#ffffff; font-weight:700; text-align:center; transition:border-color .15s, box-shadow .15s, background .15s; }
+        .qty-edit input, .size-edit input, .size-edit select { height:20px; padding:2px 7px; border:1px solid #60a5fa; border-radius:7px; font-size:12px; color:#0f172a; background:#ffffff; font-weight:700; text-align:center; transition:border-color .15s, box-shadow .15s, background .15s; }
         .qty-edit input { width:54px; }
         .size-edit { margin-left:0; }
-        .size-edit input { width:92px; text-align:left; }
-        .qty-edit input:focus, .size-edit input:focus { outline:none; border-color:#2563eb; box-shadow:0 0 0 3px #bfdbfe; background:#f8fbff; }
+        .size-edit input { width:72px; text-align:left; }
+        .size-edit select { width:76px; padding-left:4px; padding-right:2px; text-align:left; cursor:pointer; }
+        .qty-edit input:focus, .size-edit input:focus, .size-edit select:focus { outline:none; border-color:#2563eb; box-shadow:0 0 0 3px #bfdbfe; background:#f8fbff; }
         .qty-edit .qty-unit { color:#475569; font-weight:600; }
         .qty-edit .qty-hint, .size-edit .size-hint { color:#1d4ed8; font-size:11px; font-weight:700; background:#dbeafe; border-radius:999px; padding:1px 6px; white-space:nowrap; }
         .product-desc-text .sub-items { margin-top:8px; padding-left:8px; border-left:2px solid #cbd5e1; }
@@ -394,22 +395,7 @@
         return s;
     }
     function stripColorAnalysisText(text) {
-        let s = formatAiText(text).replace(/\s+/g, ' ').trim();
-        if (!s) return s;
-        const colorWord = '(?:颜色|配色|色彩|色差|色系|色调|深浅|渐变|明暗|红色|蓝色|绿色|黄色|橙色|粉色|紫色|黑色|白色|棕色|金色|银色|灰色|米色|透明)';
-        const colorOnlyClause = new RegExp(`(?:^|[，,；;。])[^，,；;。]*${colorWord}[^，,；;。]*(?:不同|差异|变化|调整|替换|一致|相同|接近|相似|明显|较大|较小|深|浅|亮|暗)[^，,；;。]*`, 'g');
-        s = s.replace(colorOnlyClause, match => (/图案|装饰|结构|轮廓|造型|版式|构图|部件|纹理|字体|线条|主体/.test(match) ? match : ''));
-        const sentences = s.split(/(?<=[。；;.!！?？])|\n+/).map(x => x.trim()).filter(Boolean);
-        const kept = sentences.filter(sentence => {
-            const mentionsColor = new RegExp(colorWord).test(sentence);
-            const hasNonColorVisual = /(图案|装饰|结构|轮廓|造型|款式|版式|构图|部件|纹理|字体|线条|主体|边缘|形态)/.test(sentence);
-            return !mentionsColor || hasNonColorVisual;
-        });
-        return (kept.length ? kept.join('') : s)
-            .replace(new RegExp(`${colorWord}(?:方面|上)?(?:的)?(?:差异|变化|不同|一致|相似|接近)[，,；;。]?`, 'g'), '')
-            .replace(/^[，,；;。]+|[，,；;。]+$/g, '')
-            .replace(/，{2,}/g, '，')
-            .trim();
+        return formatAiText(text).replace(/\s+/g, ' ').trim();
     }
     function findVisualContradictions(res) {
         if (!res) return ['未返回分析结果'];
@@ -512,8 +498,19 @@
     }
     
     // 强化总数提取：优先“X款共Y个”等表述
-    function stripInternalGridCounts(text) {
+    function stripSizeFragments(text) {
         return safeString(text)
+            .replace(/\d+(?:\.\d+)?\s*(?:[xX×＊*]\s*\d+(?:\.\d+)?\s*){1,4}(?:cm|厘米|公分|mm|毫米|m|米|inch|inches|in|英寸|["″])?/gi, '')
+            .replace(/\d+(?:\.\d+)?\s*(?:cm|厘米|公分|mm|毫米|m|米|inch|inches|in|英寸|["″])\b/gi, '')
+            .replace(/尺寸[：:]\s*[^，,。；;）)]*/g, '')
+            .replace(/长宽高[：:]\s*[^，,。；;）)]*/g, '')
+            .replace(/长[：:]?\s*\d+(?:\.\d+)?[^，,。；;）)]*/g, '')
+            .replace(/宽[：:]?\s*\d+(?:\.\d+)?[^，,。；;）)]*/g, '')
+            .replace(/高[：:]?\s*\d+(?:\.\d+)?[^，,。；;）)]*/g, '');
+    }
+
+    function stripInternalGridCounts(text) {
+        return stripSizeFragments(text)
             .replace(/\d+(?:\.\d+)?\s*(?:个|只|块|片)?\s*(?:格子|分格|宫格|网格|格|栏|列|行|区块|区域|色块)/g, '')
             .replace(/(?:采用|用|使用|配|供|供应商|仓库).{0,12}(?:opp|OPP|透明|塑料|纸|胶)?(?:打包袋|包装袋|袋子|袋|盒|纸盒|包装盒|包装).{0,12}(?:打包|包装|出货)?/gi, '');
     }
@@ -521,6 +518,10 @@
     function extractPrimaryQuantity(text) {
         let s = stripInternalGridCounts(text);
         if (!s) return null;
+        const explicitTitleQty = s.match(/(?:^|[，,；;。】）)\]\s])[^，,；;。]*?(\d+(?:\.\d+)?)\s*(?:件|个|只|颗|条|张|片|双|卷|套|包|pcs|PCS)\b/);
+        const namedProductQty = s.match(/[\u4e00-\u9fa5A-Za-z][^，,；;。]{0,30}?(\d+(?:\.\d+)?)\s*(?:件|个|只|颗|条|张|片|双|卷|套|包|pcs|PCS)(?=[，,；;。]|$)/);
+        if (namedProductQty) return parseFloat(namedProductQty[1]);
+        if (explicitTitleQty) return parseFloat(explicitTitleQty[1]);
         let setPack = s.match(/(\d+(?:\.\d+)?)\s*(?:件|个|只|颗|条|张|片|双)\s*(?:装|套装|一套|套)/);
         if (setPack) return parseFloat(setPack[1]);
         const totalAfterStyle = s.match(/\d+(?:\.\d+)?\s*(?:款|种)(?:图案|款式)?\s*(?:共|总计|合计|一共|总共)\s*(\d+(?:\.\d+)?)\s*(?:个|件|只|颗|条|张|片|套|双)/);
@@ -579,21 +580,33 @@
         return num > 100 ? '100%+' : `${Math.round(num)}%`;
     }
 
-    function parseManualSizeInput(text) {
+    function parseManualSizeInput(text, unitOverride = '') {
         const raw = safeString(text).trim();
         if (!raw) return null;
-        const normalized = raw.replace(/[×＊*X]/g, 'x').replace(/厘米/g, 'cm').replace(/公分/g, 'cm').replace(/英寸/g, 'in');
+        const normalized = raw.replace(/[×＊*X]/g, 'x').replace(/厘米/g, 'cm').replace(/公分/g, 'cm').replace(/英寸/g, 'in').replace(/英尺/g, 'ft').replace(/码/g, 'yd').replace(/千克|公斤/g, 'kg').replace(/克/g, 'g').replace(/毫升/g, 'ml').replace(/升/g, 'L');
         const nums = [...normalized.matchAll(/(\d+(?:\.\d+)?)/g)].map(m => parseFloat(m[1])).filter(v => isFinite(v) && v > 0);
         if (!nums.length) return null;
-        const unitMatch = normalized.match(/(cm|厘米|公分|mm|毫米|m|米|inch|inches|in|英寸|["″])/i);
-        let unit = unitMatch ? unitMatch[1].toLowerCase() : 'cm';
+        const unitMatch = normalized.match(/(kg|g|ml|l|cm|mm|m|yd|ft|inch|inches|in|["″])/i);
+        let unit = (unitOverride || (unitMatch ? unitMatch[1] : 'cm')).toLowerCase();
         if (unit === '厘米' || unit === '公分') unit = 'cm';
         if (unit === '毫米') unit = 'mm';
         if (unit === '米') unit = 'm';
-        if (unit === '英寸' || unit === '"' || unit === '″') unit = 'in';
+        if (unit === '英寸' || unit === '"' || unit === '″' || unit === 'inch' || unit === 'inches') unit = 'in';
+        if (unit === '英尺') unit = 'ft';
+        if (unit === '码') unit = 'yd';
+        if (unit === '千克' || unit === '公斤') unit = 'kg';
+        if (unit === '克') unit = 'g';
+        if (unit === '毫升') unit = 'ml';
+        if (unit === '升') unit = 'l';
         if (unit === 'mm') nums.forEach((v, i) => nums[i] = v / 10);
         if (unit === 'm') nums.forEach((v, i) => nums[i] = v * 100);
-        if (unit === 'mm' || unit === 'm') unit = 'cm';
+        if (unit === 'ft') nums.forEach((v, i) => nums[i] = v * 30.48);
+        if (unit === 'yd') nums.forEach((v, i) => nums[i] = v * 91.44);
+        if (unit === 'kg') nums.forEach((v, i) => nums[i] = v * 1000);
+        if (unit === 'l') nums.forEach((v, i) => nums[i] = v * 1000);
+        if (unit === 'mm' || unit === 'm' || unit === 'ft' || unit === 'yd') unit = 'cm';
+        if (unit === 'kg') unit = 'g';
+        if (unit === 'l') unit = 'ml';
         const obj = { unit };
         if (/直径|diameter|dia/i.test(normalized)) obj.diameter = nums[0];
         else {
@@ -632,11 +645,13 @@
         const skipSize = container.dataset.skipSize === '1';
         const unbuiltSizeInput = container.querySelector('.size-input[data-side="unbuilt"]');
         const builtSizeInput = container.querySelector('.size-input[data-side="built"]');
+        const unbuiltSizeUnit = container.querySelector('.size-unit[data-side="unbuilt"]');
+        const builtSizeUnit = container.querySelector('.size-unit[data-side="built"]');
         let manualSizeUsed = false;
         let manualSizeResult = null;
         if (unbuiltSizeInput && builtSizeInput && unbuiltSizeInput.value.trim() && builtSizeInput.value.trim()) {
-            const manualUnbuilt = parseManualSizeInput(unbuiltSizeInput.value);
-            const manualBuilt = parseManualSizeInput(builtSizeInput.value);
+            const manualUnbuilt = parseManualSizeInput(unbuiltSizeInput.value, unbuiltSizeUnit?.value || 'cm');
+            const manualBuilt = parseManualSizeInput(builtSizeInput.value, builtSizeUnit?.value || 'cm');
             manualSizeResult = calcSizeDiffStructured(manualBuilt, manualUnbuilt);
             if (manualSizeResult && manualSizeResult.diff !== null && !isNaN(manualSizeResult.diff)) {
                 sizeDiff = manualSizeResult.diff;
@@ -1178,7 +1193,7 @@
         const realPatternDifferenceSignals = /(明显不同图案|图案完全不同|装饰图案完全不同|印花完全不同|文字内容完全不同|IP形象不同|角色图案不同|版式完全不同|构图完全不同|字体结构完全不同)/.test(text);
         if (rawDiff >= 50 && (diffMainlyNonDesign || (nonDesignFactorSignals && similaritySignals) || structuralOnlySignals) && !realPatternDifferenceSignals) {
             const corrected = 45;
-            return { diff: corrected, reason: `图案差异从${formatPercent(rawDiff)}纠偏为${formatPercent(corrected)}：数量、尺寸、角度、展示、包装、形状轮廓或结构部件差异不计入图案差异度；颜色只作为属性展示，不参与差异度。` };
+            return { diff: corrected, reason: `图案差异从${formatPercent(rawDiff)}纠偏为${formatPercent(corrected)}：数量、尺寸、角度、展示、包装、形状轮廓或结构部件差异不计入图案装饰本身；颜色只能作为整体目视化的辅助因素，不能单独抬高到高差异。` };
         }
         return { diff: rawDiff, reason: '' };
     }
@@ -1203,7 +1218,7 @@
         const artificialPlantBundle = /(仿真|人造|假花|绿植|植物|叶|草|尤加利|龟背|波斯|春草|铁树|洒金|枝叶|花材)/.test(text);
         const bundleSimilaritySignals = /(款式一致|款式相同|组件一致|组件相同|同款|同类|均为|都为|高度相似|差异主要.*数量|仅.*数量|仅.*颜色|排版|拼图|组合图)/.test(text);
         if (rawDiff >= 50 && artificialPlantBundle && !realDifferenceSignals && (bundleSimilaritySignals || (/植物|叶|草|花材/.test(builtText) && /植物|叶|草|花材/.test(unbuiltText)))) {
-            return { diff: 40, reason: `首创图案差异从${formatPercent(rawDiff)}纠偏为40%：两款均为仿真植物/叶草花材组合，若组件款式高度重合，图片排版或数量组合不应判为高度图案差异；颜色只作为属性展示，不参与差异度。` };
+            return { diff: 40, reason: `首创图案差异从${formatPercent(rawDiff)}纠偏为40%：两款均为仿真植物/叶草花材组合，若组件款式高度重合，图片排版或数量组合不应判为高度图案差异；颜色只能作为整体目视化的辅助因素。` };
         }
         return { diff: rawDiff, reason: '' };
     }
@@ -1236,7 +1251,7 @@
         const pureNonDesignDiff = /(差异主要(来自|体现在|集中在)[^。；\n]*(数量|尺寸|规格|颜色|角度|视角|摆放|叠放|展示|包装)|仅[^。；\n]*(数量|尺寸|规格|颜色|角度|视角|摆放|叠放|展示|包装)(差异|不同))/.test(text);
         if (pureNonDesignDiff) return { diff: rawDiff, reason: '' };
         if (explicitPatternDiff) {
-            return { diff: Math.max(rawDiff, 55), reason: `图案差异从${formatPercent(rawDiff)}校准为55%：主图案/装饰构图存在明确差异，不能按数量或展示因素压低；颜色不参与该项判断。` };
+            return { diff: Math.max(rawDiff, 55), reason: `图案差异从${formatPercent(rawDiff)}校准为55%：主图案/装饰构图存在明确差异，不能按数量或展示因素压低；颜色只作为整体目视化辅助因素。` };
         }
         if (graphicSetProduct && differentStyleSet && namedDesignTheme) {
             return { diff: Math.max(rawDiff, 50), reason: `图案差异从${formatPercent(rawDiff)}校准为50%：图案型套装存在不同款式组合，应按整套图案设计差异判断。` };
@@ -1569,15 +1584,15 @@
         const productSizeRule = '\n**产品尺寸与包装尺寸区分**：包装、出货、安全包装、体积、仓库、防摔测试、外箱、箱规等语境中的尺寸是包装/运输尺寸，不得填入产品本体尺寸。';
         const imageTextConsistencyRule = '\n**图上文字与真实款式识别规则**：产品图片中的文字说明、红字标注、箭头、尺寸线、局部放大图、材质说明、款式说明、结构说明均属于产品方案信息，必须结合视觉主体识别真实款式。若图片文字说明按左图款式/参考上图/采用某结构，必须把被引用整体图作为主体结构，局部图只作细节补充。若图片红字/标注/箭头写“改成/定制/采用/做成/换成/使用右边图案/定制右边图案/参考右边图案/按右图图案”，必须按文字指定的最终成品图案进行识别；左侧或背景图若只是管身、结构、材质或颜色参考，不得把其旧表面图案当成最终图案。若图片或文字写“参考颜色/参考材质/参考色号/参考效果/参考某图做成品”，该参考图只用于提取颜色、材质、工艺或效果，不能自动把参考图里的物品识别为组件；只有明确写“包含/内含/配/带/附带/一套含”时，参考图中的物品才可作为组件。';
         const primaryAccessoryRule = '\n**主品与配件权重规则**：组合产品必须先识别主售卖产品和附属配件。主售卖产品决定核心图案差异、竞争程度、可替代性和总数量；花插、贺卡、卡纸、丝带、缎带、手提袋、包装纸、贴纸、点胶、卡片、标签、欧根纱袋、绒布袋、礼袋、透明袋、勺子、叉子、餐具、夹子、擦手巾、毛巾、抹布、餐巾、造雾器、雾化器、适配器、水架、支架、底座、电源、遥控器、充气泵、连接线、挂绳等附属/功能配件只能作为子件展示，不得计入 built_quantity/unbuilt_quantity 的总数量，也不得单独把整体图案差异或综合差异抬高到≥50。若组合中存在菜板/托盘/篮子/桶/灯/地毯/挂布/摆件/花环/清洁液/清洁剂/清洁喷雾等明显承载核心用途的主体件，总数量优先取该主体件数量；例如白板清洁套装应按清洁液瓶数作为总数量，磁性标签、抹布只作配件展示。';
-        const appearanceDiffRule = '\n**全局图案差异度规则**：overall_percent 只表示产品视觉款式/图案设计差异度，不是综合差异度。overall_percent 必须在完成4个维度分项分析后计算得出，不能先拍overall_percent再倒推文字。4个维度为：1. 整体目视化差异 visual_overall_percent；2. 形状与轮廓 shape_contour_percent；3. 图案与装饰 pattern_decoration_percent；4. 结构与部件 structure_parts_percent。固定权重：整体目视化差异30%、图案与装饰35%、形状与轮廓25%、结构与部件10%。颜色只作为产品属性提取和展示，不得参与图案差异度、四个视觉维度、summary或综合差异度计算；不要只因第一眼色彩/摆放/层次不同就给高分，必须同时看图案装饰和形状轮廓是否真正变化。所有单品都必须忽视拍摄/摆放/展示角度差异：正拍、侧拍、俯拍、背面展示、倾斜、旋转、手持、平放、立放、悬挂、叠放、堆叠、展开/收起、局部放大、裁切、光影、透视、远近、单个/多个展示都不能作为款式/图案差异；如果产品本身款式、外形、图案、结构一致或高度相似，仅展示方式不同，overall_percent 应为0%-20%。功能用途、人群场景、Amazon市场、竞争关系、主题名称、节日名称、关键词、颜色、配色、色彩、材质、价格、数量、尺寸、包装、出货方式、拍摄角度、图片展示数量都不得进入overall_percent。所有查重对比通常都是同类或近类产品，“同类产品/用途相同/材质相同/都有底座/都是挂件/都是装饰品”等不能作为压低图案差异度的理由。同类产品内部也可以存在90%以上的视觉款式差异。天然/基础本体产品要单独谨慎判断：如松果、松塔、贝壳、石头、木片、树枝、干花、麦穗、叶片等，若两边仍是同一类自然本体，外形结构、自然纹理、层级和主体轮廓高度相似，数量、尺寸、单个/多个展示、摆放角度、包装配套不得抬高图案差异度，通常应为5%-25%；只有出现彩绘、印花、雕刻、镂空、人工造型重构、额外装饰图案或核心形态完全改变，才可按真实设计差异提高。主题、节日、适用场景或关键词不同不能单独作为加分项；但如果换主题后导致整体目视化、版式构图、字体/线条风格、主体造型、装饰元素组合、图案绘制方式都明显不同，应按这些视觉差异本身给高分。若两款产品是同一版式/同一模板/同一造型语言，仅替换主题、节日、文案关键词或局部元素，overall_percent 通常不得超过49。若两款产品属于同主体/同结构/同款族，例如主体造型、套装件数、部件布局、核心轮廓基本一致，只是文字位置、局部装饰、表面图案或小配件不同，overall_percent 通常不得超过35；如果只是颜色/配色不同，overall_percent 不得因此提高。若两款产品属于同一基础图形/视觉母题或同一设计框架，仅具体轮廓、尺寸组合、数量、比例、排列或摆放场景不同，不能判为90%-100%的完全不同设计体系，通常不超过60%。若两款产品图案装饰、材质风格、结构部件高度相似，仅从长方形改为正方形、从高款改为矮款、从大尺寸改小尺寸，或只改变容器比例/规格，属于形状尺寸差异，不得判为高图案差异，通常不超过35%-45%。若两款产品同为格子/网格/方格/色块/条纹/重复区块/分格矩形块等重复版式产品，且形状轮廓、分格结构、图案语言基本一致，只是排列节奏或局部纹理不同，overall_percent 通常为20%-35%，不得判为≥50。若整体目视化明显不同，且图案与装饰或形状轮廓也明显不同，overall_percent 通常应≥60；只有整体目视化、图案装饰、版式构图、字体/线条语言、主体造型整体都明显不同，才判为90%-100%。若图案与装饰已经判断为相同/相似/无明显差异/仅纹理差异，overall_percent 必须与该结论一致。overall_percent 为0%-30%时，只能使用“差异极小/差异较小/局部差异”等表述，禁止写“整体视觉差异明显/较为明显/区分度较明确/差异较大”。overall_percent 不要受人工审核的20/30/50/70档位影响，按实际视觉差异输出即可；0%-100%全区间都可用，允许使用5%粒度，如0、5、10、15、20、25、30、35、40、45、50、55、60、65、70、75、80、85、90、95、100。40%-50%之间允许输出45，但仍属于<50的未达标档，不得为了通过而抬到50。差异度标尺：四个视觉维度完全一致或仅拍摄/展示差异=0%-5%；几乎同款，仅极小局部细节变化=10%-15%；四个视觉维度基本一致=0%-20%；整体相似仅局部纹理/表面装饰变化=20%-30%；同主体/同结构/同款族仅局部装饰变化=30%-35%；同类重复格子/网格/色块版式，仅排列节奏或局部纹理变化=20%-35%；同一模板下只换关键词或局部装饰元素=30%-45%；至少两个视觉维度明显不同=60%-80%；整体目视化和图案装饰体系完全不同，且形状/版式/结构也有明显变化=90%-100%。不要把所有相似主题产品都固定判为30%。';
+        const appearanceDiffRule = '\n**全局图案差异度规则**：overall_percent 只表示产品视觉款式/图案设计差异度，不是综合差异度。overall_percent 必须在完成4个维度分项分析后计算得出，不能先拍overall_percent再倒推文字。4个维度为：1. 整体目视化差异 visual_overall_percent；2. 形状与轮廓 shape_contour_percent；3. 图案与装饰 pattern_decoration_percent；4. 结构与部件 structure_parts_percent。固定权重：整体目视化差异30%、图案与装饰35%、形状与轮廓25%、结构与部件10%。**颜色可以作为整体目视化差异的辅助因素参与图案差异度，但只能影响 visual_overall_percent，不得进入图案与装饰、形状与轮廓、结构与部件三个维度，也不得单独决定综合差异度或通过/不通过判断。**不要只因第一眼色彩/摆放/层次不同就给高分，必须同时看图案装饰、形状轮廓和结构部件是否真正变化；如果仅颜色不同而款式、外形、图案装饰和结构一致，overall_percent 通常不得超过30%。所有单品都必须忽视拍摄/摆放/展示角度差异：正拍、侧拍、俯拍、背面展示、倾斜、旋转、手持、平放、立放、悬挂、叠放、堆叠、展开/收起、局部放大、裁切、光影、透视、远近、单个/多个展示都不能作为款式/图案差异；如果产品本身款式、外形、图案、结构一致或高度相似，仅展示方式不同，overall_percent 应为0%-20%。功能用途、人群场景、Amazon市场、竞争关系、主题名称、节日名称、关键词、材质、价格、数量、尺寸、包装、出货方式、拍摄角度、图片展示数量都不得进入overall_percent；颜色/配色/色彩只允许作为整体目视化差异的辅助因素。所有查重对比通常都是同类或近类产品，“同类产品/用途相同/材质相同/都有底座/都是挂件/都是装饰品”等不能作为压低图案差异度的理由。同类产品内部也可以存在90%以上的视觉款式差异。天然/基础本体产品要单独谨慎判断：如松果、松塔、贝壳、石头、木片、树枝、干花、麦穗、叶片等，若两边仍是同一类自然本体，外形结构、自然纹理、层级和主体轮廓高度相似，数量、尺寸、单个/多个展示、摆放角度、包装配套不得抬高图案差异度，通常应为5%-25%；只有出现彩绘、印花、雕刻、镂空、人工造型重构、额外装饰图案或核心形态完全改变，才可按真实设计差异提高。主题、节日、适用场景或关键词不同不能单独作为加分项；但如果换主题后导致整体目视化、版式构图、字体/线条风格、主体造型、装饰元素组合、图案绘制方式都明显不同，应按这些视觉差异本身给高分。若两款产品是同一版式/同一模板/同一造型语言，仅替换主题、节日、文案关键词或局部元素，overall_percent 通常不得超过49。若两款产品属于同主体/同结构/同款族，例如主体造型、套装件数、部件布局、核心轮廓基本一致，只是文字位置、局部装饰、表面图案或小配件不同，overall_percent 通常不得超过35；如果只是颜色/配色不同，overall_percent 可以体现轻微整体目视化差异，但不得超过30%，不得因此判为图案装饰、形状轮廓或结构部件差异。若两款产品属于同一基础图形/视觉母题或同一设计框架，仅具体轮廓、尺寸组合、数量、比例、排列或摆放场景不同，不能判为90%-100%的完全不同设计体系，通常不超过60%。若两款产品图案装饰、材质风格、结构部件高度相似，仅从长方形改为正方形、从高款改为矮款、从大尺寸改小尺寸，或只改变容器比例/规格，属于形状尺寸差异，不得判为高图案差异，通常不超过35%-45%。若两款产品同为格子/网格/方格/色块/条纹/重复区块/分格矩形块等重复版式产品，且形状轮廓、分格结构、图案语言基本一致，只是排列节奏或局部纹理不同，overall_percent 通常为20%-35%，不得判为≥50。若整体目视化明显不同，且图案与装饰或形状轮廓也明显不同，overall_percent 通常应≥60；只有整体目视化、图案装饰、版式构图、字体/线条语言、主体造型整体都明显不同，才判为90%-100%。若图案与装饰已经判断为相同/相似/无明显差异/仅纹理差异，overall_percent 必须与该结论一致。overall_percent 为0%-30%时，只能使用“差异极小/差异较小/局部差异”等表述，禁止写“整体视觉差异明显/较为明显/区分度较明确/差异较大”。overall_percent 不要受人工审核的20/30/50/70档位影响，按实际视觉差异输出即可；0%-100%全区间都可用，允许使用5%粒度，如0、5、10、15、20、25、30、35、40、45、50、55、60、65、70、75、80、85、90、95、100。40%-50%之间允许输出45，但仍属于<50的未达标档，不得为了通过而抬到50。差异度标尺：四个视觉维度完全一致或仅拍摄/展示差异=0%-5%；几乎同款，仅极小局部细节变化=10%-15%；四个视觉维度基本一致=0%-20%；整体相似仅局部纹理/表面装饰变化=20%-30%；同主体/同结构/同款族仅局部装饰变化=30%-35%；同类重复格子/网格/色块版式，仅排列节奏或局部纹理变化=20%-35%；同一模板下只换关键词或局部装饰元素=30%-45%；中度差异/临界差异=45%-60%：两款产品仍属于同类或同一基础设计方向，但在主体造型、版式构图、图案装饰、结构部件中至少一项有明显变化，且另一项存在辅助变化；整体可以区分，但尚未达到明显不同设计体系。若只是数量、尺寸、角度、主题名称或轻微纹理变化，不得进入该档；若只是颜色/配色变化，通常不得进入45%-60%档；至少两个视觉维度明显不同=60%-80%；整体目视化和图案装饰体系完全不同，且形状/版式/结构也有明显变化=90%-100%。不要把所有相似主题产品都固定判为30%。';
         const comprehensiveDiffRule = '\n**综合差异度计算边界**：综合差异度只由三项组成：1. 数量/套装结构差异；2. 尺寸/规格定位差异；3. 图案/文案设计差异。主产品是否一致、功能用途、人群场景、Amazon市场竞争、关键词重合、购买意图、是否可替代等内容只能在文字分析和上架竞争程度分析中说明，不得作为综合差异度的组成项。';
-        const componentRule = '\n**组件拆分严格限制**：仅当产品包含多个可物理分离的独立实体部件且文字/图片明确表示属于本套产品时输出 components；A+B+C 结构必须按加号逐项输出组件；1套/1组/1包是售卖单位，不等于组件数量；1大2小等规格必须拆分并保留数量。参考颜色、参考材质、参考效果的图片不得拆成组件。';
+        const componentRule = '\n**组件拆分严格限制**：只有两种情况可以输出 components：1）产品方案文字中使用“+”号连接多个产品/部件，必须按加号逐项拆分；2）产品方案只写“1套/1组/套装”等笼统信息，但审核图片中明显展示多个可物理分离、可独立计数、功能不同的组件，可以结合图片拆分。除此之外不要拆 components。产品名称或描述中的“带/含/有/配有”如果只是说明主体上的装饰、结构或工艺，不代表独立组件。窗帘、罩帘、遮挡帘、微波炉罩、防尘罩、桌布、地毯、挂布、服装、包袋等整体成品中的花边、蕾丝边、蝴蝶结、绑带、流苏、滚边、褶皱、拼接布、印花、刺绣、口袋、提手、边框、装饰条都属于主体的一部分，不得拆成 components，也不得参与总数量。1套/1组/1包是售卖单位，不等于组件数量；1大2小等规格只有在方案或图片明确为多个独立实体时才拆分。参考颜色、参考材质、参考效果的图片不得拆成组件。';
         const sizeFormatRule = '\n**尺寸格式约束**：built_size/unbuilt_size/components.size 必须为 JSON 对象，如 {length:20,width:10,height:5,unit:cm}；尺寸数值必须是纯数字。无法识别尺寸时返回空对象。';
         const pairRule = '\n**成对物品数量规则**：手套、袜子、袖套、耳环等通常成对销售的物品，除非明确单只，否则按1双/1套/1对计数。';
-        const mappingRule = '\n**图文组件对应流程**：先将文字组件与图片组件一一对应，再找出图案差异度<50%的重复组件。重复组件判定基于视觉图案/款式相似度，颜色差异不计入图案差异。';
-        const dimensionDetailRule = '\n**四个视觉维度输出要求**：visual_overall、shape_contour、pattern_decoration、structure_parts 不得分析颜色/配色/色彩差异，不能只写“差异较大/差异明显/无差异/差异较小”这类等级词。每个文字字段用一句自然表达说明“差异程度 + 具体差异点”，同时必须输出对应的分项百分比字段；不要写“依据是/原因是/主要依据是”这类套话。例如直接写“差异较大，未建新增围边和插签，已建仅为单一主体造型”。';
-        const summaryRule = '\n**summary字段约束**：summary 是“图案差异度总结性分析”，输出2-3句分析型总结。必须围绕款式、外形、图案、装饰、结构这些视觉差异说明为什么给出该图案差异度，不得把颜色/配色/色彩作为差异依据；可以归纳上方四个视觉维度的关键结论，但不要逐项机械复述“整体目视化、形状轮廓、图案装饰、结构部件”。summary、四个视觉维度和 overall_percent 必须使用同一套差异等级口径，不能前面写差异明显/差异较大，后面又写中等偏小/差异较小，也不能百分比很高但文字结论偏低；如果overall_percent低于50，禁止出现“整体视觉差异较为明显/明显/差异较大/区分度较明确”等高差异表达。summary 禁止出现受众、人群、使用场景、场景、市场、Amazon、亚马逊、竞争、关键词、上架、消费者、需求、用途、功能、是否可替代等内容。';
-        let prompt = `对比已建与未建产品图片及文字。优先采纳产品方案文字，但若文字缺少数量信息，可从图片补充。${marketHint}${consistencyRule}${noMetaComment}${competitionFocusRule}${redesignDirectionRule}${overlapRule}${imageQuantityRule}${skuBundleRule}${productSizeRule}${imageTextConsistencyRule}${primaryAccessoryRule}${appearanceDiffRule}${comprehensiveDiffRule}${componentRule}${sizeFormatRule}${pairRule}${mappingRule}${dimensionDetailRule}${summaryRule}\n【组合产品数量提取规则】若产品包含多个组件，必须先区分主售卖产品与配件/包装。最终总数量 built_quantity/unbuilt_quantity 优先取主售卖产品数量；卡片、袋子、包装、标签、贴纸、点胶、丝带、勺子、叉子、夹子、擦手巾、毛巾、造雾器、雾化器、适配器、水架、支架、底座、电源、遥控器、充气泵、连接线等配件只在组件列表展示，不参与总数量相加。只有在所有组件地位相近、没有明显主品和配件时，才取所有组件数量之和。${priceInfo}\n竞争程度分5级：高度/较高/一般/较低/无竞争。详细分析(≥150字)。细分市场差异分析以“细分市场差异：较大/较小/无明显差异”开头(≥80字)。\n任务：提取描述、数量、尺寸、颜色、材质、成本水平和组件列表；总结功能用途、人群场景；必须先分别对“整体目视化差异、形状与轮廓、图案与装饰、结构与部件”写明差异程度和具体依据，并分别输出分项百分比，再据此计算overall_percent；summary只输出图案差异度总结；输出overall_percent、竞争程度、细分市场差异、重复组件和 Amazon 改款方向。`;
+        const mappingRule = '\n**图文组件对应流程**：先将文字组件与图片组件一一对应，再找出图案差异度<50%的重复组件。重复组件判定基于视觉图案/款式相似度；颜色差异可作为整体目视化辅助因素，但不能单独改变重复组件结论。';
+        const dimensionDetailRule = '\n**四个视觉维度输出要求**：visual_overall、shape_contour、pattern_decoration、structure_parts 只能分析产品本身的款式、外形轮廓、图案装饰、纹理语言、结构部件和版式构图。四个字段均必须忽视数量、件数、套装数量、尺寸、规格、大小、多尺寸组合、拍摄角度、展示角度、单个/多个展示、叠放/摆放方式、包装和出货方式；颜色、配色、色彩只能在整体目视化差异中作为辅助因素描述，不得写入形状与轮廓、图案与装饰、结构与部件三个维度；禁止写“未建4个、已建1个所以差异明显”“多尺寸套装与单个产品差异明显”“仅颜色不同导致视觉差异明显”等把非图案因素当成视觉维度依据的表述。如果两边只是数量/尺寸/展示方式不同，而碗口形态、主体轮廓、棋盘格图案、装饰位置、结构部件一致或高度相似，应在四个维度中写差异较小或高度相似；如果仅颜色不同，可在整体目视化差异中写轻微或一定色彩区分，但其他三个维度仍应按款式/图案/结构本身判断。不能只写“差异较大/差异明显/无差异/差异较小”这类等级词。每个文字字段用一句自然表达说明“差异程度 + 具体款式/图案依据”，同时必须输出对应的分项百分比字段；但文字字段本身禁止出现任何百分比、分值、权重、占比、分项占比、对应分项占比、对应分项百分比、该项XX%、XX分等内部计算信息，百分比只能放在 visual_overall_percent、shape_contour_percent、pattern_decoration_percent、structure_parts_percent 和 overall_percent 字段里。不要写“依据是/原因是/主要依据是”这类套话。例如直接写“差异较小，二者均为敞口碗形主体并采用棋盘格外壁装饰，仅碗口比例或局部细节略有区别”。';
+        const summaryRule = '\n**summary字段约束**：summary 是“图案差异度总结性分析”，输出2-3句分析型总结。必须围绕款式、外形、图案、装饰、纹理、结构这些视觉差异说明为什么给出该图案差异度，不得把数量、件数、套装数量、尺寸、规格、大小、多尺寸组合、拍摄角度、展示角度、单个/多个展示、叠放/摆放方式、包装和出货方式作为差异依据。颜色/配色/色彩只能作为整体目视化辅助因素总结，不得作为图案装饰、形状轮廓或结构部件差异依据。可以归纳上方四个视觉维度的关键结论，但不要逐项机械复述“整体目视化、形状轮廓、图案装饰、结构部件”。summary、四个视觉维度和 overall_percent 必须使用同一套差异等级口径，不能前面写差异明显/差异较大，后面又写中等偏小/差异较小，也不能百分比很高但文字结论偏低；如果overall_percent低于50，禁止出现“整体视觉差异较为明显/明显/差异较大/区分度较明确”等高差异表达。summary 禁止出现受众、人群、使用场景、场景、市场、Amazon、亚马逊、竞争、关键词、上架、消费者、需求、用途、功能、是否可替代等内容。';
+        let prompt = `对比已建与未建产品图片及文字。优先采纳产品方案文字，但若文字缺少数量信息，可从图片补充。${marketHint}${consistencyRule}${noMetaComment}${competitionFocusRule}${redesignDirectionRule}${overlapRule}${imageQuantityRule}${skuBundleRule}${productSizeRule}${imageTextConsistencyRule}${primaryAccessoryRule}${appearanceDiffRule}${comprehensiveDiffRule}${componentRule}${sizeFormatRule}${pairRule}${mappingRule}${dimensionDetailRule}${summaryRule}\n【组合产品数量提取规则】只有产品方案使用“+”号连接，或方案写1套/1组但审核图明显存在多个独立组件时，才按组合产品处理并拆分 components。若产品方案明确写“某产品1个/1件/1套”，且后续只是描述该产品自带的花边、蕾丝、蝴蝶结、绑带、装饰边、印花、刺绣、口袋、提手、滚边、褶皱等结构/装饰细节，则总数量取该主体数量，不得把这些细节拆成组件相加。最终总数量 built_quantity/unbuilt_quantity 优先取主售卖产品数量；卡片、袋子、包装、标签、贴纸、点胶、丝带、勺子、叉子、夹子、擦手巾、毛巾、造雾器、雾化器、适配器、水架、支架、底座、电源、遥控器、充气泵、连接线等配件只在组件列表展示，不参与总数量相加。只有在所有组件地位相近、没有明显主品和配件时，才取所有组件数量之和。${priceInfo}\n竞争程度分5级：高度/较高/一般/较低/无竞争。详细分析(≥150字)。细分市场差异分析以“细分市场差异：较大/较小/无明显差异”开头(≥80字)。\n任务：提取描述、数量、尺寸、颜色、材质、成本水平和组件列表；总结功能用途、人群场景；必须先分别对“整体目视化差异、形状与轮廓、图案与装饰、结构与部件”写明差异程度和具体依据，并分别输出分项百分比，再据此计算overall_percent；summary只输出图案差异度总结；输出overall_percent、竞争程度、细分市场差异、重复组件和 Amazon 改款方向。`;
         if (isPioneer) prompt += `\n【首创保护期规则】首创对比的核心是产品款式/外形特征差异。若款式/外形高度相似，且材质没有明显大类差异，则不予通过，不能仅因低竞争、数量、普通尺寸变化、颜色变化或轻微表面差异放行。保护期内首创对比必须先判断是否只是数量、尺寸拓展或单纯改色：若外形/款式差异小，仅做数量、尺寸或颜色的单一拓展或组合拓展，原则上属于保护期内不可做。尺寸/容量若差异过大并明显影响用途，可作为用途差异单独说明；材质若为大类差异（如亚克力/金属/木质/陶瓷等）并影响用途，可作为非单纯拓展说明。组合产品不直接套用单品保护期限制，需回到方案差异判断。保护期外按正常查重维度判断；服装产品尺码差异不计入有效尺寸差异。\n【首创图案差异约束】展示角度、拍摄角度、俯视/侧视、叠放方式、产品数量、尺寸组合、颜色、图片裁切、光影差异不得作为款式/图案差异计算。主题/节日/适用场景不同也不得单独作为款式/图案差异加分；若版式结构、构图布局、字体结构、主体造型、装饰位置和设计语言高度相似，仅替换主题或节日元素，图案差异度不得判为≥50。但不能因为两者同属同类产品就压低差异度；只要款式/图案设计本身出现不同版式构图、不同字体结构、不同核心造型语言、不同图案绘制方案或不同主体造型，就应按真实设计差异判为≥50，差异很大时可判80%-100%。`;
         prompt += `\n\n只输出JSON：{
   "built_product_desc":"", "built_quantity":"", "built_size":{}, "built_color":"", "built_material":"", "built_cost_level":"",
@@ -1796,10 +1811,11 @@
             const unbuiltQtyNum = parseQuantityValue(res.unbuilt_quantity);
             const builtQtyNumForEdit = parseQuantityValue(res.built_quantity);
             if (res.unbuilt_quantity) uAttr.push(`<span class="attr-row">📦 数量：<span class="qty-edit"><input class="qty-input" data-side="unbuilt" type="number" min="0" step="1" value="${unbuiltQtyNum || ''}" title="可人工修正数量"><span class="qty-hint">可修正</span></span></span>`);
-            uAttr.push(`<span class="attr-row">📏 尺寸：<span class="size-edit"><input class="size-input" data-side="unbuilt" type="text" placeholder="选填" title="可人工填写尺寸，如 60x60x12cm"><span class="size-hint">可填</span></span><span>${uSizeStr !== '-' ? uSizeStr : '—'}</span></span>`);
+            const unitOptions = '<option value="mm">毫米 (mm)</option><option value="cm" selected>厘米 (cm)</option><option value="m">米 (m)</option><option value="in">英寸 (in)</option><option value="ft">英尺 (ft)</option><option value="yd">码 (yd)</option><option value="g">克 (g)</option><option value="kg">千克 (kg)</option><option value="ml">毫升 (ml)</option><option value="l">升 (L)</option>';
+            uAttr.push(`<span class="attr-row">📏 尺寸：<span class="size-edit"><input class="size-input" data-side="unbuilt" type="text" placeholder="选填" title="可人工填写尺寸，如 60x60x12"><select class="size-unit" data-side="unbuilt" title="选择人工填写尺寸的单位">${unitOptions}</select><span class="size-hint">可填</span></span><span>${uSizeStr !== '-' ? uSizeStr : '—'}</span></span>`);
             if (res.unbuilt_material) uAttr.push(`<span class="attr-row">🔧 材质：${res.unbuilt_material}</span>`);
             if (res.built_quantity) bAttr.push(`<span class="attr-row">📦 数量：<span class="qty-edit"><input class="qty-input" data-side="built" type="number" min="0" step="1" value="${builtQtyNumForEdit || ''}" title="可人工修正数量"><span class="qty-hint">可修正</span></span></span>`);
-            bAttr.push(`<span class="attr-row">📏 尺寸：<span class="size-edit"><input class="size-input" data-side="built" type="text" placeholder="选填" title="可人工填写尺寸，如 40x40x10cm"><span class="size-hint">可填</span></span><span>${bSizeStr !== '-' ? bSizeStr : '—'}</span></span>`);
+            bAttr.push(`<span class="attr-row">📏 尺寸：<span class="size-edit"><input class="size-input" data-side="built" type="text" placeholder="选填" title="可人工填写尺寸，如 40x40x10"><select class="size-unit" data-side="built" title="选择人工填写尺寸的单位">${unitOptions}</select><span class="size-hint">可填</span></span><span>${bSizeStr !== '-' ? bSizeStr : '—'}</span></span>`);
             if (res.built_material) bAttr.push(`<span class="attr-row">🔧 材质：${res.built_material}</span>`);
             const hasUnbuiltDuplicates = overlapDetails && overlapDetails.length > 0;
             const duplicateNoteHtml = hasUnbuiltDuplicates ? '<div class="duplicate-note">图案差异<50%为重复款</div>' : '';
@@ -1909,6 +1925,13 @@
                 input.addEventListener('input', e => {
                     e.stopPropagation();
                     recalcManualQuantityDiff(input.closest('.comparison-result'));
+                });
+            });
+            item.querySelectorAll('.size-unit').forEach(select => {
+                select.addEventListener('click', e => e.stopPropagation());
+                select.addEventListener('change', e => {
+                    e.stopPropagation();
+                    recalcManualQuantityDiff(select.closest('.comparison-result'));
                 });
             });
             const retry = item.querySelector('.retry-btn');
