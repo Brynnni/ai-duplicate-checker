@@ -95,7 +95,6 @@
         .manual-size-toolbar select { height:23px; min-width:48px; padding:1px 5px; border:1px solid #3b82f6; border-radius:7px; background:#fff; color:#1e3a8a; font-size:11px; font-weight:800; }
         .manual-size-toolbar .manual-size-hint { display:none; }
         .manual-size-toolbar .manual-size-note { color:#3b82f6; font-weight:600; }
-        .manual-size-toolbar-spacer { min-height:32px; margin:8px 0 4px; padding:6px 8px; border:none; visibility:hidden; pointer-events:none; }
         .comparison-summary-list { display:flex; flex-wrap:wrap; gap:6px 10px; margin-top:8px; width:100%; }
         .comparison-summary-row { display:inline-flex; align-items:center; gap:4px; padding:4px 8px; border-radius:8px; background:#f8fafc; color:#334155; font-size:12px; font-weight:600; }
         .comparison-summary-row.pass { color:#166534; background:#f0fdf4; }
@@ -3115,16 +3114,9 @@
                 const toolbar = toolbars[0];
                 const unbuiltText = result.querySelector('.product-card:first-child .product-desc-text');
                 const unbuiltSize = unbuiltText?.querySelector('.manual-size-side');
-                const builtText = result.querySelector('.product-card:nth-child(2) .product-desc-text');
-                const builtSize = builtText?.querySelector('.manual-size-side');
+                result.querySelectorAll('.manual-size-toolbar-spacer').forEach(spacer => spacer.remove());
                 toolbars.slice(1).forEach(extra => extra.remove());
                 if (toolbar && unbuiltText && unbuiltSize) unbuiltText.insertBefore(toolbar, unbuiltSize);
-                if (builtText && builtSize) {
-                    const spacer = document.createElement('div');
-                    spacer.className = 'manual-size-toolbar-spacer';
-                    spacer.setAttribute('aria-hidden', 'true');
-                    builtText.insertBefore(spacer, builtSize);
-                }
             });
             if (item.querySelector('.summary-confidence-score')) updateRecordConfidence(item, false);
             const det = item.querySelector('.record-detail');
