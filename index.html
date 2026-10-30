@@ -90,7 +90,8 @@
         .qty-edit input:focus, .size-edit input:focus, .size-edit select:focus { outline:none; border-color:#2563eb; box-shadow:0 0 0 3px #bfdbfe; background:#f8fbff; }
         .qty-edit .qty-unit { color:#475569; font-weight:600; }
         .qty-edit .qty-hint, .size-edit .size-hint { color:#1d4ed8; font-size:11px; font-weight:700; background:#dbeafe; border-radius:999px; padding:1px 6px; white-space:nowrap; }
-        .manual-size-toolbar { display:flex; align-items:center; justify-content:flex-start; gap:6px; flex-wrap:wrap; min-height:32px; margin:8px 0 4px; padding:6px 8px; border:none; border-radius:8px; background:#f1f5f9; color:#1d4ed8; font-size:11px; font-weight:800; box-shadow:none; }
+        .manual-size-toolbar { position:relative; display:flex; align-items:center; justify-content:flex-start; gap:6px; flex-wrap:wrap; min-height:32px; margin:14px 0 4px; padding:6px 8px; border:none; border-radius:8px; background:#f1f5f9; color:#1d4ed8; font-size:11px; font-weight:800; box-shadow:none; }
+        .manual-size-toolbar::before { content:""; position:absolute; left:0; right:0; top:-7px; border-top:1px solid #e2e8f0; }
         .manual-size-toolbar select { height:23px; min-width:48px; padding:1px 5px; border:1px solid #3b82f6; border-radius:7px; background:#fff; color:#1e3a8a; font-size:11px; font-weight:800; }
         .manual-size-toolbar .manual-size-hint { display:none; }
         .manual-size-toolbar .manual-size-note { color:#3b82f6; font-weight:600; }
@@ -115,7 +116,7 @@
         .confidence-detail-title { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:4px; font-weight:800; }
         .confidence-formula { color:#334155; }
         .confidence-reason-list { margin-top:4px; color:#64748b; }
-        .manual-size-side { margin-top:8px; padding-top:7px; border-top:1px solid #e2e8f0; }
+        .manual-size-side { margin-top:4px; padding-top:0; border-top:none; }
         .manual-size-side-title { display:none; }
         .manual-size-row { display:flex; align-items:center; gap:5px; min-height:27px; margin-top:4px; white-space:nowrap; }
         .manual-size-row[hidden] { display:none; }
@@ -1428,7 +1429,10 @@
     function solutionQuantityFromPart(part) {
         const seg = safeString(part).replace(/补充备注[：:].*$/g, '').replace(/供\s*\d+\s*个/g, '').trim();
         const units = '(?:个|件|条|把|套|组|片|包|支|枝|束|只|卷|张|根|枚|瓶|罐|盒|双|pcs|件装)';
-        const mainText = seg.split(/[（(【\[]/)[0];
+        const bracketText = seg.match(/[【\[]([\s\S]*?)[】\]]/)?.[1] || seg;
+        const mainText = bracketText
+            .replace(/^\s*(?:[（(]\s*(?:供[^）)]*|配|定制)\s*[）)]\s*)+/g, '')
+            .split(/[（(](?=\s*(?:颜色|尺寸|材质|款式|其他)\s*[：:])/)[0];
         const starMatches = [...mainText.matchAll(new RegExp(`(?:\\*|×|x)\\s*(\\d+(?:\\.\\d+)?)(?:\\s*${units})?`, 'gi'))];
         if (starMatches.length) {
             const last = starMatches[starMatches.length - 1];
@@ -1445,11 +1449,16 @@
         const raw = safeString(part).replace(/补充备注[：:].*$/g, '').trim();
         const bracketText = raw.match(/[【\[]([^】\]]+)/)?.[1] || '';
         let name = (bracketText || raw.replace(/^\s*\d{8,}\s*/, '')).trim();
+        // “（供一）/（供二）/（配）/（定制）”是供应或流程标记，不是产品名称。
+        // 必须先移除，否则后续按属性括号截取时会把真实名称截成空字符串。
+        name = name.replace(/^\s*(?:[（(]\s*(?:供[^）)]*|配|定制)\s*[）)]\s*)+/g, '').trim();
+        // 产品名称后的“，1个”“，每款1个，共3个”等属于数量描述，名称在此处结束。
+        name = name.split(/[,，]\s*(?=(?:(?:每|各)\s*(?:款|种)?|共|总计|合计|一共|总共)?\s*\d+(?:\.\d+)?\s*(?:个|件|条|把|套|组|片|包|支|枝|束|只|卷|张|根|枚|瓶|罐|盒|双|pcs|件装))/i)[0];
         name = name.split(/[（(【\[]/)[0]
             .replace(/(?:\*|×|x)\s*\d+(?:\.\d+)?\s*(?:个|件|条|把|套|组|片|包|支|枝|束|只|卷|张|根|枚|瓶|罐|盒|双|pcs|件装)?/gi, ' ')
             .replace(/\d+(?:\.\d+)?\s*(?:个|件|条|把|套|组|片|包|支|枝|束|只|卷|张|根|枚|瓶|罐|盒|双|pcs|件装)/gi, ' ')
             .replace(/\s*(?:一套|一组|一包)\s*$/g, '')
-            .replace(/[【】\[\]：:]/g, ' ')
+            .replace(/[【】\[\]：:，,；;]/g, ' ')
             .replace(/\s+/g, ' ')
             .trim();
         return name;
@@ -1488,6 +1497,16 @@
         // 明确写出的“X套/X组”优先表示整套销售数量，且必须是主产品分项。
         const setQuantity = quantities.find(item => /^(套|组)$/.test(item.unit) && isMain(item));
         if (setQuantity) return setQuantity.quantity;
+
+        // 组装型方案中，某一分项数量可能与其余主体分项数量之和一致，表示一一配套加工。
+        // 例如1个主体款+3个主体款+4个对应加工件，最终数量为4，不把三个分项直接相加。
+        const nonAccessoryItems = quantities.filter(item => !isAccessory(item));
+        if (nonAccessoryItems.length >= 3) {
+            const values = nonAccessoryItems.map(item => item.quantity).filter(value => value > 0).sort((a, b) => b - a);
+            if (values.length === nonAccessoryItems.length && Math.abs(values[0] - values.slice(1).reduce((sum, value) => sum + value, 0)) < 0.0001) {
+                return values[0];
+            }
+        }
 
         // 一般组合：优先取主产品数量。多个主产品时取最能代表套装单位的数量，
         // 不把盖子、吸管、盘子等附属数量叠加进去。
@@ -1534,6 +1553,14 @@
         const s = stripInternalGridCounts(text);
         if (!s) return { quantity: 1, source: 'default' };
         const units = '(?:个|件|只|颗|条|张|片|双|卷|套|包|支|枝|束|把|捆|pcs|PCS)';
+        const topLevelPlusParts = splitTopLevelSolutionParts(s, /[+＋]/);
+        if (topLevelPlusParts.length >= 2) {
+            // 顶层“+”组合中的“共N个”可能只是某个SKU的局部数量，先按所有分项关系计算。
+            const plusQty = sumPlusSeparatedQuantities(s);
+            return plusQty !== null && plusQty !== undefined && plusQty > 0
+                ? { quantity: plusQty, source: 'text' }
+                : { quantity: 1, source: 'default' };
+        }
         let match = s.match(new RegExp(`(?:共|总计|合计|一共|总共)\\s*(\\d+(?:\\.\\d+)?)\\s*${units}`));
         if (match) return { quantity: parseFloat(match[1]), source: 'text' };
         const styleEachPatterns = [
@@ -1548,8 +1575,6 @@
         if (match) return { quantity: parseFloat(match[1]) + parseFloat(match[2]), source: 'text' };
         const main = extractMainProductQuantityBeforeAccessory(s);
         if (main && main.qty > 0) return { quantity: main.qty, source: 'text' };
-        const plusQty = sumPlusSeparatedQuantities(s);
-        if (plusQty !== null && plusQty !== undefined && plusQty > 0) return { quantity: plusQty, source: 'text' };
         const generic = extractPrimaryQuantity(s);
         return generic !== null && generic !== undefined && generic > 0
             ? { quantity: generic, source: 'text' }
@@ -1583,7 +1608,11 @@
         const raw = safeString(text).trim();
         if (!raw) return '';
         return raw
-            .split(/\+?\s*补充备注\s*[：:]/i)[0]
+            // 删除每个【SKU分项】内部自己的补充备注，但保留“】 + 下一个SKU【”之后的方案。
+            // 原逻辑从第一个“补充备注”起截断整段文本，导致后续SKU无法识别为组件。
+            .replace(/[+＋]?\s*补充备注\s*[：:][^】\]]*(?=[】\]])/gi, '')
+            // 兼容不在方括号内、位于整段末尾的补充备注。
+            .replace(/[+＋]?\s*补充备注\s*[：:][\s\S]*$/i, '')
             .replace(/[+＋]\s*$/, '')
             .trim();
     }
