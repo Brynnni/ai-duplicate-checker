@@ -266,6 +266,11 @@
 
     const DB_NAME = "AIChatHistoryDB", DB_VERSION = 2, STORE_NAME = "records", HISTORY_BACKUP_KEY = "AIChatHistoryDB_records_backup_v2";
     let historyRecords = [], db = null;
+    const manualRecalcFrames = new WeakMap();
+    const manualSaveTimers = new WeakMap();
+    let historyBackupTimer = null;
+    let historyRenderTimer = null;
+    const historyRecordSaveTimers = new Map();
 
     // ---------- IndexedDB 操作 ----------
     function openDB() { return new Promise((resolve, reject) => { if (db && db.name === DB_NAME) { resolve(db); return; } const r = indexedDB.open(DB_NAME, DB_VERSION); r.onerror = e => reject(e.target.error); r.onsuccess = e => { db = e.target.result; resolve(db); }; r.onupgradeneeded = e => { const db = e.target.result; if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME, { keyPath: "id" }); }; }); }
@@ -317,8 +322,137 @@
             console.error(e);
         }
     }
-    async function addRecord(r) { historyRecords.unshift(r); await saveHistory(); renderRecordsList(); }
-    async function updateRecord(id, upd) { const idx = historyRecords.findIndex(r => r.id === id); if (idx !== -1) { historyRecords[idx] = { ...historyRecords[idx], ...upd }; await saveHistory(); renderRecordsList(); } }
+    function scheduleHistoryBackup() {
+        if (historyBackupTimer) clearTimeout(historyBackupTimer);
+        historyBackupTimer = setTimeout(() => {
+            historyBackupTimer = null;
+            saveHistoryBackup();
+        }, 1000);
+    }
+    function scheduleRecordsRender(delay = 0) {
+        if (historyRenderTimer) return;
+        historyRenderTimer = setTimeout(() => {
+            historyRenderTimer = null;
+            renderRecordsList();
+        }, delay);
+    }
+    function appendAnalyzingRecord(record) {
+        const cont = document.getElementById('recordsList');
+        if (!cont || !record) return;
+        const emptyState = cont.querySelector('p');
+        if (emptyState && cont.children.length === 1) cont.innerHTML = '';
+        const item = document.createElement('div');
+        item.className = 'record-item';
+        item.dataset.id = record.id;
+        const uPriceDisp = record.unbuiltPrice ? `$${parseFloat(record.unbuiltPrice).toFixed(2)}` : '未填';
+        const bPricesDisp = (record.builtConfigs || []).map(c => c.price ? `$${parseFloat(c.price).toFixed(2)}` : '未填').join(', ');
+        item.innerHTML = `<div class="record-summary"><div class="record-info"><div class="image-row"><div class="thumb"><img src="${record.unbuiltThumb || ''}"></div><span class="vs">VS</span>${(record.builtThumbs || []).map(t => `<div class="thumb"><img src="${t}"></div>`).join('')}</div><div class="record-desc">新品ID: ${record.newProductId || '未填'}<br>产品名称: 分析中...</div></div><div class="price-display">💰 未建: ${uPriceDisp} &nbsp;|&nbsp; 已建: ${bPricesDisp}</div><div class="record-status analyzing">AI分析中...</div></div><div class="record-detail"></div>`;
+        cont.prepend(item);
+    }
+    async function saveSingleRecord(record) {
+        if (!record) return;
+        try {
+            const database = await openDB();
+            const tx = database.transaction(STORE_NAME, "readwrite");
+            tx.objectStore(STORE_NAME).put(record);
+            await new Promise((resolve, reject) => { tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); });
+        } catch (e) {
+            console.error(e);
+        }
+    }
+    function scheduleSingleRecordSave(id, delay = 0) {
+        const key = String(id);
+        const previous = historyRecordSaveTimers.get(key);
+        if (previous) clearTimeout(previous);
+        const timer = setTimeout(() => {
+            historyRecordSaveTimers.delete(key);
+            const record = historyRecords.find(item => String(item.id) === key);
+            if (record) saveSingleRecord(record);
+        }, delay);
+        historyRecordSaveTimers.set(key, timer);
+    }
+    function getRecordItemState(recordItem) {
+        if (!recordItem) return null;
+        const record = historyRecords.find(item => String(item.id) === String(recordItem.dataset.id));
+        if (!record) return null;
+        const results = [...recordItem.querySelectorAll('.comparison-result .combined-value')]
+            .map(el => parseQuantityValue(el.textContent))
+            .filter(value => isFinite(value));
+        const allPass = [...recordItem.querySelectorAll('.comparison-result .conclusion-text')]
+            .every(el => el.textContent.includes('通过') && !el.textContent.includes('不通过'));
+        record.summaryHtml = recordItem.innerHTML;
+        record.detailHtml = recordItem.querySelector('.record-detail')?.innerHTML || record.detailHtml || '';
+        record.combinedDiff = results.length ? Math.min(...results) : record.combinedDiff;
+        record.isPass = allPass;
+        const latestConfidence = recordItem._latestConfidence;
+        if (latestConfidence) {
+            record.confidenceScore = latestConfidence.score;
+            record.confidenceLevel = latestConfidence.level;
+            record.requiresReview = latestConfidence.requiresReview;
+            record.reviewAction = latestConfidence.action;
+            record.confidenceReasons = latestConfidence.reasons;
+            record.comparisonConfidences = latestConfidence.comparisonConfidences;
+        } else {
+            const score = Number(recordItem.dataset.confidenceScore);
+            if (isFinite(score)) record.confidenceScore = score;
+            record.confidenceLevel = recordItem.dataset.confidenceLevel || record.confidenceLevel || '';
+            record.requiresReview = recordItem.dataset.requiresReview === '1';
+        }
+        return record;
+    }
+    async function saveRecordItemState(recordItem) {
+        const record = getRecordItemState(recordItem);
+        if (!record) return;
+        try {
+            const database = await openDB();
+            const tx = database.transaction(STORE_NAME, "readwrite");
+            tx.objectStore(STORE_NAME).put(record);
+            await new Promise((resolve, reject) => { tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); });
+            // 备份延后到输入空闲后执行，避免大体积历史记录阻塞输入过程。
+            scheduleHistoryBackup();
+        } catch (e) {
+            console.error(e);
+        }
+    }
+    function scheduleManualRecordSave(recordItem) {
+        if (!recordItem) return;
+        const previous = manualSaveTimers.get(recordItem);
+        if (previous) clearTimeout(previous);
+        const timer = setTimeout(() => {
+            manualSaveTimers.delete(recordItem);
+            saveRecordItemState(recordItem);
+        }, 250);
+        manualSaveTimers.set(recordItem, timer);
+    }
+    function scheduleManualRecalc(container) {
+        if (!container || manualRecalcFrames.has(container)) return;
+        const flush = () => {
+            manualRecalcFrames.delete(container);
+            recalcManualQuantityDiff(container);
+            scheduleManualRecordSave(container.closest('.record-item'));
+        };
+        const frame = typeof requestAnimationFrame === 'function'
+            ? requestAnimationFrame(flush)
+            : setTimeout(flush, 0);
+        manualRecalcFrames.set(container, frame);
+    }
+    function addRecord(r, options = {}) {
+        historyRecords.unshift(r);
+        if (options.deferRender) appendAnalyzingRecord(r);
+        else renderRecordsList();
+        // 新记录先进入内存并立即开始分析，持久化改为后台单条写入。
+        scheduleSingleRecordSave(r.id, 0);
+        scheduleHistoryBackup();
+        return r;
+    }
+    async function updateRecord(id, upd) {
+        const idx = historyRecords.findIndex(r => r.id === id);
+        if (idx === -1) return;
+        historyRecords[idx] = { ...historyRecords[idx], ...upd };
+        scheduleRecordsRender(0);
+        scheduleSingleRecordSave(id, 0);
+        scheduleHistoryBackup();
+    }
     async function clearHistory() { historyRecords = []; await saveHistory(); renderRecordsList(); }
 
     // ---------- 辅助函数 ----------
@@ -879,39 +1013,45 @@
         };
     }
 
-    function buildFinalAuditRemark({ isPass, isPioneer = false, inProtection = false, marketPass = false, appearDiff = 0, quantityDiff = 0, sizeDiff = null, hasCombination = false, hasDuplicates = false, strongColor = false, styleDiff = false, patternDiff = false } = {}) {
+    function buildFinalAuditRemark({ isPass, isPioneer = false, inProtection = false, marketPass = false, appearDiff = 0, quantityDiff = 0, sizeDiff = null, hasCombination = false, hasDuplicates = false, strongColor = false, styleDiff = false, patternDiff = false, materialDiff = false } = {}) {
         const appearance = Number(appearDiff) || 0;
         const quantity = Number(quantityDiff) || 0;
         const size = sizeDiff === null || sizeDiff === '' || !isFinite(Number(sizeDiff)) ? null : Number(sizeDiff);
+        const hasQuantityDiff = quantity > 0;
+        const hasSizeDiff = size !== null && size > 0;
+
+        // 备注只提取人工审核常用的核心差异，不重复展示综合差异度和判定规则。
         if (isPass) {
             if (marketPass && appearance < 50) return '上架竞争程度较低，细分市场差异较大，可以尝试';
+
             const reasons = [];
-            if (strongColor && appearance >= 50) reasons.push('颜色目视化差异明显');
-            else if (appearance >= 50) {
-                if (styleDiff && patternDiff) reasons.push('款式、图案设计差异');
-                else if (styleDiff) reasons.push('款式差异');
-                else if (patternDiff) reasons.push('图案设计差异');
-                else reasons.push(hasCombination ? '组合搭配差异' : '整体目视化差异');
-            }
-            if (quantity > 0) reasons.push('数量差异');
-            if (size !== null && size > 0) reasons.push('尺寸差异');
-            if (!reasons.length) reasons.push('整体差异');
-            return `${reasons.slice(0, 3).join('、')}，综合满足，可以尝试`;
+            if (hasCombination && (styleDiff || patternDiff || appearance >= 50)) reasons.push('组合搭配差异');
+            if (styleDiff) reasons.push('款式差异');
+            if (patternDiff) reasons.push('图案设计差异');
+            if (strongColor && appearance >= 50) reasons.push('颜色差异');
+            if (materialDiff) reasons.push('材质差异');
+            if (hasSizeDiff) reasons.push('尺寸差异');
+            if (hasQuantityDiff) reasons.push('数量差异');
+
+            if (appearance >= 50 && !reasons.length) reasons.push('整体差异');
+            if (!reasons.length) reasons.push(hasCombination ? '组合搭配差异' : '整体差异');
+            return `${reasons.slice(0, 3).join('、')}，可以尝试`;
         }
-        if (isPioneer && inProtection && appearance < 50) return '首创保护期内款式差异不足，暂不可建';
-        if (hasCombination && hasDuplicates) return '组合搭配重复度较高，整体差异不足，暂不可建';
-        const reasons = [];
-        if (appearance <= 20 && !styleDiff && !patternDiff) reasons.push('款式和图案设计高度相似');
-        else if (appearance < 50 && styleDiff && patternDiff) reasons.push('款式、图案设计差异较小');
-        else if (appearance < 50 && styleDiff) reasons.push('款式差异较小');
-        else if (appearance < 50 && patternDiff) reasons.push('图案设计差异较小');
-        else if (appearance < 50) reasons.push('整体目视化差异较小');
-        if (quantity === 0) reasons.push('数量一致');
-        else if (quantity < 20) reasons.push('数量差异较小');
-        if (size !== null && size === 0) reasons.push('尺寸一致');
-        else if (size !== null && size < 20) reasons.push('尺寸差异较小');
-        if (!reasons.length) reasons.push('整体有效差异不足');
-        return `${reasons.slice(0, 3).join('，')}，整体差异不足，暂不可建`;
+
+        if (isPioneer && inProtection && appearance < 50) return '首创保护期内，暂不可建';
+        if (hasCombination && hasDuplicates) return '与已建组合搭配重复度较高，整体差异不足，暂不可建';
+        if (hasCombination && appearance < 50) return '组合搭配差异小，整体差异不足，暂不可建';
+
+        // 不通过备注按人工审核习惯给出最能解释结论的一条主因，避免堆叠互相冲突的话术。
+        if (!styleDiff && !patternDiff) {
+            if (hasSizeDiff && size < 20) return '与已建款式一致，尺寸差异小，暂不可建';
+            if (hasQuantityDiff && quantity < 20) return '款式一致，数量差异小，整体差异不足，暂不可建';
+            return '款式一致，整体差异不足，暂不可建';
+        }
+        if (appearance < 50 && styleDiff && patternDiff) return '款式、图案设计差异较小，暂不可建';
+        if (appearance < 50 && styleDiff) return '款式差异较小，整体差异不足，暂不可建';
+        if (appearance < 50 && patternDiff) return '图案设计差异较小，整体差异不足，暂不可建';
+        return '整体差异不足，暂不可建';
     }
 
     const CONFIDENCE_RULE_VERSION = '1.0';
@@ -1122,6 +1262,14 @@
         recordItem.dataset.confidenceScore = String(finalConfidence.score);
         recordItem.dataset.confidenceLevel = finalConfidence.level;
         recordItem.dataset.requiresReview = finalConfidence.requiresReview ? '1' : '0';
+        recordItem._latestConfidence = {
+            score: finalConfidence.score,
+            level: finalConfidence.level,
+            requiresReview: finalConfidence.requiresReview,
+            action: finalConfidence.action,
+            reasons: finalConfidence.reasons,
+            comparisonConfidences: confidences
+        };
         if (persist && recordItem.dataset.id) {
             const record = historyRecords.find(item => String(item.id) === String(recordItem.dataset.id));
             if (record) {
@@ -1154,7 +1302,8 @@
             hasDuplicates: result.dataset.hasDuplicates === '1',
             strongColor: result.dataset.strongColor === '1',
             styleDiff: result.dataset.styleDiff === '1',
-            patternDiff: result.dataset.patternDiff === '1'
+            patternDiff: result.dataset.patternDiff === '1',
+            materialDiff: result.dataset.materialDiff === '1'
         });
     }
 
@@ -1250,7 +1399,9 @@
                 row.innerHTML = `${pass ? '✅ 通过' : '❌ 不通过'} 对比已建${index}：综合差异度 <span class="comparison-summary-diff">${displayPercentValue(isFinite(diff) ? diff : 0)}</span><span class="comparison-summary-confidence"></span>`;
             });
             updateRecordAuditRemark(recordItem);
-            updateRecordConfidence(recordItem);
+            // 输入过程中只更新当前记录的界面，保存延后到防抖计时器，避免每个字符触发整库写入。
+            updateRecordConfidence(recordItem, false);
+            scheduleManualRecordSave(recordItem);
         }
     }
 
@@ -2783,7 +2934,8 @@
                 hasDuplicates,
                 strongColor,
                 styleDiff: auditVisualFlags.styleDiff,
-                patternDiff: auditVisualFlags.patternDiff
+                patternDiff: auditVisualFlags.patternDiff,
+                materialDiff: hasMajorMaterialDiff(res)
             });
             if (!isPass) overallPass = false; if (combined < finalMin) finalMin = combined;
             comparisonSummaryRows.push({ index: i + 1, isPass, combined: combinedRounded, auditRemark, confidence });
@@ -2855,7 +3007,7 @@
             const builtSchemeText = safeString(b.text);
             res.unbuilt_product_desc = `<div class="product-scheme-text">${escapeHtml(unbuiltSchemeText.trim() ? unbuiltSchemeText : '—')}</div>${unbuiltResult.html ? `<div class="sub-items">${unbuiltResult.html}</div>` : ''}`;
             res.built_product_desc = `<div class="product-scheme-text">${escapeHtml(builtSchemeText.trim() ? builtSchemeText : '—')}</div>${builtResult.html ? `<div class="sub-items">${builtResult.html}</div>` : ''}`;
-            allHtml += `<div class="comparison-result" data-comparison-index="${i + 1}" data-appear-diff="${appearDiff}" data-quantity-diff="${qDiff !== null && !isNaN(qDiff) ? qDiff : ''}" data-size-diff="${(!skipSizeDiff && sizeDiff !== null && !isNaN(sizeDiff)) ? sizeDiff : ''}" data-current-size-diff="${(!skipSizeDiff && sizeDiff !== null && !isNaN(sizeDiff)) ? sizeDiff : ''}" data-skip-size="${skipSizeDiff ? '1' : '0'}" data-pioneer="${isPio ? '1' : '0'}" data-in-protection="${inProt ? '1' : '0'}" data-market-pass="${passedByMarketDifference ? '1' : '0'}" data-has-combination="${hasCombination ? '1' : '0'}" data-has-duplicates="${hasDuplicates ? '1' : '0'}" data-strong-color="${strongColor ? '1' : '0'}" data-style-diff="${auditVisualFlags.styleDiff ? '1' : '0'}" data-pattern-diff="${auditVisualFlags.patternDiff ? '1' : '0'}" data-confidence-path="${confidencePath}" data-confidence-evidence="${encodeURIComponent(JSON.stringify(evidenceIssues))}" data-overlap-ratio="${normalizedOverlapRatio ?? ''}" data-competition-level="${compLevel || ''}" data-market-reliable="${marketReliable ? '1' : '0'}" style="margin-bottom:20px; border:1px solid #e2e8f0; border-radius:16px; padding:12px;"><h4 style="margin-bottom:12px;">📊 对比已建 ${i+1}</h4>${imagesHtml}<div class="product-descriptions"><div class="product-card"><h4>📦 未建</h4><div class="product-desc-text">${res.unbuilt_product_desc || '—'}${uAttr.length ? `<div class="attr">${uAttr.join('')}</div>` : ''}${manualSizeToolbarHtml}${unbuiltManualSizeHtml}${duplicateNoteHtml}</div></div><div class="product-card"><h4>🏷️ 已建</h4><div class="product-desc-text">${res.built_product_desc || '—'}${bAttr.length ? `<div class="attr">${bAttr.join('')}</div>` : ''}${manualSizeToolbarHtml}${builtManualSizeHtml}</div></div></div><div class="dimension-summary"><div class="dimension-card"><h4>📊 方案差异度</h4><div class="dimension-value scheme-value">${schemeValue}</div><div class="sub-value scheme-sub">${schemeSubValue}</div></div><div class="dimension-card"><h4>🎨 图案差异度</h4><div class="dimension-value">${appearDiffDisplay}</div><div class="sub-value">款式/图案分析</div></div><div class="dimension-card"><h4>⚖️ 综合差异度</h4><div class="dimension-value combined-value">${formatPercent(combinedRounded)}</div><div class="sub-value combined-sub">${combinedSubValue}</div></div></div><div class="formula-area"><div><strong>📐 计算过程：</strong></div><div class="quantity-calc">${qDisp.replace(/^<div>|<\/div>$/g, '')}</div>${sizeDisp}<div>图案差异 = ${appearDiffDisplay}</div><div class="combined-calc">综合差异 = ${formatPercent(combinedRounded)}</div></div><div class="diff-detail">${funcHtml}${sceneHtml}${visualOverallHtml}${shapeContourHtml}${patternDecorationHtml}${structurePartsHtml}${patternSummaryHtml}${pioneerHtml}${compHtml}</div>${renderConfidenceDetail(confidence)}<div class="final-conclusion"><div class="conclusion-text ${isPass ? 'pass' : 'fail'}">${isPass ? '✅ 通过' : '❌ 不通过'}</div>${passedByMarketDifference ? `<div style="font-size:12px;color:#15803d;">上架竞争程度较低，细分市场差异大，通过</div>` : ''}</div></div>`;
+            allHtml += `<div class="comparison-result" data-comparison-index="${i + 1}" data-appear-diff="${appearDiff}" data-quantity-diff="${qDiff !== null && !isNaN(qDiff) ? qDiff : ''}" data-size-diff="${(!skipSizeDiff && sizeDiff !== null && !isNaN(sizeDiff)) ? sizeDiff : ''}" data-current-size-diff="${(!skipSizeDiff && sizeDiff !== null && !isNaN(sizeDiff)) ? sizeDiff : ''}" data-skip-size="${skipSizeDiff ? '1' : '0'}" data-pioneer="${isPio ? '1' : '0'}" data-in-protection="${inProt ? '1' : '0'}" data-market-pass="${passedByMarketDifference ? '1' : '0'}" data-has-combination="${hasCombination ? '1' : '0'}" data-has-duplicates="${hasDuplicates ? '1' : '0'}" data-strong-color="${strongColor ? '1' : '0'}" data-style-diff="${auditVisualFlags.styleDiff ? '1' : '0'}" data-pattern-diff="${auditVisualFlags.patternDiff ? '1' : '0'}" data-material-diff="${hasMajorMaterialDiff(res) ? '1' : '0'}" data-confidence-path="${confidencePath}" data-confidence-evidence="${encodeURIComponent(JSON.stringify(evidenceIssues))}" data-overlap-ratio="${normalizedOverlapRatio ?? ''}" data-competition-level="${compLevel || ''}" data-market-reliable="${marketReliable ? '1' : '0'}" style="margin-bottom:20px; border:1px solid #e2e8f0; border-radius:16px; padding:12px;"><h4 style="margin-bottom:12px;">📊 对比已建 ${i+1}</h4>${imagesHtml}<div class="product-descriptions"><div class="product-card"><h4>📦 未建</h4><div class="product-desc-text">${res.unbuilt_product_desc || '—'}${uAttr.length ? `<div class="attr">${uAttr.join('')}</div>` : ''}${manualSizeToolbarHtml}${unbuiltManualSizeHtml}${duplicateNoteHtml}</div></div><div class="product-card"><h4>🏷️ 已建</h4><div class="product-desc-text">${res.built_product_desc || '—'}${bAttr.length ? `<div class="attr">${bAttr.join('')}</div>` : ''}${manualSizeToolbarHtml}${builtManualSizeHtml}</div></div></div><div class="dimension-summary"><div class="dimension-card"><h4>📊 方案差异度</h4><div class="dimension-value scheme-value">${schemeValue}</div><div class="sub-value scheme-sub">${schemeSubValue}</div></div><div class="dimension-card"><h4>🎨 图案差异度</h4><div class="dimension-value">${appearDiffDisplay}</div><div class="sub-value">款式/图案分析</div></div><div class="dimension-card"><h4>⚖️ 综合差异度</h4><div class="dimension-value combined-value">${formatPercent(combinedRounded)}</div><div class="sub-value combined-sub">${combinedSubValue}</div></div></div><div class="formula-area"><div><strong>📐 计算过程：</strong></div><div class="quantity-calc">${qDisp.replace(/^<div>|<\/div>$/g, '')}</div>${sizeDisp}<div>图案差异 = ${appearDiffDisplay}</div><div class="combined-calc">综合差异 = ${formatPercent(combinedRounded)}</div></div><div class="diff-detail">${funcHtml}${sceneHtml}${visualOverallHtml}${shapeContourHtml}${patternDecorationHtml}${structurePartsHtml}${patternSummaryHtml}${pioneerHtml}${compHtml}</div>${renderConfidenceDetail(confidence)}<div class="final-conclusion"><div class="conclusion-text ${isPass ? 'pass' : 'fail'}">${isPass ? '✅ 通过' : '❌ 不通过'}</div>${passedByMarketDifference ? `<div style="font-size:12px;color:#15803d;">上架竞争程度较低，细分市场差异大，通过</div>` : ''}</div></div>`;
         }
         const finalPass = overallPass, shortDesc = cachedUnbuilt?.short_desc || '—';
         const hasPassComparison = comparisonSummaryRows.some(row => row.isPass);
@@ -2952,21 +3104,26 @@
                 input.addEventListener('click', e => e.stopPropagation());
                 input.addEventListener('input', e => {
                     e.stopPropagation();
-                    recalcManualQuantityDiff(input.closest('.comparison-result'));
+                    scheduleManualRecalc(input.closest('.comparison-result'));
                 });
+                input.addEventListener('change', () => scheduleManualRecordSave(input.closest('.record-item')));
+                input.addEventListener('blur', () => scheduleManualRecordSave(input.closest('.record-item')));
             });
             item.querySelectorAll('.size-input').forEach(input => {
                 input.addEventListener('click', e => e.stopPropagation());
                 input.addEventListener('input', e => {
                     e.stopPropagation();
-                    recalcManualQuantityDiff(input.closest('.comparison-result'));
+                    scheduleManualRecalc(input.closest('.comparison-result'));
                 });
+                input.addEventListener('change', () => scheduleManualRecordSave(input.closest('.record-item')));
+                input.addEventListener('blur', () => scheduleManualRecordSave(input.closest('.record-item')));
             });
             item.querySelectorAll('.size-unit').forEach(select => {
                 select.addEventListener('click', e => e.stopPropagation());
                 select.addEventListener('change', e => {
                     e.stopPropagation();
-                    recalcManualQuantityDiff(select.closest('.comparison-result'));
+                    scheduleManualRecalc(select.closest('.comparison-result'));
+                    scheduleManualRecordSave(select.closest('.record-item'));
                 });
             });
             item.querySelectorAll('.size-count-select').forEach(select => {
@@ -2975,7 +3132,8 @@
                     e.stopPropagation();
                     const result = select.closest('.comparison-result');
                     updateManualSizeRows(result);
-                    recalcManualQuantityDiff(result);
+                    scheduleManualRecalc(result);
+                    scheduleManualRecordSave(select.closest('.record-item'));
                 });
                 updateManualSizeRows(select.closest('.comparison-result'));
             });
@@ -2995,6 +3153,14 @@
         if (!unbuilt.imageDataUrl) { alert('请上传未建产品图片'); return; }
         const anyBuilt = Object.keys(builtItems).some(k => builtItems[k].imageDataUrl);
         if (!anyBuilt) { alert('请至少上传一个已建图片'); return; }
+        if (this.dataset.launching === '1') return;
+        const compareButton = this;
+        compareButton.dataset.launching = '1';
+        compareButton.disabled = true;
+        compareButton.dataset.defaultText = compareButton.dataset.defaultText || compareButton.textContent;
+        compareButton.textContent = '⏳ 正在启动分析...';
+        // 先让按钮状态完成绘制，再执行历史记录和分析准备工作。
+        await new Promise(resolve => requestAnimationFrame(resolve));
         // 新分析始终展示在记录列表中，避免从“分析中”变为完成后被置信度筛选隐藏。
         const confidenceFilterEl = document.getElementById('confidenceFilter');
         const confidenceSortEl = document.getElementById('confidenceSort');
@@ -3008,7 +3174,11 @@
         clearComparisonGroup();
         const recId = Date.now() + '_' + Math.random();
         const tmp = { id: recId, newProductId: newId, timestamp: new Date().toLocaleString(), status: 'analyzing', summaryHtml: '', detailHtml: '', errorMessage: '', isPass: false, combinedDiff: 0, confidenceScore: null, confidenceLevel: '', requiresReview: false, reviewAction: '', confidenceReasons: [], comparisonConfidences: [], confidenceRuleVersion: CONFIDENCE_RULE_VERSION, unbuiltThumb: uThumb, builtThumbs: bThumbs, unbuiltDesc: uTxt, unbuiltPrice: uPrice, builtConfigs: builtData.map(b => ({ text: b.text, price: b.price, compareType: b.compareType, buildDate: b.buildDate, productType: b.productType })), productName: '', unbuiltImageData: uImg, builtImagesData: builtData.map(b => b.imageData) };
-        await addRecord(tmp);
+        // 不等待整批历史记录落盘或重绘，先把分析请求交给后台异步流程。
+        addRecord(tmp, { deferRender: true });
+        compareButton.dataset.launching = '0';
+        compareButton.disabled = false;
+        compareButton.textContent = compareButton.dataset.defaultText;
         (async () => {
             try {
                 const cfg = { unbuiltImageData: uImg, unbuiltText: uTxt, unbuiltPrice: uPrice, newProductId: newId, unbuiltThumb: uThumb, builtThumbs: bThumbs, builtItemsData: builtData };
