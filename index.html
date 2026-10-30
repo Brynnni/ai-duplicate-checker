@@ -49,11 +49,13 @@
         .history-header { background:#f1f5f9; padding:12px 20px; font-weight:bold; font-size:18px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; }
         .search-box { display:flex; gap:8px; align-items:center; }
         .search-box input { padding:6px 12px; border-radius:30px; border:1px solid #cbd5e1; width:200px; }
+        .search-box select { padding:6px 10px; border-radius:10px; border:1px solid #cbd5e1; background:#fff; color:#334155; font-size:12px; }
         .search-box button { background:#3b82f6; color:white; border:none; border-radius:30px; padding:6px 16px; cursor:pointer; }
         .records-list { padding:20px; }
         .record-item { background:#f9fafb; border-radius:16px; margin-bottom:16px; border:1px solid #e2e8f0; }
-        .record-summary { padding:12px 16px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; background:#ffffff; border-radius:16px; }
-        .record-summary:hover { background:#f1f5f9; }
+        .record-summary { padding:12px 16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; background:#ffffff; border-radius:16px; }
+        .record-summary:hover { background:#ffffff; }
+        .toggle-icon { display:none !important; }
         .record-info { display:flex; gap:20px; flex-wrap:wrap; align-items:center; }
         .image-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
         .thumb { width:50px; height:50px; background:#e2e8f0; border-radius:8px; display:flex; align-items:center; justify-content:center; overflow:hidden; }
@@ -66,13 +68,17 @@
         .record-status.fail { background:#b91c1c; color:white; }
         .record-status.analyzing { background:#eab308; color:white; }
         .retry-btn { background:#3b82f6; color:white; border:none; border-radius:30px; padding:4px 12px; font-size:12px; cursor:pointer; }
-        .record-detail { padding:16px; border-top:1px solid #e2e8f0; display:none; background:#f9fafb; }
-        .record-detail.show { display:block; }
+        .analysis-failure-card { width:100%; padding:12px 14px; border-radius:12px; background:#fef2f2; color:#991b1b; line-height:1.55; overflow-wrap:anywhere; }
+        .analysis-failure-title { font-weight:800; margin-bottom:4px; }
+        .analysis-failure-message { color:#b91c1c; font-size:13px; }
+        .analysis-failure-actions { margin-top:8px; text-align:right; }
+        .record-detail { padding:16px; border-top:1px solid #e2e8f0; display:block !important; background:#f9fafb; }
         .clear-history { background:#ef4444; color:white; border:none; border-radius:30px; padding:6px 16px; font-size:13px; cursor:pointer; margin-left:16px; }
-        .product-descriptions { display:flex; gap:20px; margin-bottom:20px; flex-wrap:wrap; }
-        .product-card { flex:1; background:#f1f5f9; border-radius:16px; padding:12px; }
+        .product-descriptions { display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr); gap:20px; margin-bottom:20px; align-items:start; }
+        .product-card { min-width:0; background:#f1f5f9; border-radius:16px; padding:12px; }
         .product-card h4 { margin-bottom:8px; font-size:15px; }
         .product-desc-text { font-size:13px; background:white; padding:10px; border-radius:12px; line-height:1.45; }
+        .product-scheme-text { white-space:pre-wrap; overflow-wrap:anywhere; word-break:break-word; }
         .product-desc-text .attr { margin-top:8px; padding-top:7px; border-top:1px solid #e2e8f0; font-size:12px; color:#475569; display:flex; flex-direction:column; gap:6px; align-items:flex-start; }
         .attr-row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; line-height:1.35; }
         .qty-edit, .size-edit { display:inline-flex; align-items:center; gap:5px; min-height:26px; padding:3px 7px; border-radius:10px; background:#eff6ff; border:1px solid #93c5fd; box-shadow:inset 0 0 0 1px rgba(255,255,255,0.65); vertical-align:middle; }
@@ -84,6 +90,44 @@
         .qty-edit input:focus, .size-edit input:focus, .size-edit select:focus { outline:none; border-color:#2563eb; box-shadow:0 0 0 3px #bfdbfe; background:#f8fbff; }
         .qty-edit .qty-unit { color:#475569; font-weight:600; }
         .qty-edit .qty-hint, .size-edit .size-hint { color:#1d4ed8; font-size:11px; font-weight:700; background:#dbeafe; border-radius:999px; padding:1px 6px; white-space:nowrap; }
+        .manual-size-toolbar { display:flex; align-items:center; justify-content:flex-start; gap:6px; flex-wrap:wrap; min-height:32px; margin:8px 0 4px; padding:6px 8px; border:none; border-radius:8px; background:#f1f5f9; color:#1d4ed8; font-size:11px; font-weight:800; box-shadow:none; }
+        .manual-size-toolbar select { height:23px; min-width:48px; padding:1px 5px; border:1px solid #3b82f6; border-radius:7px; background:#fff; color:#1e3a8a; font-size:11px; font-weight:800; }
+        .manual-size-toolbar .manual-size-hint { display:none; }
+        .manual-size-toolbar .manual-size-note { color:#3b82f6; font-weight:600; }
+        .manual-size-toolbar-spacer { min-height:32px; margin:8px 0 4px; padding:6px 8px; border:none; visibility:hidden; pointer-events:none; }
+        .comparison-summary-list { display:flex; flex-wrap:wrap; gap:6px 10px; margin-top:8px; width:100%; }
+        .comparison-summary-row { display:inline-flex; align-items:center; gap:4px; padding:4px 8px; border-radius:8px; background:#f8fafc; color:#334155; font-size:12px; font-weight:600; }
+        .comparison-summary-row.pass { color:#166534; background:#f0fdf4; }
+        .comparison-summary-row.fail { color:#991b1b; background:#fef2f2; }
+        .comparison-summary-row .comparison-summary-diff { font-weight:800; }
+        .summary-audit-note { align-self:center; max-width:720px; padding:6px 10px; border-radius:6px; background:#f8fafc; color:#475569; font-size:13px; line-height:1.5; }
+        .summary-audit-note-label { margin-right:4px; color:#334155; font-weight:700; }
+        .confidence-summary { display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:6px 10px; border-radius:8px; background:#eff6ff; color:#1e3a8a; font-size:12px; }
+        .confidence-score { font-size:18px; font-weight:800; color:#0f172a; }
+        .confidence-badge { display:inline-flex; align-items:center; justify-content:center; min-width:62px; padding:3px 9px; border-radius:999px; font-size:12px; font-weight:800; }
+        .confidence-badge.high { color:#166534; background:#dcfce7; }
+        .confidence-badge.medium { color:#854d0e; background:#fef9c3; }
+        .confidence-badge.low { color:#991b1b; background:#fee2e2; }
+        .review-action { font-weight:700; color:#334155; }
+        .review-action.required { color:#b91c1c; }
+        .confidence-reasons { width:100%; color:#475569; line-height:1.45; }
+        .confidence-detail { margin-top:12px; padding:10px 12px; border-radius:8px; background:#eff6ff; color:#1e3a8a; font-size:12px; line-height:1.55; }
+        .confidence-detail-title { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:4px; font-weight:800; }
+        .confidence-formula { color:#334155; }
+        .confidence-reason-list { margin-top:4px; color:#64748b; }
+        .manual-size-side { margin-top:8px; padding-top:7px; border-top:1px solid #e2e8f0; }
+        .manual-size-side-title { display:none; }
+        .manual-size-row { display:flex; align-items:center; gap:5px; min-height:27px; margin-top:4px; white-space:nowrap; }
+        .manual-size-row[hidden] { display:none; }
+        .manual-size-label { color:#475569; font-size:12px; flex:0 0 auto; }
+        .manual-size-index { display:none; }
+        .manual-size-row input { width:80px; height:23px; padding:2px 8px; border:1px solid #93c5fd; border-radius:8px; background:#fff; color:#0f172a; font-size:11px; font-weight:500; }
+        .manual-size-row select { width:88px; height:23px; padding:1px 3px; border:1px solid #93c5fd; border-radius:8px; background:#fff; color:#0f172a; font-size:11px; font-weight:600; }
+        .manual-size-fill { color:#2563eb; background:#eff6ff; border:1px solid #bfdbfe; border-radius:999px; padding:1px 6px; font-size:10px; font-weight:700; flex:0 0 auto; }
+        .manual-size-row input:focus, .manual-size-row select:focus, .manual-size-toolbar select:focus { outline:none; border-color:#2563eb; box-shadow:0 0 0 3px #bfdbfe; }
+        .manual-size-ai { margin-left:2px; color:#475569; font-size:11px; line-height:1.35; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .manual-size-columns { flex-basis:100%; display:flex; gap:10px; flex-wrap:wrap; }
+        .size-calc { line-height:1.5; }
         .product-desc-text .sub-items { margin-top:8px; padding-left:8px; border-left:2px solid #cbd5e1; }
         .product-desc-text .sub-item { padding:2px 0; font-size:12px; color:#334155; line-height:1.35; }
         .product-desc-text .sub-item.duplicate-item { color:#991b1b; }
@@ -98,6 +142,9 @@
         .diff-item { border-bottom:1px solid #e2e8f0; padding:10px 0; }
         .diff-label { font-weight:700; margin-bottom:4px; font-size:13px; }
         .diff-desc { font-size:13px; line-height:1.4; }
+        .diff-item.inline-diff-item { display:flex; align-items:flex-start; gap:4px; }
+        .inline-diff-item .diff-label { flex:0 0 auto; margin:0; line-height:1.4; }
+        .inline-diff-item .diff-desc { flex:1 1 auto; min-width:0; }
         .product-images-compare { display:flex; gap:16px; margin-bottom:20px; }
         .product-image-box { flex:1; text-align:center; }
         .product-image-box img { max-width:100%; max-height:200px; border-radius:12px; border:1px solid #e2e8f0; }
@@ -121,16 +168,27 @@
         .competition-level-box { background:#f0f9ff; padding:8px 12px; border-radius:12px; margin-bottom:12px; border-left:4px solid #0284c7; }
         .competition-level-box .label { font-weight:700; color:#0369a1; margin-bottom:6px; font-size:13px; }
         .competition-analysis-text { margin-bottom:12px; }
+        .market-inline-row { display:flex; align-items:flex-start; gap:4px; }
+        .market-inline-row .market-inline-label { flex:0 0 auto; font-weight:700; line-height:1.5; }
+        .market-inline-row .market-inline-content { flex:1 1 auto; min-width:0; line-height:1.5; }
         .competition-highlights { margin:8px 0 12px; padding-left:18px; line-height:1.55; }
         .competition-highlights li { margin:4px 0; }
         .submarket-box { background:#e0f2fe; border-left:4px solid #0284c7; padding:10px 12px; border-radius:12px; margin-top:12px; }
         .submarket-box .label { font-weight:700; color:#0369a1; margin-bottom:6px; font-size:13px; }
+        .submarket-box.market-inline-row .label { flex:0 0 auto; margin-bottom:0; line-height:1.5; }
         .submarket-box .content { font-size:13px; line-height:1.5; color:#0c4a6e; }
+        .submarket-box.market-inline-row .content { flex:1 1 auto; min-width:0; }
         @media (max-width:700px) {
             .compare-layout { flex-direction:column; }
-            .product-descriptions { flex-direction:column; }
+            .product-descriptions { grid-template-columns:minmax(0, 1fr); }
             .dimension-summary { flex-direction:column; align-items:center; }
             .record-info { flex-direction:column; align-items:flex-start; }
+            .history-header { align-items:stretch; }
+            .search-box { width:100%; flex-wrap:wrap; }
+            .search-box input { flex:1 1 180px; width:auto; min-width:0; }
+            .search-box select { flex:1 1 130px; min-width:0; }
+            .manual-size-row { flex-wrap:wrap; white-space:normal; }
+            .manual-size-ai { flex-basis:100%; margin-left:52px; }
         }
     </style>
 </head>
@@ -176,6 +234,18 @@
             <span>📋 查重记录</span>
             <div class="search-box">
                 <input type="text" id="historySearchInput" placeholder="按新品ID搜索">
+                <select id="confidenceFilter" title="按置信度或复核状态筛选">
+                    <option value="review">待复核</option>
+                    <option value="all" selected>全部记录（默认）</option>
+                    <option value="high">高置信</option>
+                    <option value="medium">中置信</option>
+                    <option value="low">低置信</option>
+                </select>
+                <select id="confidenceSort" title="记录排序方式">
+                    <option value="time">按时间排序</option>
+                    <option value="confidence_asc">置信度从低到高</option>
+                    <option value="confidence_desc">置信度从高到低</option>
+                </select>
                 <button id="historySearchBtn">搜索</button>
                 <button id="historyResetBtn">重置</button>
                 <button class="clear-history" id="clearHistoryBtn">清空记录</button>
@@ -192,6 +262,7 @@
     const DOUBAO_API_KEY = "fbcfcc90-d805-42a1-9424-f983f423c09a";
     const DOUBAO_ENDPOINT_ID = "ep-20260320164842-rsqff";
     const DOUBAO_URL = "https://ark.cn-beijing.volces.com/api/v3/chat/completions";
+    const aiImageCache = new Map();
 
     const DB_NAME = "AIChatHistoryDB", DB_VERSION = 2, STORE_NAME = "records", HISTORY_BACKUP_KEY = "AIChatHistoryDB_records_backup_v2";
     let historyRecords = [], db = null;
@@ -252,6 +323,28 @@
 
     // ---------- 辅助函数 ----------
     function safeString(s) { return typeof s === 'string' ? s : ''; }
+    function normalizeAnalysisErrorMessage(error) {
+        const message = safeString(error?.message || error).replace(/\s+/g, ' ').trim();
+        return message || '接口或图片处理发生未知错误';
+    }
+    function renderAnalysisFailure(errorMessage) {
+        const message = normalizeAnalysisErrorMessage(errorMessage);
+        return `<div class="analysis-failure-card"><div class="analysis-failure-title">分析失败</div><div class="analysis-failure-message">${escapeHtml(message)}</div></div>`;
+    }
+    function getRecordFailureMessage(record) {
+        if (safeString(record?.errorMessage).trim()) return normalizeAnalysisErrorMessage(record.errorMessage);
+        const legacyHtml = safeString(record?.summaryHtml);
+        if (legacyHtml) {
+            const holder = document.createElement('div');
+            holder.innerHTML = legacyHtml;
+            const text = safeString(holder.textContent).replace(/^\s*分析失败\s*[：:]?\s*/i, '').trim();
+            if (text) return text;
+        }
+        return '本次AI分析未完成，请点击重新分析';
+    }
+    function escapeHtml(s) {
+        return safeString(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
+    }
     function normalizeImageDataForCompare(dataUrl) {
         return safeString(dataUrl).replace(/^data:image\/[a-zA-Z0-9.+-]+;base64,/, '').replace(/\s+/g, '');
     }
@@ -263,11 +356,17 @@
     function forceSameImageVisualResult(res) {
         if (!res) return;
         res.overall_percent = 0;
+        res.visual_overall_percent = 0;
+        res.shape_contour_percent = 0;
+        res.pattern_decoration_percent = 0;
+        res.structure_parts_percent = 0;
         res.visual_overall = '两张产品图片完全一致，整体目视化无差异。';
         res.shape_contour = '两张产品图片完全一致，形状与轮廓无差异。';
         res.pattern_decoration = '两张产品图片完全一致，图案、纹理与装饰无差异。';
         res.structure_parts = '两张产品图片完全一致，结构与部件无差异。';
         res.summary = '两张产品图片完全一致，整体目视化、形状轮廓、图案装饰、结构部件均无差异，图案差异度为0%。';
+        res.audit_style_shape_diff = false;
+        res.audit_pattern_design_diff = false;
         res.overlap_details = [];
         res.component_overlap_ratio = 100;
     }
@@ -410,6 +509,10 @@
         ];
         const strong = /(差异(?:较大|很大|明显|较明显|较为明显|比较明显|显著|极大)|(?:整体|视觉|整体视觉|目视化)?(?:差异|区别|区分|区分度)[^。；，,]{0,8}(?:明显|较明显|较为明显|比较明显|较明确|很明确|高)|明显不同|完全不同|截然不同|大幅不同|高度不同|区别明显|区分度高)/;
         const weak = /(差异(?:较小|很小|极小|不大|有限)|中等偏小|中等偏低|高度相似|基本一致|较为接近|非常接近|重复度高|无明显差异|几乎一致)/;
+        const sameCoreEvidence = /(?:二者|两者|双方)[^。；]{0,32}(?:均为|都是|同为|相同|一致|高度相似|基本一致)|(?:核心|主体|主要)(?:载体|轮廓|结构|造型|版式|图案)?[^。；]{0,20}(?:相同|一致|相似|均为|未变|不变)/;
+        const explicitSameDimensionEvidence = /(?:主体|核心|整体|主要)(?:的)?(?:轮廓|形态|造型|结构|版式|图案|装饰|部件|设计体系)[^。；，,]{0,16}(?:一致|相同|基本一致|高度相似|无明显差异|没有明显差异)|(?:一致|相同|基本一致|高度相似|无明显差异|没有明显差异)[^。；，,]{0,16}(?:主体|核心|整体|主要)(?:的)?(?:轮廓|形态|造型|结构|版式|图案|装饰|部件|设计体系)/;
+        const localOnlyEvidence = /(?:仅|只是|只在|只有)[^。；]{0,36}(?:少量|局部|轻微|细微|个别|少数|小部分|额外增加|额外带有|细节)|(?:少量|局部|轻微|细微|个别|少数|小部分)[^。；]{0,18}(?:变化|差异|不同|区别|调整|增加|减少)/;
+        const majorDesignEvidence = /(?:核心|主体|整体|主要)[^。；]{0,12}(?:轮廓|造型|结构|图案|版式|设计体系|装饰语言)[^。；]{0,24}(?:完全不同|明显不同|差异显著|重新设计|整体重构|截然不同)|(?:完全不同|明显不同|差异显著|重新设计|整体重构|截然不同)[^。；]{0,24}(?:核心|主体|整体|轮廓|造型|结构|图案|版式|设计体系|装饰语言)/;
         const issues = [];
         let strongCount = 0, weakCount = 0;
         fields.forEach(([label, value, fieldScore]) => {
@@ -423,12 +526,44 @@
             const hasWeak = weak.test(text);
             if (hasStrong) strongCount++;
             if (hasWeak) weakCount++;
+            if (hasStrong && hasWeak) issues.push(`${label}同时包含高差异和低差异结论`);
+            if (hasStrong && sameCoreEvidence.test(text) && localOnlyEvidence.test(text)) issues.push(`${label}依据写成核心一致且仅有少量局部变化，但结论判为高差异`);
+            if (hasStrong && explicitSameDimensionEvidence.test(text) && !majorDesignEvidence.test(text)) issues.push(`${label}明确写成主体/核心设计一致，但结论判为高差异`);
+            if (hasWeak && majorDesignEvidence.test(text)) issues.push(`${label}依据写成核心设计明显重做，但结论判为低差异`);
             if (compareScore < 50 && hasStrong && !hasWeak) issues.push(`${label}文字为高差异，但分项/总分=${compareScore}% 低于50%`);
             if (compareScore >= 70 && hasWeak && !hasStrong) issues.push(`${label}文字为低/中低差异，但分项/总分=${compareScore}% 较高`);
             if (compareScore >= 50 && /无明显差异|几乎一致|基本一致/.test(text) && !hasStrong) issues.push(`${label}写成基本一致，但分项/总分=${compareScore}% 已达到50%以上`);
         });
         if (n < 50 && strongCount >= 2) issues.push(`多个视觉维度写成明显/较大差异，但 overall_percent=${n}% 低于50%`);
         if (n >= 70 && weakCount >= 2) issues.push(`多个视觉维度写成较小/中等偏小差异，但 overall_percent=${n}% 较高`);
+        const styleFlag = normalizeAuditDifferenceFlag(res.audit_style_shape_diff, null);
+        const patternFlag = normalizeAuditDifferenceFlag(res.audit_pattern_design_diff, null);
+        const shapeScore = normalizeDimensionScore(res.shape_contour_percent);
+        const patternScore = normalizeDimensionScore(res.pattern_decoration_percent);
+        if (styleFlag === null) issues.push('缺少 audit_style_shape_diff 款式外形差异判定');
+        else if (styleFlag && shapeScore !== null && shapeScore < 50) issues.push(`款式外形判定为存在有效差异，但形状与轮廓仅${shapeScore}%`);
+        else if (!styleFlag && shapeScore !== null && shapeScore >= 70) issues.push(`款式外形判定为无有效差异，但形状与轮廓达到${shapeScore}%`);
+        if (patternFlag === null) issues.push('缺少 audit_pattern_design_diff 图案设计差异判定');
+        else if (patternFlag && patternScore !== null && patternScore < 50) issues.push(`图案设计判定为存在有效差异，但图案与装饰仅${patternScore}%`);
+        else if (!patternFlag && patternScore !== null && patternScore >= 70) issues.push(`图案设计判定为无有效差异，但图案与装饰达到${patternScore}%`);
+        const submarketText = formatAiText(res.submarket_difference_analysis).replace(/\s+/g, ' ').trim();
+        const submarketLead = (submarketText.match(/细分市场差异[：:]\s*(较大|较小|无明显差异)/) || [])[1] || '';
+        const submarketStrong = /(细分市场|目标客群|细分客群|受众|风格偏好|需求方向|购买人群)[^。；，,]{0,24}(差异明显|明显不同|明显区隔|区分明显|显著不同|差异较大|区隔较大)|(?:差异明显|明显不同|明显区隔|区分明显|显著不同|差异较大|区隔较大)[^。；，,]{0,24}(细分市场|目标客群|细分客群|受众|风格偏好|需求方向|购买人群)/.test(submarketText);
+        const submarketWeak = /(目标客群|细分客群|受众|需求|市场)[^。；，,]{0,24}(高度重叠|基本重叠|重叠度高|无明显区隔|差异有限|差异较小|基本一致)|(?:高度重叠|基本重叠|重叠度高|无明显区隔|差异有限|差异较小|基本一致)[^。；，,]{0,24}(目标客群|细分客群|受众|需求|市场)/.test(submarketText);
+        if (!submarketLead) issues.push('细分市场差异分析未按要求给出较大/较小/无明显差异标签');
+        if (submarketStrong && submarketWeak) issues.push('细分市场分析同时写成明显区隔和高度重叠');
+        if ((submarketLead === '较小' || submarketLead === '无明显差异') && submarketStrong) issues.push(`细分市场标签为${submarketLead}，但正文写成客群/偏好差异明显`);
+        if (submarketLead === '较大' && submarketWeak && !submarketStrong) issues.push('细分市场标签为较大，但正文写成客群高度重叠或无明显区隔');
+        const competitionLevel = formatAiText(res.competition_level).replace(/\s+/g, '').trim();
+        const competitionText = formatAiText(res.competition_analysis).replace(/\s+/g, ' ').trim();
+        const competitionStrong = /(直接竞争|竞争关系|替代关系|受众重叠|需求重叠)[^。；，,]{0,18}(强|较强|明显|高|较高|高度)|(?:高度|较高|强|较强)[^。；，,]{0,18}(直接竞争|竞争关系|替代关系|受众重叠|需求重叠)/.test(competitionText);
+        const competitionWeak = /(直接竞争|竞争关系|替代关系|受众重叠|需求重叠)[^。；，,]{0,18}(弱|较弱|低|较低|有限|不明显)|(?:较低|较弱|有限|不明显)[^。；，,]{0,18}(直接竞争|竞争关系|替代关系|受众重叠|需求重叠)/.test(competitionText);
+        if (competitionStrong && competitionWeak) issues.push('竞争分析同时写成直接竞争较强和替代/竞争关系有限');
+        if (/(高度|较高)/.test(competitionLevel) && competitionWeak && !competitionStrong) issues.push(`竞争等级为${competitionLevel}，但详细分析写成直接竞争较弱`);
+        if (/(较低|无竞争)/.test(competitionLevel) && competitionStrong && !competitionWeak) issues.push(`竞争等级为${competitionLevel}，但详细分析写成直接竞争较强`);
+        const competitionSceneOverlap = /(?:使用|摆放|应用|基础)场景[^。；，,]{0,30}(?:重合|重叠|一致|相同|相近)|(?:重合|重叠|一致|相同|相近)[^。；，,]{0,30}(?:使用|摆放|应用|基础)场景|(?:使用|摆放|应用|基础)场景[^。；，,]{0,8}(?:均|都|同样)(?:包含|包括|覆盖|适用)|(?:均|都|同样)(?:包含|包括|覆盖|适用)[^。；，,]{0,8}(?:使用|摆放|应用|基础)场景/.test(competitionText);
+        const submarketSceneOpposite = /(?:完全不同|截然不同|毫无重合|互不重叠|不存在重叠)[^。；，,]{0,20}(?:消费|使用|应用)场景|(?:消费|使用|应用)场景[^。；，,]{0,20}(?:完全不同|截然不同|毫无重合|互不重叠|不存在重叠)/.test(submarketText);
+        if (competitionSceneOverlap && submarketSceneOpposite) issues.push('竞争分析写使用场景重叠，但细分市场分析又写消费场景完全不同；应改为基础场景重叠、购买动机或主题需求不同');
         return [...new Set(issues)].slice(0, 6);
     }
     function formatPatternSummary(text, diffValue = null) {
@@ -630,6 +765,416 @@
         return text;
     }
 
+    const MANUAL_SIZE_UNITS = [
+        ['mm', '毫米 (mm)'], ['cm', '厘米 (cm)'], ['m', '米 (m)'], ['in', '英寸 (in)'], ['ft', '英尺 (ft)'],
+        ['yd', '码 (yd)'], ['g', '克 (g)'], ['kg', '千克 (kg)'], ['ml', '毫升 (ml)'], ['l', '升 (L)']
+    ];
+    function manualSizeUnitOptionsHtml() {
+        return MANUAL_SIZE_UNITS.map(([value, label]) => `<option value="${value}"${value === 'cm' ? ' selected' : ''}>${label}</option>`).join('');
+    }
+    function normalizeManualSizeUnit(unit) {
+        const s = safeString(unit).trim().toLowerCase();
+        if (/^(毫米|mm)$/.test(s)) return 'mm';
+        if (/^(厘米|公分|cm)$/.test(s)) return 'cm';
+        if (/^(米|m)$/.test(s)) return 'm';
+        if (/^(英寸|inch|inches|in|"|″)$/.test(s)) return 'in';
+        if (/^(英尺|feet|foot|ft|'|′)$/.test(s)) return 'ft';
+        if (/^(码|yd)$/.test(s)) return 'yd';
+        if (/^(克|g)$/.test(s)) return 'g';
+        if (/^(千克|公斤|kg)$/.test(s)) return 'kg';
+        if (/^(毫升|ml)$/.test(s)) return 'ml';
+        if (/^(升|l|L)$/.test(s)) return 'l';
+        return 'cm';
+    }
+    function parseManualScalarSize(text, unitOverride = 'cm') {
+        const raw = safeString(text).trim();
+        if (!raw) return null;
+        const match = raw.match(/(\d+(?:\.\d+)?)/);
+        if (!match) return null;
+        const sourceUnit = safeString(unitOverride).trim() || (raw.match(/(毫米|厘米|公分|米|英寸|英尺|码|千克|公斤|克|毫升|升|mm|cm|m|in|inch|ft|yd|kg|g|ml|l)/i)?.[1] || 'cm');
+        const unit = normalizeManualSizeUnit(sourceUnit);
+        let value = parseFloat(match[1]);
+        if (!isFinite(value) || value <= 0) return null;
+        let kind = 'length';
+        if (unit === 'mm') value /= 10;
+        else if (unit === 'm') value *= 100;
+        else if (unit === 'in') value *= 2.54;
+        else if (unit === 'ft') value *= 30.48;
+        else if (unit === 'yd') value *= 91.44;
+        else if (unit === 'kg') { value *= 1000; kind = 'weight'; }
+        else if (unit === 'g') kind = 'weight';
+        else if (unit === 'l') { value *= 1000; kind = 'volume'; }
+        else if (unit === 'ml') kind = 'volume';
+        return { value, kind, baseUnit: kind === 'length' ? 'cm' : (kind === 'weight' ? 'g' : 'ml') };
+    }
+    function getManualSizeCount(container) {
+        const select = container?.querySelector('.size-count-select');
+        const count = parseInt(select?.value || '1', 10);
+        return Math.min(10, Math.max(1, isFinite(count) ? count : 1));
+    }
+    function updateManualSizeRows(container) {
+        if (!container) return 1;
+        const count = getManualSizeCount(container);
+        container.dataset.manualSizeCount = String(count);
+        container.querySelectorAll('.manual-size-row').forEach(row => {
+            const index = parseInt(row.dataset.index || '0', 10);
+            row.hidden = index >= count;
+        });
+        return count;
+    }
+    function calculateManualMultiSizeDiff(container) {
+        const count = getManualSizeCount(container);
+        const sides = {};
+        ['unbuilt', 'built'].forEach(side => {
+            sides[side] = [...container.querySelectorAll(`.size-input[data-side="${side}"]`)].sort((a, b) => parseInt(a.dataset.index || '0', 10) - parseInt(b.dataset.index || '0', 10));
+        });
+        if (!sides.unbuilt.length || !sides.built.length) return { used: false, hasInput: false, reason: '' };
+        const details = [];
+        let hasInput = false, incomplete = false, invalid = false;
+        for (let i = 0; i < count; i++) {
+            const uInput = sides.unbuilt[i], bInput = sides.built[i];
+            const uRaw = safeString(uInput?.value).trim(), bRaw = safeString(bInput?.value).trim();
+            if (!uRaw && !bRaw) continue;
+            hasInput = true;
+            if (!uRaw || !bRaw) { incomplete = true; continue; }
+            const u = parseManualScalarSize(uRaw, container.querySelector(`.size-unit[data-side="unbuilt"][data-index="${i}"]`)?.value || 'cm');
+            const b = parseManualScalarSize(bRaw, container.querySelector(`.size-unit[data-side="built"][data-index="${i}"]`)?.value || 'cm');
+            if (!u || !b || u.kind !== b.kind || b.value <= 0) { invalid = true; continue; }
+            const diffPercent = Math.abs(u.value - b.value) / b.value * 100;
+            details.push({ index: i + 1, unbuilt: u.value, built: b.value, diffPercent, weight: b.value, unit: b.baseUnit });
+        }
+        if (!hasInput) return { used: false, hasInput: false, reason: '' };
+        if (incomplete || invalid || details.length !== count) return { used: false, hasInput: true, reason: invalid ? '人工尺寸单位或数值不匹配' : '人工尺寸未完整填写' };
+        const totalWeight = details.reduce((sum, item) => sum + item.weight, 0);
+        const weightedSum = details.reduce((sum, item) => sum + item.diffPercent * item.weight, 0);
+        return { used: true, hasInput: true, diff: totalWeight > 0 ? weightedSum / totalWeight : 0, details, totalWeight, weightedSum, count };
+    }
+    function formatManualMultiSizeCalc(result) {
+        if (!result?.used) return '';
+        const details = result.details.map(item => `<div>第${item.index}组差异 = |${item.unbuilt.toFixed(2)} - ${item.built.toFixed(2)}| / ${item.built.toFixed(2)} × 100% = ${displayPercentValue(item.diffPercent)}（权重 ${item.weight.toFixed(2)}）</div>`).join('');
+        return `<div>尺寸差异（人工加权） = ${displayPercentValue(result.diff)}</div>${details}<div>加权尺寸差异 = ${displayPercentValue(result.diff)}</div>`;
+    }
+    function renderManualSizeRows(side, aiSizeText) {
+        const options = manualSizeUnitOptionsHtml();
+        const recognized = aiSizeText && aiSizeText !== '-' ? aiSizeText : '未识别';
+        return Array.from({ length: 10 }, (_, index) => `<div class="manual-size-row" data-side="${side}" data-index="${index}"${index > 0 ? ' hidden' : ''}><span class="manual-size-label">✏️ 尺寸${index > 0 ? index + 1 : ''}：</span><span class="manual-size-index">${index + 1}</span><input class="size-input" data-side="${side}" data-index="${index}" type="number" min="0" step="any" inputmode="decimal" placeholder="选填" title="按顺序填写第${index + 1}个尺寸"><select class="size-unit" data-side="${side}" data-index="${index}" title="选择第${index + 1}个尺寸的单位">${options}</select><span class="manual-size-fill">可填</span>${index === 0 ? `<span class="manual-size-ai" title="AI识别尺寸：${recognized}">${recognized}</span>` : ''}</div>`).join('');
+    }
+    function renderManualSizeSide(side, aiSizeText) {
+        const title = side === 'unbuilt' ? '未建尺寸' : '已建尺寸';
+        return `<div class="manual-size-side" aria-label="${title}"><div class="manual-size-side-title">${title}</div>${renderManualSizeRows(side, aiSizeText)}</div>`;
+    }
+
+    function normalizeAuditDifferenceFlag(value, fallback = false) {
+        if (value === true || value === 1 || safeString(value).toLowerCase() === 'true') return true;
+        if (value === false || value === 0 || safeString(value).toLowerCase() === 'false') return false;
+        return fallback;
+    }
+
+    function getAuditVisualDifferenceFlags(res) {
+        const shapeScore = normalizeDimensionScore(res?.shape_contour_percent);
+        const patternScore = normalizeDimensionScore(res?.pattern_decoration_percent);
+        return {
+            styleDiff: normalizeAuditDifferenceFlag(res?.audit_style_shape_diff, shapeScore !== null && shapeScore >= 50),
+            patternDiff: normalizeAuditDifferenceFlag(res?.audit_pattern_design_diff, patternScore !== null && patternScore >= 50)
+        };
+    }
+
+    function buildFinalAuditRemark({ isPass, isPioneer = false, inProtection = false, marketPass = false, appearDiff = 0, quantityDiff = 0, sizeDiff = null, hasCombination = false, hasDuplicates = false, strongColor = false, styleDiff = false, patternDiff = false } = {}) {
+        const appearance = Number(appearDiff) || 0;
+        const quantity = Number(quantityDiff) || 0;
+        const size = sizeDiff === null || sizeDiff === '' || !isFinite(Number(sizeDiff)) ? null : Number(sizeDiff);
+        if (isPass) {
+            if (marketPass && appearance < 50) return '上架竞争程度较低，细分市场差异较大，可以尝试';
+            const reasons = [];
+            if (strongColor && appearance >= 50) reasons.push('颜色目视化差异明显');
+            else if (appearance >= 50) {
+                if (styleDiff && patternDiff) reasons.push('款式、图案设计差异');
+                else if (styleDiff) reasons.push('款式差异');
+                else if (patternDiff) reasons.push('图案设计差异');
+                else reasons.push(hasCombination ? '组合搭配差异' : '整体目视化差异');
+            }
+            if (quantity > 0) reasons.push('数量差异');
+            if (size !== null && size > 0) reasons.push('尺寸差异');
+            if (!reasons.length) reasons.push('整体差异');
+            return `${reasons.slice(0, 3).join('、')}，综合满足，可以尝试`;
+        }
+        if (isPioneer && inProtection && appearance < 50) return '首创保护期内款式差异不足，暂不可建';
+        if (hasCombination && hasDuplicates) return '组合搭配重复度较高，整体差异不足，暂不可建';
+        const reasons = [];
+        if (appearance <= 20 && !styleDiff && !patternDiff) reasons.push('款式和图案设计高度相似');
+        else if (appearance < 50 && styleDiff && patternDiff) reasons.push('款式、图案设计差异较小');
+        else if (appearance < 50 && styleDiff) reasons.push('款式差异较小');
+        else if (appearance < 50 && patternDiff) reasons.push('图案设计差异较小');
+        else if (appearance < 50) reasons.push('整体目视化差异较小');
+        if (quantity === 0) reasons.push('数量一致');
+        else if (quantity < 20) reasons.push('数量差异较小');
+        if (size !== null && size === 0) reasons.push('尺寸一致');
+        else if (size !== null && size < 20) reasons.push('尺寸差异较小');
+        if (!reasons.length) reasons.push('整体有效差异不足');
+        return `${reasons.slice(0, 3).join('，')}，整体差异不足，暂不可建`;
+    }
+
+    const CONFIDENCE_RULE_VERSION = '1.0';
+
+    function getConfidenceLevel(score) {
+        const n = Number(score) || 0;
+        if (n >= 75) return 'high';
+        if (n >= 50) return 'medium';
+        return 'low';
+    }
+
+    function getConfidenceLevelLabel(level) {
+        return level === 'high' ? '高置信' : (level === 'medium' ? '中置信' : '低置信');
+    }
+
+    function confidenceStrengthByDifference(diff) {
+        const value = Math.max(0, Math.min(100, Number(diff) || 0));
+        const distance = Math.abs(value - 50);
+        if (distance >= 25) return { score: 100, forcedReview: false, label: `距离50%判定线${Math.round(distance)}个百分点` };
+        if (distance >= 15) return { score: 85, forcedReview: false, label: `距离50%判定线${Math.round(distance)}个百分点` };
+        if (distance >= 8) return { score: 65, forcedReview: false, label: `距离50%判定线${Math.round(distance)}个百分点` };
+        if (distance > 4) return { score: 40, forcedReview: false, label: `接近50%判定线` };
+        return { score: 10, forcedReview: true, label: '差异度处于46%-54%灰区' };
+    }
+
+    function normalizeOverlapPercent(value) {
+        const n = Number(value);
+        if (!isFinite(n)) return null;
+        const percent = n >= 0 && n <= 1 ? n * 100 : n;
+        return Math.max(0, Math.min(100, percent));
+    }
+
+    function confidenceStrengthByOverlap(value) {
+        const percent = normalizeOverlapPercent(value);
+        if (percent === null) return { score: 40, forcedReview: false, label: '方案重复度数据缺失' };
+        const distance = Math.abs(percent - 50);
+        if (distance >= 30) return { score: 100, forcedReview: false, label: `方案重复度距离50%判定线${Math.round(distance)}个百分点` };
+        if (distance >= 15) return { score: 70, forcedReview: false, label: `方案重复度距离50%判定线${Math.round(distance)}个百分点` };
+        if (distance >= 5) return { score: 45, forcedReview: false, label: '方案重复度接近判定线' };
+        return { score: 15, forcedReview: false, label: '方案重复度紧贴50%判定线' };
+    }
+
+    function uniqueEvidenceIssues(issues) {
+        const seen = new Set();
+        return (Array.isArray(issues) ? issues : []).filter(issue => {
+            if (!issue || !issue.code || seen.has(issue.code)) return false;
+            seen.add(issue.code);
+            return true;
+        });
+    }
+
+    function buildConfidenceEvidenceIssues({ sizeMissing = false, sizeUncertain = false, quantityUncertain = false, componentQuantityMismatch = false, quantitySourceUncertain = false, textShort = false, plusComponentsMissing = false, componentsUncertain = false, imageQualityPoor = false, pioneerDateMissing = false, aiUncertain = false } = {}) {
+        const issues = [];
+        if (sizeMissing) issues.push({ code: 'size_missing', label: '尺寸未识别', factor: 0.85 });
+        else if (sizeUncertain) issues.push({ code: 'size_uncertain', label: '尺寸识别不确定', factor: 0.85 });
+        if (quantityUncertain) issues.push({ code: 'quantity_uncertain', label: '数量识别需核对', factor: 0.80 });
+        if (componentQuantityMismatch) issues.push({ code: 'component_quantity_mismatch', label: '明确总数与AI组件数量偏差超过30%', factor: 0.85 });
+        if (quantitySourceUncertain) issues.push({ code: 'quantity_source_uncertain', label: 'AI数量来源为图片或推测', factor: 0.85 });
+        if (textShort) issues.push({ code: 'text_short', label: '方案文字缺失或少于20字', factor: 0.85 });
+        if (plusComponentsMissing) issues.push({ code: 'plus_components_missing', label: '组合方案未正确拆分组件', factor: 0.80 });
+        else if (componentsUncertain) issues.push({ code: 'components_uncertain', label: '组件拆分不确定', factor: 0.85 });
+        if (imageQualityPoor) issues.push({ code: 'image_quality', label: '图片质量较差', factor: 0.85 });
+        if (pioneerDateMissing) issues.push({ code: 'pioneer_date_missing', label: '首创产品缺少建SKU时间', factor: 0.80 });
+        if (aiUncertain) issues.push({ code: 'ai_uncertain', label: 'AI标记识别不确定', factor: 0.85 });
+        return uniqueEvidenceIssues(issues);
+    }
+
+    function getConfidenceReviewAction(isPass, level, forcedReview = false) {
+        if (forcedReview) return { text: '强制人工复核', requiresReview: true, sampleReview: false };
+        if (isPass && level === 'high') return { text: '直接采信AI结果', requiresReview: false, sampleReview: false };
+        if (isPass && level === 'medium') return { text: '采信并抽查10%-20%', requiresReview: false, sampleReview: true };
+        if (isPass) return { text: '人工复核后生效', requiresReview: true, sampleReview: false };
+        if (level === 'high') return { text: '直接采信，保留申诉/复核入口', requiresReview: false, sampleReview: false };
+        return { text: '人工复核后生效', requiresReview: true, sampleReview: false };
+    }
+
+    function calculateComparisonConfidence({ isPass = false, decisionPath = 'combined', combinedDiff = 0, overlapRatio = null, competitionLevel = '', marketReliable = true, evidenceIssues = [] } = {}) {
+        let strength;
+        if (decisionPath === 'market') {
+            const base = marketReliable ? (competitionLevel === '无竞争' ? 90 : 75) : 35;
+            strength = { score: base, forcedReview: false, label: marketReliable ? `${competitionLevel}且细分市场差异较大` : '市场分析空泛或前后不一致' };
+        } else if (decisionPath === 'pioneer_protection') {
+            strength = { score: 100, forcedReview: false, label: '首创保护期规则明确' };
+        } else if (decisionPath === 'pioneer_missing_date') {
+            strength = { score: 40, forcedReview: false, label: '首创保护期无法准确计算' };
+        } else if (decisionPath === 'component_overlap') {
+            strength = confidenceStrengthByOverlap(overlapRatio);
+        } else {
+            strength = confidenceStrengthByDifference(combinedDiff);
+        }
+        const issues = uniqueEvidenceIssues(evidenceIssues);
+        let coefficient = issues.reduce((value, issue) => value * (Number(issue.factor) || 1), 1);
+        coefficient = Math.max(0.3, coefficient);
+        const score = Math.max(0, Math.min(100, Math.round(strength.score * coefficient)));
+        const level = getConfidenceLevel(score);
+        const action = getConfidenceReviewAction(isPass, level, strength.forcedReview);
+        const reasons = [strength.label, ...issues.map(issue => issue.label)];
+        const factorText = issues.length ? issues.map(issue => `${issue.factor.toFixed(2)}`).join(' × ') : '1.00';
+        return {
+            score,
+            level,
+            levelLabel: getConfidenceLevelLabel(level),
+            baseScore: strength.score,
+            coefficient,
+            forcedReview: strength.forcedReview,
+            requiresReview: action.requiresReview,
+            sampleReview: action.sampleReview,
+            action: action.text,
+            reasons,
+            evidenceIssues: issues,
+            formula: `强度分${strength.score} × 证据系数${factorText} = ${score}`,
+            decisionPath,
+            combinedDiff: Number(combinedDiff) || 0,
+            overlapRatio: normalizeOverlapPercent(overlapRatio),
+            competitionLevel,
+            marketReliable,
+            ruleVersion: CONFIDENCE_RULE_VERSION
+        };
+    }
+
+    function addMixedOutcomeEvidence(confidence, isPass) {
+        if (!confidence) return confidence;
+        return calculateComparisonConfidence({
+            isPass,
+            decisionPath: confidence.decisionPath,
+            combinedDiff: confidence.combinedDiff,
+            overlapRatio: confidence.overlapRatio,
+            competitionLevel: confidence.competitionLevel,
+            marketReliable: confidence.marketReliable,
+            evidenceIssues: [...confidence.evidenceIssues, { code: 'mixed_outcomes', label: '多个已建对比结论不一致', factor: 0.85 }]
+        });
+    }
+
+    function renderConfidenceDetail(confidence) {
+        if (!confidence) return '';
+        const reasons = confidence.reasons.length ? confidence.reasons.join('；') : '证据完整';
+        return `<div class="confidence-detail"><div class="confidence-detail-title">结果置信度 <span class="confidence-score">${confidence.score}</span><span class="confidence-badge ${confidence.level}">${confidence.levelLabel}</span><span class="review-action ${confidence.requiresReview ? 'required' : ''}">${confidence.action}</span></div><div class="confidence-formula">${confidence.formula}</div><div class="confidence-reason-list">原因：${escapeHtml(reasons)}</div></div>`;
+    }
+
+    function parseConfidenceEvidenceFromElement(result) {
+        try {
+            return uniqueEvidenceIssues(JSON.parse(decodeURIComponent(result.dataset.confidenceEvidence || '[]')));
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function calculateConfidenceFromElement(result, mixedOutcomes = false) {
+        const conclusion = result.querySelector('.conclusion-text')?.textContent || '';
+        const isPass = conclusion.includes('通过') && !conclusion.includes('不通过');
+        const combined = parseQuantityValue(result.querySelector('.combined-value')?.textContent);
+        let decisionPath = result.dataset.confidencePath || 'combined';
+        if (decisionPath === 'market' && combined >= 50) decisionPath = 'combined';
+        let issues = parseConfidenceEvidenceFromElement(result);
+        const manualSize = calculateManualMultiSizeDiff(result);
+        if (manualSize.used) issues = issues.filter(issue => !['size_missing', 'size_uncertain'].includes(issue.code));
+        const quantityChanged = [...result.querySelectorAll('.qty-input')].some(input => input.dataset.original !== undefined && String(input.value) !== String(input.dataset.original));
+        if (quantityChanged) issues = issues.filter(issue => !['quantity_uncertain', 'quantity_source_uncertain'].includes(issue.code));
+        if (mixedOutcomes) issues.push({ code: 'mixed_outcomes', label: '多个已建对比结论不一致', factor: 0.85 });
+        return calculateComparisonConfidence({
+            isPass,
+            decisionPath,
+            combinedDiff: isFinite(combined) ? combined : 0,
+            overlapRatio: result.dataset.overlapRatio,
+            competitionLevel: result.dataset.competitionLevel || '',
+            marketReliable: result.dataset.marketReliable !== '0',
+            evidenceIssues: issues
+        });
+    }
+
+    function updateRecordConfidence(recordItem, persist = true) {
+        if (!recordItem) return null;
+        const results = [...recordItem.querySelectorAll('.comparison-result')];
+        if (!results.length) return null;
+        const decisions = results.map(result => {
+            const text = result.querySelector('.conclusion-text')?.textContent || '';
+            return text.includes('通过') && !text.includes('不通过');
+        });
+        const mixedOutcomes = decisions.some(Boolean) && decisions.some(value => !value);
+        const confidences = results.map((result, index) => {
+            const confidence = calculateConfidenceFromElement(result, mixedOutcomes);
+            const detail = result.querySelector('.confidence-detail');
+            if (detail) detail.outerHTML = renderConfidenceDetail(confidence);
+            const summaryConfidence = recordItem.querySelector(`.comparison-summary-row[data-summary-index="${result.dataset.comparisonIndex}"] .comparison-summary-confidence`);
+            if (summaryConfidence) summaryConfidence.textContent = `，置信度 ${confidence.score}`;
+            return { ...confidence, isPass: decisions[index], comparisonIndex: result.dataset.comparisonIndex };
+        });
+        const finalConfidence = [...confidences].sort((a, b) => a.score - b.score)[0];
+        const finalPass = decisions.every(Boolean);
+        const finalAction = getConfidenceReviewAction(finalPass, finalConfidence.level, finalConfidence.forcedReview);
+        finalConfidence.action = finalAction.text;
+        finalConfidence.requiresReview = finalAction.requiresReview;
+        finalConfidence.sampleReview = finalAction.sampleReview;
+        const scoreEl = recordItem.querySelector('.summary-confidence-score');
+        const badgeEl = recordItem.querySelector('.summary-confidence-badge');
+        const actionEl = recordItem.querySelector('.summary-review-action');
+        const reasonsEl = recordItem.querySelector('.summary-confidence-reasons');
+        if (scoreEl) scoreEl.textContent = String(finalConfidence.score);
+        if (badgeEl) {
+            badgeEl.textContent = finalConfidence.levelLabel;
+            badgeEl.className = `confidence-badge summary-confidence-badge ${finalConfidence.level}`;
+        }
+        if (actionEl) {
+            actionEl.textContent = finalConfidence.action;
+            actionEl.classList.toggle('required', finalConfidence.requiresReview);
+        }
+        if (reasonsEl) reasonsEl.textContent = `原因：${finalConfidence.reasons.join('；')}`;
+        recordItem.dataset.confidenceScore = String(finalConfidence.score);
+        recordItem.dataset.confidenceLevel = finalConfidence.level;
+        recordItem.dataset.requiresReview = finalConfidence.requiresReview ? '1' : '0';
+        if (persist && recordItem.dataset.id) {
+            const record = historyRecords.find(item => String(item.id) === String(recordItem.dataset.id));
+            if (record) {
+                record.confidenceScore = finalConfidence.score;
+                record.confidenceLevel = finalConfidence.level;
+                record.requiresReview = finalConfidence.requiresReview;
+                record.reviewAction = finalConfidence.action;
+                record.confidenceReasons = finalConfidence.reasons;
+                record.comparisonConfidences = confidences;
+                record.summaryHtml = recordItem.innerHTML;
+                saveHistory();
+            }
+        }
+        return { finalConfidence, confidences, mixedOutcomes };
+    }
+
+    function auditRemarkFromComparisonElement(result) {
+        if (!result) return '';
+        const conclusion = result.querySelector('.conclusion-text')?.textContent || '';
+        const isPass = conclusion.includes('通过') && !conclusion.includes('不通过');
+        return buildFinalAuditRemark({
+            isPass,
+            isPioneer: result.dataset.pioneer === '1',
+            inProtection: result.dataset.inProtection === '1',
+            marketPass: result.dataset.marketPass === '1',
+            appearDiff: result.dataset.appearDiff,
+            quantityDiff: result.dataset.quantityDiff,
+            sizeDiff: result.dataset.currentSizeDiff ?? result.dataset.sizeDiff,
+            hasCombination: result.dataset.hasCombination === '1',
+            hasDuplicates: result.dataset.hasDuplicates === '1',
+            strongColor: result.dataset.strongColor === '1',
+            styleDiff: result.dataset.styleDiff === '1',
+            patternDiff: result.dataset.patternDiff === '1'
+        });
+    }
+
+    function updateRecordAuditRemark(recordItem) {
+        if (!recordItem) return;
+        const results = [...recordItem.querySelectorAll('.comparison-result')];
+        if (!results.length) return;
+        const rows = results.map(result => {
+            const conclusion = result.querySelector('.conclusion-text')?.textContent || '';
+            const isPass = conclusion.includes('通过') && !conclusion.includes('不通过');
+            const combined = parseQuantityValue(result.querySelector('.combined-value')?.textContent);
+            return { result, isPass, combined: isFinite(combined) ? combined : 0 };
+        });
+        const allPass = rows.every(row => row.isPass);
+        const candidates = allPass ? rows : rows.filter(row => !row.isPass);
+        candidates.sort((a, b) => a.combined - b.combined);
+        const noteText = recordItem.querySelector('.summary-audit-note-text');
+        if (noteText && candidates[0]) noteText.textContent = auditRemarkFromComparisonElement(candidates[0].result);
+    }
+
     function recalcManualQuantityDiff(container) {
         if (!container) return;
         const unbuiltInput = container.querySelector('.qty-input[data-side="unbuilt"]');
@@ -643,32 +1188,20 @@
         let sizeDiff = sizeDiffRaw === '' || sizeDiffRaw === undefined ? null : parseFloat(sizeDiffRaw);
         const appearDiff = parseFloat(container.dataset.appearDiff) || 0;
         const skipSize = container.dataset.skipSize === '1';
-        const unbuiltSizeInput = container.querySelector('.size-input[data-side="unbuilt"]');
-        const builtSizeInput = container.querySelector('.size-input[data-side="built"]');
-        const unbuiltSizeUnit = container.querySelector('.size-unit[data-side="unbuilt"]');
-        const builtSizeUnit = container.querySelector('.size-unit[data-side="built"]');
-        let manualSizeUsed = false;
-        let manualSizeResult = null;
-        if (unbuiltSizeInput && builtSizeInput && unbuiltSizeInput.value.trim() && builtSizeInput.value.trim()) {
-            const manualUnbuilt = parseManualSizeInput(unbuiltSizeInput.value, unbuiltSizeUnit?.value || 'cm');
-            const manualBuilt = parseManualSizeInput(builtSizeInput.value, builtSizeUnit?.value || 'cm');
-            manualSizeResult = calcSizeDiffStructured(manualBuilt, manualUnbuilt);
-            if (manualSizeResult && manualSizeResult.diff !== null && !isNaN(manualSizeResult.diff)) {
-                sizeDiff = manualSizeResult.diff;
-                manualSizeUsed = true;
-            } else if (manualSizeResult && manualSizeResult.reason === '微小') {
-                sizeDiff = 0;
-                manualSizeUsed = true;
-            }
-        }
+        const manualSizeResult = calculateManualMultiSizeDiff(container);
+        const manualSizeUsed = manualSizeResult.used === true;
+        if (manualSizeUsed) sizeDiff = manualSizeResult.diff;
+        const sizeIncluded = manualSizeUsed || (!skipSize && sizeDiff !== null && !isNaN(sizeDiff));
         let schemeDiff = 0;
         let combined = appearDiff;
         schemeDiff += qDiff;
         combined += qDiff;
-        if ((manualSizeUsed || !skipSize) && sizeDiff !== null && !isNaN(sizeDiff)) {
+        if (sizeIncluded) {
             schemeDiff += sizeDiff;
             combined += sizeDiff;
         }
+        container.dataset.quantityDiff = String(qDiff);
+        container.dataset.currentSizeDiff = sizeIncluded ? String(sizeDiff) : '';
         const schemeValue = container.querySelector('.scheme-value');
         const schemeSub = container.querySelector('.scheme-sub');
         const combinedValue = container.querySelector('.combined-value');
@@ -678,13 +1211,15 @@
         const combinedCalc = container.querySelector('.combined-calc');
         const conclusionText = container.querySelector('.conclusion-text');
         if (schemeValue) schemeValue.textContent = displayPercentValue(schemeDiff);
-        if (schemeSub) schemeSub.textContent = `数量差 ${displayPercentValue(qDiff)} + 尺寸差 ${((manualSizeUsed || !skipSize) && sizeDiff !== null && !isNaN(sizeDiff)) ? displayPercentValue(sizeDiff) : '—'}`;
+        if (schemeSub) schemeSub.textContent = `数量差 ${displayPercentValue(qDiff)} + 尺寸差 ${sizeIncluded ? displayPercentValue(sizeDiff) : '—'}`;
         if (combinedValue) combinedValue.textContent = displayPercentValue(combined);
-        if (combinedSub) combinedSub.textContent = (manualSizeUsed || !skipSize) ? '数量差 + 尺寸差 + 图案差' : '数量差 + 尺寸差不计 + 图案差';
+        if (combinedSub) combinedSub.textContent = sizeIncluded ? '数量差 + 尺寸差 + 图案差' : '数量差 + 尺寸差不计 + 图案差';
         if (quantityCalc) quantityCalc.textContent = `数量差异 = |${qtyUnbuilt} - ${qtyBuilt}| / ${qtyBuilt} × 100% = ${displayPercentValue(qDiff)}（人工修正）`;
-        if (sizeCalc && !sizeCalc.dataset.originalText) sizeCalc.dataset.originalText = sizeCalc.textContent;
-        if (sizeCalc && manualSizeUsed) sizeCalc.textContent = formatManualSizeCalc(manualSizeResult);
-        else if (sizeCalc && (!unbuiltSizeInput?.value.trim() || !builtSizeInput?.value.trim()) && sizeCalc.dataset.originalText) sizeCalc.textContent = sizeCalc.dataset.originalText;
+        if (sizeCalc && !sizeCalc.dataset.originalHtml) sizeCalc.dataset.originalHtml = sizeCalc.innerHTML;
+        container.querySelectorAll('.size-auto-detail').forEach(el => { el.hidden = manualSizeUsed; });
+        if (sizeCalc && manualSizeUsed) sizeCalc.innerHTML = formatManualMultiSizeCalc(manualSizeResult);
+        else if (sizeCalc && manualSizeResult.hasInput) sizeCalc.textContent = `尺寸差异 = ${manualSizeResult.reason}，暂沿用AI识别结果`;
+        else if (sizeCalc && sizeCalc.dataset.originalHtml) sizeCalc.innerHTML = sizeCalc.dataset.originalHtml;
         if (combinedCalc) combinedCalc.textContent = `综合差异 = ${displayPercentValue(combined)}`;
         if (conclusionText && container.dataset.pioneer !== '1') {
             const isPass = combined >= 50 || container.dataset.marketPass === '1';
@@ -704,24 +1239,132 @@
                 .every(el => el.textContent.includes('通过') && !el.textContent.includes('不通过'));
             const summaryStatus = recordItem.querySelector('.summary-pass-status');
             if (summaryStatus) summaryStatus.textContent = allPass ? '✅ 通过' : '❌ 不通过';
+            recordItem.querySelectorAll('.comparison-summary-row').forEach(row => {
+                const index = row.dataset.summaryIndex;
+                const result = recordItem.querySelector(`.comparison-result[data-comparison-index="${index}"]`);
+                if (!result) return;
+                const diff = parseQuantityValue(result.querySelector('.combined-value')?.textContent);
+                const pass = result.querySelector('.conclusion-text')?.textContent.includes('通过') && !result.querySelector('.conclusion-text')?.textContent.includes('不通过');
+                row.classList.toggle('pass', pass);
+                row.classList.toggle('fail', !pass);
+                row.innerHTML = `${pass ? '✅ 通过' : '❌ 不通过'} 对比已建${index}：综合差异度 <span class="comparison-summary-diff">${displayPercentValue(isFinite(diff) ? diff : 0)}</span><span class="comparison-summary-confidence"></span>`;
+            });
+            updateRecordAuditRemark(recordItem);
+            updateRecordConfidence(recordItem);
         }
     }
 
+    function splitTopLevelSolutionParts(text, separatorPattern) {
+        const source = safeString(text);
+        const parts = [], separators = separatorPattern || /[+＋]/;
+        let current = '', round = 0, square = 0, curly = 0;
+        for (const char of source) {
+            if (char === '(' || char === '（') round++;
+            else if (char === ')' || char === '）') round = Math.max(0, round - 1);
+            else if (char === '[' || char === '【') square++;
+            else if (char === ']' || char === '】') square = Math.max(0, square - 1);
+            else if (char === '{' || char === '｛') curly++;
+            else if (char === '}' || char === '｝') curly = Math.max(0, curly - 1);
+            if (round === 0 && square === 0 && curly === 0 && separators.test(char)) {
+                if (current.trim()) parts.push(current.trim());
+                current = '';
+            } else current += char;
+        }
+        if (current.trim()) parts.push(current.trim());
+        return parts;
+    }
+
+    function solutionQuantityFromPart(part) {
+        const seg = safeString(part).replace(/补充备注[：:].*$/g, '').replace(/供\s*\d+\s*个/g, '').trim();
+        const units = '(?:个|件|条|把|套|组|片|包|支|枝|束|只|卷|张|根|枚|瓶|罐|盒|双|pcs|件装)';
+        const mainText = seg.split(/[（(【\[]/)[0];
+        const starMatches = [...mainText.matchAll(new RegExp(`(?:\\*|×|x)\\s*(\\d+(?:\\.\\d+)?)(?:\\s*${units})?`, 'gi'))];
+        if (starMatches.length) {
+            const last = starMatches[starMatches.length - 1];
+            const unitMatch = last[0].match(new RegExp(units, 'i'));
+            return { quantity: parseFloat(last[1]) || 0, unit: unitMatch?.[0] || '个' };
+        }
+        const matches = [...mainText.matchAll(new RegExp(`(?:^|[^\\d])(?:(?:白色|红色|黄色|紫色|绿色|蓝色|粉色|黑色|棕色|双绿|白绿)\\s*)?(\\d+(?:\\.\\d+)?)\\s*(${units})(?=\\s|$|[^\\d])`, 'gi'))];
+        if (!matches.length) return { quantity: 0, unit: '' };
+        const last = matches[matches.length - 1];
+        return { quantity: parseFloat(last[1]) || 0, unit: last[2] };
+    }
+
+    function cleanSolutionComponentName(part) {
+        const raw = safeString(part).replace(/补充备注[：:].*$/g, '').trim();
+        const bracketText = raw.match(/[【\[]([^】\]]+)/)?.[1] || '';
+        let name = (bracketText || raw.replace(/^\s*\d{8,}\s*/, '')).trim();
+        name = name.split(/[（(【\[]/)[0]
+            .replace(/(?:\*|×|x)\s*\d+(?:\.\d+)?\s*(?:个|件|条|把|套|组|片|包|支|枝|束|只|卷|张|根|枚|瓶|罐|盒|双|pcs|件装)?/gi, ' ')
+            .replace(/\d+(?:\.\d+)?\s*(?:个|件|条|把|套|组|片|包|支|枝|束|只|卷|张|根|枚|瓶|罐|盒|双|pcs|件装)/gi, ' ')
+            .replace(/\s*(?:一套|一组|一包)\s*$/g, '')
+            .replace(/[【】\[\]：:]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+        return name;
+    }
+
+    function extractExplicitComponentDefinitions(text) {
+        const s = stripInternalGridCounts(extractSolutionTitleText(text));
+        if (!s) return [];
+        const hasPlus = /[+＋]/.test(s);
+        const parts = hasPlus ? splitTopLevelSolutionParts(s, /[+＋]/) : splitTopLevelSolutionParts(s, /[,，、;；]/);
+        if (parts.length < 2) return [];
+        const definitions = parts.map(part => {
+            const q = solutionQuantityFromPart(part);
+            return { quantity: q.quantity, unit: q.unit, part: part.trim(), name: cleanSolutionComponentName(part) };
+        }).filter(item => item.name && item.quantity > 0);
+        // 没有“+”时，只有至少两个逗号/顿号分项都写了明确数量，才认定为组合组件。
+        if (!hasPlus && definitions.length < 2) return [];
+        return definitions;
+    }
+
+    function extractPlusSeparatedQuantities(text) {
+        return extractExplicitComponentDefinitions(text);
+    }
+
     function sumPlusSeparatedQuantities(text) {
-        const s = safeString(text);
-        if (!s || !s.includes('+')) return null;
-        const parts = s.split('+');
-        let total = 0, count = 0;
-        parts.forEach(part => {
-            let seg = part.replace(/补充备注[：:].*$/g, '').replace(/供\s*\d+\s*个/g, '');
-            const matches = [...seg.matchAll(/(?:白色|红色|黄色|紫色|绿色|蓝色|粉色|黑色|棕色|双绿|白绿)?\s*(\d+(?:\.\d+)?)\s*(个|件|条|把|套|片|包|支|枝|束|只|卷|张)/g)];
-            if (matches.length) {
-                const last = matches[matches.length - 1];
-                total += parseFloat(last[1]) || 0;
-                count++;
-            }
-        });
-        return count >= 2 && total > 0 ? total : null;
+        const quantities = extractPlusSeparatedQuantities(text);
+        if (quantities.length < 2) return null;
+
+        // 组合总数量代表“几套/几件主产品”，不是所有子件数量之和。
+        // 例如：30个杯子 + 30个盖子 + 1个盘子 + 10个吸管，结果应为30。
+        const accessoryPattern = /(吸管|杯盖|盖子|瓶盖|盖帽|杯塞|配件|附件|餐具|刀叉|叉子|汤勺|勺子|筷子|卡片|贺卡|标签|包装|包装纸|袋子|手提袋|丝带|缎带|胶带|贴纸|点胶|胶水|挂钩|粘钩|支架|底座|绑带|挂绳|绳子|说明书|电源|遥控器|充气泵|连接线)/i;
+        const mainProductPattern = /(杯|瓶|罐|碗|篮|桶|箱|托盘|盘子?|餐盘|地毯|地垫|挂布|挂毯|横幅|拉旗|旗帜|窗帘|桌布|花环|花束|拱门|背景布|背景板|摆件|玩偶|公仔|气球|挂件|吊饰|装饰球|圣诞球|手套|袜子|衣服|裙|包|清洁液|清洁剂|喷雾|灯|笔|画板|浴巾|杯垫|浇水器|植物|绿植|花材)/i;
+        const isAccessory = item => accessoryPattern.test(safeString(item?.name));
+        const isMain = item => mainProductPattern.test(safeString(item?.name)) && !isAccessory(item);
+
+        // 明确写出的“X套/X组”优先表示整套销售数量，且必须是主产品分项。
+        const setQuantity = quantities.find(item => /^(套|组)$/.test(item.unit) && isMain(item));
+        if (setQuantity) return setQuantity.quantity;
+
+        // 一般组合：优先取主产品数量。多个主产品时取最能代表套装单位的数量，
+        // 不把盖子、吸管、盘子等附属数量叠加进去。
+        const mainItems = quantities.filter(isMain);
+        if (mainItems.length) {
+            const ranked = mainItems.map(item => {
+                const name = safeString(item.name);
+                let score = 0;
+                if (/(杯|瓶|罐|碗|篮|桶|地毯|地垫|挂布|花束|气球|灯|清洁液|清洁剂|喷雾)/i.test(name)) score += 4;
+                if (/(托盘|盘子?|摆件|挂件|装饰球|圣诞球)/i.test(name)) score += 2;
+                if (/套|组/.test(item.unit)) score += 3;
+                return { item, score };
+            }).sort((a, b) => b.score - a.score || b.item.quantity - a.item.quantity);
+            const top = ranked[0];
+            const sameRole = ranked.filter(entry => entry.score === top.score);
+            if (sameRole.length === 1) return top.item.quantity;
+            // 同等主产品只取共同套数；不同数量时取最大主产品数量，避免把配件叠加进去。
+            const quantitiesOfSameRole = sameRole.map(entry => entry.item.quantity);
+            if (quantitiesOfSameRole.every(value => value === quantitiesOfSameRole[0])) return quantitiesOfSameRole[0];
+            return Math.max(...quantitiesOfSameRole);
+        }
+
+        // 没有可识别主产品时才保守处理：相同分项数量视为同一套数；
+        // 不同数量无法确认主次，返回 null，由上层按1兜底，不从图片猜数。
+        const values = quantities.map(item => item.quantity).filter(value => value > 0);
+        if (!values.length) return null;
+        if (values.every(value => value === values[0])) return values[0];
+        return null;
     }
 
     function extractMainProductQuantityBeforeAccessory(text) {
@@ -729,31 +1372,125 @@
         if (!s) return null;
         const accessoryLead = /(搭配|配|配套|附带|含|包含|另配|加配|赠|赠送).{0,18}(造雾器|雾化器|适配器|水架|支架|底座|电源|遥控器|充气泵|气泵|连接线|挂绳|配件|包装|袋|盒|贴纸|点胶|胶水|丝带|卡片|贺卡)/;
         if (!accessoryLead.test(s)) return null;
-        const before = s.split(accessoryLead)[0];
+        const before = s.split(/\+?\s*补充备注\s*[：:]/i)[0].split(accessoryLead)[0];
         const matches = [...before.matchAll(/(\d+(?:\.\d+)?)\s*(个|件|只|颗|条|张|片|套|组|包)/g)];
         if (!matches.length) return null;
         const last = matches[matches.length - 1];
         return { qty: parseFloat(last[1]), unit: last[2] };
     }
+
+    function extractSolutionQuantityInfo(text) {
+        const s = stripInternalGridCounts(text);
+        if (!s) return { quantity: 1, source: 'default' };
+        const units = '(?:个|件|只|颗|条|张|片|双|卷|套|包|支|枝|束|把|捆|pcs|PCS)';
+        let match = s.match(new RegExp(`(?:共|总计|合计|一共|总共)\\s*(\\d+(?:\\.\\d+)?)\\s*${units}`));
+        if (match) return { quantity: parseFloat(match[1]), source: 'text' };
+        const styleEachPatterns = [
+            new RegExp(`(\\d+(?:\\.\\d+)?)\\s*(?:款|种)(?:图案|款式)?[^0-9]{0,20}?每\\s*(?:款|种|款式)?\\s*(\\d+(?:\\.\\d+)?)\\s*${units}`),
+            new RegExp(`(\\d+(?:\\.\\d+)?)\\s*(?:款|种)(?:图案|款式)?[^0-9]{0,20}?(?:各|分别)\\s*(\\d+(?:\\.\\d+)?)\\s*${units}`)
+        ];
+        for (const stylePattern of styleEachPatterns) {
+            match = s.match(stylePattern);
+            if (match) return { quantity: parseFloat(match[1]) * parseFloat(match[2]), source: 'text' };
+        }
+        match = s.match(/(\d+(?:\.\d+)?)\s*大\s*(\d+(?:\.\d+)?)\s*小/);
+        if (match) return { quantity: parseFloat(match[1]) + parseFloat(match[2]), source: 'text' };
+        const main = extractMainProductQuantityBeforeAccessory(s);
+        if (main && main.qty > 0) return { quantity: main.qty, source: 'text' };
+        const plusQty = sumPlusSeparatedQuantities(s);
+        if (plusQty !== null && plusQty !== undefined && plusQty > 0) return { quantity: plusQty, source: 'text' };
+        const generic = extractPrimaryQuantity(s);
+        return generic !== null && generic !== undefined && generic > 0
+            ? { quantity: generic, source: 'text' }
+            : { quantity: 1, source: 'default' };
+    }
+
+    function extractSolutionQuantityStrict(text) {
+        return extractSolutionQuantityInfo(text).quantity;
+    }
+
+    function extractExplicitTotalQuantity(text) {
+        const s = stripInternalGridCounts(extractSolutionTitleText(text));
+        if (!s) return null;
+        const units = '(?:个|件|只|颗|条|张|片|双|卷|套|包|支|枝|束|把|捆|pcs|PCS)';
+        const match = s.match(new RegExp(`(?:共|总计|合计|一共|总共)\\s*(\\d+(?:\\.\\d+)?)\\s*${units}`, 'i'));
+        return match ? parseFloat(match[1]) : null;
+    }
+
+    function sumAiComponentQuantities(components) {
+        if (!Array.isArray(components) || components.length < 2) return null;
+        const values = components.map(component => parseQuantityValue(component?.quantity)).filter(value => isFinite(value) && value > 0);
+        return values.length === components.length ? values.reduce((sum, value) => sum + value, 0) : null;
+    }
+
+    function isUnreliableAiQuantitySource(value) {
+        const source = safeString(value).trim().toLowerCase();
+        return /图片|图像|视觉|推测|猜测|image|visual|inferred|guess/.test(source);
+    }
+
+    function extractSolutionTitleText(text) {
+        const raw = safeString(text).trim();
+        if (!raw) return '';
+        return raw
+            .split(/\+?\s*补充备注\s*[：:]/i)[0]
+            .replace(/[+＋]\s*$/, '')
+            .trim();
+    }
+
+    function shouldDisplayComponentsFromSolutionText(sourceText) {
+        return extractExplicitComponentDefinitions(sourceText).length >= 2;
+    }
     
-    function convertToCm(input) {
+    function sizeUnitFactorToCm(unit) {
+        const normalized = safeString(unit).trim().toLowerCase().replace(/[.。\s]/g, '');
+        if (!normalized) return 1;
+        if (['mm', '毫米', 'millimeter', 'millimeters'].includes(normalized)) return 0.1;
+        if (['cm', '厘米', '公分', 'centimeter', 'centimeters'].includes(normalized)) return 1;
+        if (['m', '米', '公尺', 'meter', 'meters'].includes(normalized)) return 100;
+        if (['in', 'inch', 'inches', '英寸', '"', '″', "''"].includes(normalized)) return 2.54;
+        if (['ft', 'foot', 'feet', '英尺', "'", '′'].includes(normalized)) return 30.48;
+        if (['yd', 'yard', 'yards', '码', '码数'].includes(normalized)) return 91.44;
+        return 1;
+    }
+
+    function convertToCm(input, fallbackUnit = '') {
         if (input === null || input === undefined) return null;
-        if (typeof input === 'number') return input;
-        let str = String(input).trim();
+        if (typeof input === 'number') return Number.isFinite(input) ? input * sizeUnitFactorToCm(fallbackUnit) : null;
+        const str = String(input).trim();
         if (!str) return null;
-        let m = str.match(/^([\d.]+)\s*(?:''|″|英寸|inch|in)\b/i);
-        if (m) return parseFloat(m[1]) * 2.54;
-        m = str.match(/^([\d.]+)\s*(?:'|′|英尺|ft|foot)\b/i);
-        if (m) return parseFloat(m[1]) * 30.48;
-        m = str.match(/^([\d.]+)\s*(?:cm|厘米)\b/i);
-        if (m) return parseFloat(m[1]);
-        m = str.match(/^([\d.]+)\s*(?:mm|毫米)\b/i);
-        if (m) return parseFloat(m[1]) / 10;
-        m = str.match(/^([\d.]+)\s*(?:m|米)\b/i);
-        if (m) return parseFloat(m[1]) * 100;
-        m = str.match(/^([\d.]+)$/);
-        if (m) return parseFloat(m[1]);
-        return null;
+        const match = str.match(/^([+-]?(?:\d+(?:\.\d+)?|\.\d+))\s*([a-zA-Z"'″′\u4e00-\u9fff]*)\s*$/);
+        if (!match) return null;
+        const value = parseFloat(match[1]);
+        if (!Number.isFinite(value)) return null;
+        const explicitUnit = match[2] || fallbackUnit;
+        return value * sizeUnitFactorToCm(explicitUnit);
+    }
+
+    function normalizeMixedUnitSizeFromSolutionText(sizeObj, sourceText) {
+        const source = extractSolutionTitleText(sourceText);
+        if (!source) return sizeObj;
+        const unitToken = '(mm|毫米|cm|厘米|公分|m|米|inches|inch|in|英寸|ft|feet|foot|英尺|yd|yards|yard|码)';
+        const mixedPattern = new RegExp(
+            `(\\d+(?:\\.\\d+)?)\\s*${unitToken}\\s*[x×X*]\\s*(\\d+(?:\\.\\d+)?)\\s*${unitToken}(?:\\s*[x×X*]\\s*(\\d+(?:\\.\\d+)?)\\s*${unitToken})?`,
+            'i'
+        );
+        const match = source.match(mixedPattern);
+        if (!match) return sizeObj;
+        const dimensions = [
+            { value: parseFloat(match[1]), unit: match[2] },
+            { value: parseFloat(match[3]), unit: match[4] }
+        ];
+        if (match[5] && match[6]) dimensions.push({ value: parseFloat(match[5]), unit: match[6] });
+        if (dimensions.some(item => !Number.isFinite(item.value) || item.value <= 0)) return sizeObj;
+        const factors = dimensions.map(item => sizeUnitFactorToCm(item.unit));
+        if (new Set(factors).size < 2) return sizeObj;
+        const valuesCm = dimensions
+            .map((item, index) => item.value * factors[index])
+            .sort((a, b) => b - a)
+            .map(value => Math.round(value * 100) / 100);
+        const normalized = { length: valuesCm[0], width: valuesCm[1], unit: 'cm' };
+        if (valuesCm.length > 2) normalized.height = valuesCm[2];
+        return normalized;
     }
     
     const dimensionMap = {
@@ -766,28 +1503,19 @@
     function calcSizeDiffStructured(bObj, uObj) {
         if (!bObj || !uObj) return { diff: null, reason: '未识别', details: [], weightedDetails: [] };
         let normBuilt = {}, normUnbuilt = {};
-        const bUnit = (bObj.unit || bObj.单位 || '').toLowerCase();
-        const uUnit = (uObj.unit || uObj.单位 || '').toLowerCase();
-        const inchUnits = ['inch', 'inches', 'in', '英寸', '"', '″'];
-        const bIsInch = inchUnits.some(u => bUnit.includes(u));
-        const uIsInch = inchUnits.some(u => uUnit.includes(u));
-        const bConvert = bIsInch ? 2.54 : 1;
-        const uConvert = uIsInch ? 2.54 : 1;
+        const bUnit = bObj.unit || bObj.单位 || '';
+        const uUnit = uObj.unit || uObj.单位 || '';
         
         for (let key in bObj) {
             const normKey = dimensionMap[key.toLowerCase()] || key;
             if (normKey === 'unit' || normKey === '单位') continue;
-            let val = bObj[key];
-            if (typeof val === 'number') val *= bConvert;
-            else if (typeof val === 'string') { const cm = convertToCm(val); val = (cm !== null) ? cm : null; }
+            const val = convertToCm(bObj[key], bUnit);
             if (val !== null && val > 0) normBuilt[normKey] = val;
         }
         for (let key in uObj) {
             const normKey = dimensionMap[key.toLowerCase()] || key;
             if (normKey === 'unit' || normKey === '单位') continue;
-            let val = uObj[key];
-            if (typeof val === 'number') val *= uConvert;
-            else if (typeof val === 'string') { const cm = convertToCm(val); val = (cm !== null) ? cm : null; }
+            const val = convertToCm(uObj[key], uUnit);
             if (val !== null && val > 0) normUnbuilt[normKey] = val;
         }
         const builtKeys = Object.keys(normBuilt), unbuiltKeys = Object.keys(normUnbuilt);
@@ -941,7 +1669,7 @@
         const sizeDiff = isClothing ? null : sizeResult.diff;
         const materialDiff = hasMajorMaterialDiff(res) ? 100 : 0;
         const isMultiComponent = (builtComps && builtComps.length > 1) || (unbuiltComps && unbuiltComps.length > 1);
-        const overlapRatio = res.component_overlap_ratio || 0;
+        const overlapRatio = normalizeOverlapPercent(res.component_overlap_ratio) ?? 0;
         if (appearDiff < 50 && materialDiff === 0) {
             return { pass: false, reason: '首创对比以产品款式/外形特征为核心：款式外形差异不足50%，且不存在材质大类差异，不通过。' };
         }
@@ -956,12 +1684,12 @@
         const maxDim = Math.max(...dims,0), sumDim = dims.reduce((a,b)=>a+b,0);
         const hasAny50 = dims.some(d=>d>=50), allBelow50 = dims.every(d=>d<50);
         if (allBelow50 && sumDim < 50) return {pass:false, reason:`所有维度<50%且综合<50%`};
-        if (allBelow50 && sumDim >= 50) { if (overlapRatio > 0.5) return {pass:false, reason:`所有维度<50%但综合≥50%，重复度${Math.round(overlapRatio*100)}%>50%，不通过`}; else return {pass:true, reason:`所有维度<50%但综合≥50%，且重复度≤50%，通过`}; }
+        if (allBelow50 && sumDim >= 50) { if (overlapRatio > 50) return {pass:false, reason:`所有维度<50%但综合≥50%，重复度${Math.round(overlapRatio)}%>50%，不通过`}; else return {pass:true, reason:`所有维度<50%但综合≥50%，且重复度≤50%，通过`}; }
         if (hasAny50) return {pass:true, reason:`存在某一维度差异≥50%`};
         if (isClothing) { if (maxDim>=50) return {pass:true, reason:`服装产品最大维度差异≥50%`}; else return {pass:false, reason:`服装产品最大维度差异不足50%`}; }
         if (isMultiComponent) {
             const hasPrimary = builtHasPrimary || unbuiltHasPrimary;
-            if (!hasPrimary) { if (overlapRatio<=0.5) return {pass:true, reason:`不区分主次组合，款式重复度≤50%`}; const repeatPortion = overlapRatio; if (repeatPortion<=0.5) return {pass:true, reason:`重复款数量占比≤50%`}; else return {pass:false, reason:`重复款数量占比>50%`}; }
+            if (!hasPrimary) { if (overlapRatio<=50) return {pass:true, reason:`不区分主次组合，款式重复度≤50%`}; const repeatPortion = overlapRatio; if (repeatPortion<=50) return {pass:true, reason:`重复款数量占比≤50%`}; else return {pass:false, reason:`重复款数量占比>50%`}; }
             else { const combinedDiff = (appearDiff + (isNaN(qDiff)?0:qDiff) + (sizeDiff||0)) / 3; if (combinedDiff>=50) return {pass:true, reason:`区分主次组合，综合差异度≥50%`}; else return {pass:false, reason:`区分主次组合，综合差异度<50%`}; }
         }
         return {pass:false, reason:`未满足任何通过条件`};
@@ -1121,6 +1849,82 @@
             const escapedName = escapeRegExp(name);
             const explicitComponent = new RegExp(`(包含|内含|含有|配有|配|带|附带|一套含|套装含).{0,12}${escapedName}|${escapedName}.{0,12}(包含|内含|配有|附带|作为组件|为组件)`).test(source);
             return explicitComponent;
+        });
+    }
+
+    function extractTextQuantityForComponent(componentName, sourceText) {
+        const source = stripInternalGridCounts(sourceText);
+        const name = safeString(componentName).trim();
+        if (!source || !name) return null;
+        const compact = value => safeString(value).toLowerCase().replace(/[^\u4e00-\u9fa5a-z0-9.]/g, '');
+        const compactSource = compact(source);
+        const compactName = compact(name);
+        const quantityPattern = /(\d+(?:\.\d+)?)\s*(?:个|件|只|颗|条|张|片|双|卷|套|包|支|枝|束|把|捆|pcs|件装)/i;
+        let position = compactName ? compactSource.indexOf(compactName) : -1;
+        if (position < 0) {
+            const genericTokens = new Set(['产品', '组件', '配件', '颜色', '尺寸', '材质', '款式', '套装', '主体', '主品']);
+            const tokens = (name.match(/[\u4e00-\u9fa5]{2,}|[a-zA-Z]{2,}/g) || []).filter(token => !genericTokens.has(token)).sort((a, b) => b.length - a.length);
+            for (const token of tokens) {
+                const found = compactSource.indexOf(compact(token));
+                if (found >= 0) { position = found; break; }
+            }
+        }
+        if (position < 0) return null;
+        const before = compactSource.slice(Math.max(0, position - 18), position);
+        const after = compactSource.slice(position + compactName.length, position + compactName.length + 18);
+        const beforeMatch = before.match(new RegExp(`(\\d+(?:\\.\\d+)?)\\s*(?:个|件|只|颗|条|张|片|双|卷|套|包|支|枝|束|把|捆|pcs|件装)\\s*$`, 'i'));
+        if (beforeMatch) return parseFloat(beforeMatch[1]);
+        const afterMatch = after.match(new RegExp(`^\\s*(?:x|×)?\\s*(\\d+(?:\\.\\d+)?)\\s*(?:个|件|只|颗|条|张|片|双|卷|套|包|支|枝|束|把|捆|pcs|件装)`, 'i'));
+        if (afterMatch) return parseFloat(afterMatch[1]);
+        return null;
+    }
+    function normalizeComponentQuantitiesFromSolutionText(components, sourceText) {
+        const aiComponents = Array.isArray(components) ? components : [];
+        const titleText = extractSolutionTitleText(sourceText);
+        const definitions = extractExplicitComponentDefinitions(titleText);
+        if (!definitions.length) {
+            return aiComponents.map((component, index) => ({
+                ...component,
+                name: component?.name || `组件${index + 1}`,
+                quantity: parseQuantityValue(component?.quantity) || 1
+            }));
+        }
+        const usedIndexes = new Set();
+        const compactName = value => safeString(value).toLowerCase().replace(/[^\u4e00-\u9fa5a-z0-9]/g, '');
+        const findMatchingAiComponent = definition => {
+            const target = compactName(definition.name);
+            if (!target) return -1;
+            let bestIndex = -1;
+            let bestScore = 0;
+            aiComponents.forEach((component, index) => {
+                if (usedIndexes.has(index)) return;
+                const candidate = compactName(component?.name);
+                if (!candidate) return;
+                let score = 0;
+                if (candidate === target) score = 100;
+                else if (candidate.includes(target) || target.includes(candidate)) score = 80;
+                else {
+                    const tokens = (definition.name.match(/[\u4e00-\u9fa5]{2,}|[a-zA-Z]{2,}/g) || []).filter(token => token.length >= 2);
+                    score = tokens.filter(token => candidate.includes(compactName(token))).length * 10;
+                }
+                if (score > bestScore) { bestScore = score; bestIndex = index; }
+            });
+            return bestScore >= 10 ? bestIndex : -1;
+        };
+        return definitions.map((definition, index) => {
+            const matchedIndex = findMatchingAiComponent(definition);
+            if (matchedIndex >= 0) {
+                usedIndexes.add(matchedIndex);
+                return { ...aiComponents[matchedIndex], name: definition.name, quantity: definition.quantity };
+            }
+            return {
+                name: definition.name,
+                quantity: definition.quantity,
+                size: {},
+                color: '-',
+                material: '-',
+                cost_level: '中'
+            };
         });
     }
 
@@ -1567,32 +2371,154 @@
         return primaryQty;
     }
 
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function parseDoubaoErrorMessage(rawText, status, requestBytes) {
+        let detail = '';
+        try {
+            const parsed = JSON.parse(rawText || '{}');
+            detail = safeString(parsed?.error?.message || parsed?.message || parsed?.error?.code || parsed?.code);
+        } catch (e) {
+            detail = safeString(rawText).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+        }
+        detail = detail.slice(0, 300);
+        const sizeMb = (requestBytes / 1024 / 1024).toFixed(1);
+        if (status === 400 && !detail) detail = `请求参数或图片不符合接口要求，请求大小约${sizeMb}MB`;
+        if (status === 401 || status === 403) detail = detail || 'API密钥或模型端点无权限';
+        if (status === 413) detail = detail || `图片或请求体过大，请求大小约${sizeMb}MB`;
+        if (status === 429) detail = detail || '请求过于频繁或接口额度不足';
+        if (status >= 500) detail = detail || '豆包服务暂时异常';
+        return `豆包请求失败（${status}）：${detail || '接口未返回具体原因'}`;
+    }
+
+    async function fetchDoubao(reqBody, maxAttempts = 3) {
+        const body = JSON.stringify(reqBody);
+        const requestBytes = new Blob([body]).size;
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+            try {
+                const resp = await fetch(DOUBAO_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${DOUBAO_API_KEY}` },
+                    body
+                });
+                if (resp.ok) return resp;
+                const rawError = await resp.text();
+                const retryable = [408, 429, 500, 502, 503, 504].includes(resp.status);
+                if (!retryable || attempt === maxAttempts - 1) {
+                    throw new Error(parseDoubaoErrorMessage(rawError, resp.status, requestBytes));
+                }
+            } catch (error) {
+                const isDetailedApiError = /^豆包请求失败（\d+）/.test(safeString(error?.message));
+                if (isDetailedApiError || attempt === maxAttempts - 1) throw error;
+            }
+            await sleep(800 * Math.pow(2, attempt));
+        }
+        throw new Error('豆包请求失败：未知错误');
+    }
+
+    async function optimizeImageForDoubao(dataUrl, maxSide = 1800, maxEncodedBytes = 3.5 * 1024 * 1024) {
+        const source = safeString(dataUrl);
+        if (!source.startsWith('data:image/')) throw new Error('图片数据无效，请重新上传');
+        if (aiImageCache.has(source)) return aiImageCache.get(source);
+        if (aiImageCache.size >= 24) aiImageCache.delete(aiImageCache.keys().next().value);
+        const task = new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => {
+                try {
+                    const scale = Math.min(1, maxSide / Math.max(img.naturalWidth || img.width, img.naturalHeight || img.height));
+                    const width = Math.max(1, Math.round((img.naturalWidth || img.width) * scale));
+                    const height = Math.max(1, Math.round((img.naturalHeight || img.height) * scale));
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d', { alpha: false });
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, width, height);
+                    ctx.drawImage(img, 0, 0, width, height);
+                    let quality = 0.88;
+                    let optimized = canvas.toDataURL('image/jpeg', quality);
+                    while (optimized.length > maxEncodedBytes && quality > 0.58) {
+                        quality -= 0.10;
+                        optimized = canvas.toDataURL('image/jpeg', quality);
+                    }
+                    if (!optimized || optimized === 'data:,') throw new Error('图片压缩失败');
+                    resolve(optimized);
+                } catch (error) {
+                    reject(new Error(`图片处理失败：${error.message || '无法读取图片'}`));
+                }
+            };
+            img.onerror = () => reject(new Error('图片读取失败，请重新粘贴或上传图片'));
+            img.src = source;
+        });
+        aiImageCache.set(source, task);
+        try {
+            return await task;
+        } catch (error) {
+            aiImageCache.delete(source);
+            throw error;
+        }
+    }
+
     async function callDoubaoProductComparison(imgA, imgB, txtA, txtB, isPioneer = false, bPrice = null, uPrice = null) {
-        const b64A = imgA.split(',')[1], b64B = imgB.split(',')[1];
+        const [optimizedA, optimizedB] = await Promise.all([
+            optimizeImageForDoubao(imgA),
+            optimizeImageForDoubao(imgB)
+        ]);
+        const b64A = optimizedA.split(',')[1], b64B = optimizedB.split(',')[1];
         let priceInfo = '';
         if (bPrice !== null && uPrice !== null) priceInfo = `\n用户提供价格：已建 $${bPrice}，未建 $${uPrice}。`;
         else if (bPrice !== null) priceInfo = `\n用户提供价格：已建 $${bPrice}，未建未知。`;
         else if (uPrice !== null) priceInfo = `\n用户提供价格：未建 $${uPrice}，已建未知。`;
         const marketHint = '\n**市场元素识别**：若图片中出现明显的特定市场元素（如“十字架”“四叶草”等暗示宗教/爱尔兰节等市场的元素），必须在竞争分析中识别并讨论对应的细分市场。如果产品中不包含任何宗教、节日、特殊人群指向的元素，则不要在分析中主动提及“无特殊元素”之类的否定陈述——只描述确实存在的市场特征。语言文字属于细分市场因素：西班牙语生日文案与英语生日文案同属生日装饰大类，购买场景有交叉，但目标语言人群存在区分，不能写成完全重合；必须准确识别图片文字语言，英文“It’s My Birthday/Happy Birthday”不能说成中文文案。';
-        const consistencyRule = '\n**重要一致性要求**：输出最终JSON前，必须先完成四个视觉维度的分项分析和分项百分比，再按权重计算 overall_percent，并自行校验 visual_overall、visual_overall_percent、shape_contour、shape_contour_percent、pattern_decoration、pattern_decoration_percent、structure_parts、structure_parts_percent、summary、overall_percent 是否前后一致；如果第一次分析中出现百分比、等级词、总结结论互相矛盾，必须重新分析并修正后再输出最终JSON，不能输出带矛盾的中间结果。若overall_percent较低，不得写差异较大/完全不同；若overall_percent较高，不得写中等偏小/差异较小。竞争程度判定与细分市场差异结论也必须逻辑自洽。';
+        const consistencyRule = '\n**重要一致性要求**：输出最终JSON前，必须先完成四个视觉维度的分项分析和分项百分比，再按权重计算 overall_percent，并自行校验 visual_overall、visual_overall_percent、shape_contour、shape_contour_percent、pattern_decoration、pattern_decoration_percent、structure_parts、structure_parts_percent、summary、overall_percent 是否前后一致；如果第一次分析中出现百分比、等级词、总结结论互相矛盾，必须重新分析并修正后再输出最终JSON，不能输出带矛盾的中间结果。每个文字字段必须先写具体事实依据，再由依据得出唯一差异等级；同一字段禁止同时出现“差异较大/明显/完全不同”和“差异较小/高度相似/基本一致”等相反结论。若依据为“二者核心载体、主体轮廓、结构、版式或图案相同/一致/均为同一种”，并且差异仅是少量、少数款式、个别、局部、轻微或细节变化，则该字段只能判为差异较小或中等偏小，禁止判为差异较大。即使没有写“仅局部变化”，只要字段中明确写“主体/核心/整体轮廓、形态、造型、结构、版式、图案或部件一致/相同/无明显差异”，该字段也禁止判为差异明显或差异较大，除非同一字段明确说明另一个核心设计部分已经整体重做。若依据明确表明核心造型、轮廓、结构、图案体系或版式整体重做，则禁止判为差异较小。结论句不得在末尾无依据地反转前文，例如禁止“二者核心载体均为标准心形，仅少量款式增加翅膀，核心主体轮廓差异较大”，也禁止“差异明显，二者主体轮廓形态一致”。若overall_percent较低，不得写差异较大/完全不同；若overall_percent较高，不得写中等偏小/差异较小。competition_level必须与competition_analysis同方向，submarket_difference_analysis开头的等级必须与后文论证同方向：判“较小/无明显差异”时，正文不得写目标客群、风格偏好或细分需求差异明显；正文若认定客群、风格偏好或需求方向存在明显区隔，等级必须判为“较大”。竞争分析不得同时写直接竞争较强和替代关系有限；细分市场分析不得同时写客群明显区隔和高度重叠。';
         const noMetaComment = '\n不要输出纠偏过程、内部规则说明或模型自我评价，只输出用户可读的分析结果。';
-        const competitionFocusRule = '\n**竞争分析聚焦约束**：沿用原版上架竞争程度分析口径，只分析两个产品之间的直接竞争关系和细分市场差异。禁止分析市场供给量、竞品数量等宏观状况；禁止写搜索词、关键词、搜索结果、搜索路径、购买决策、购买意图等内容。详细分析不要重复“图案差异度多少、是否低于50%、综合差异度多少、通过/不通过”等界面已有信息。';
+        const competitionFocusRule = '\n**竞争分析聚焦约束**：沿用原版上架竞争程度分析口径，只分析两个产品之间的直接竞争关系和细分市场差异。竞争程度看核心功能、使用场景、替代关系和受众重叠；细分市场差异看目标风格、节日体系、语言/宗教属性、特殊人群、固定主题与可替换主题体系等是否形成稳定区隔。细分市场差异“较大”表示存在明确且稳定的目标客群或需求边界；“较小”表示只有有限偏好差异，客群和需求仍高度重叠；“无明显差异”表示未形成有效细分区隔。若一款为固定垂直主题，另一款为跨节日可替换体系，且由此面向明显不同的装饰风格或需求方向，应判为较大，不得先写较小再说客群差异明显。较高竞争与较大细分差异不是绝对互斥，但若同时出现，必须统一写成“核心功能和基础使用/摆放场景重合，因此具有较强替代关系；但购买动机、主题需求、目标风格或特定人群存在稳定边界，因此细分市场差异较大”。此时禁止在竞争分析中写“使用场景重叠”，又在细分市场分析中写“消费场景完全不同、截然不同或毫无重合”；可以写节庆装饰与日常展示的具体需求侧重点不同，但必须承认两者仍共享基础陈列/使用场景。禁止分析市场供给量、竞品数量等宏观状况；禁止写搜索词、关键词、搜索结果、搜索路径、购买决策、购买意图等内容。详细分析不要重复“图案差异度多少、是否低于50%、综合差异度多少、通过/不通过”等界面已有信息。';
         const redesignDirectionRule = '\n**基于Amazon市场特性的改款方向**：若存在较高竞争、细分市场差异较小、图案差异<50%、重复款或不通过风险，必须给出可降低 Amazon 竞争重合的改款方向，最多输出3条，每条单独换行。建议必须针对未建产品本身提出可执行改法，包括主题图案、核心造型、结构部件、产品形态、套装结构、安装方式、材质/工艺、功能场景、适用人群等；不要只给关键词差异，不要只建议改颜色、改数量、轻微改尺寸或改表面纹路。若产品已有明确节日/宗教主题，不要建议切换到其他节日，只能在同一主题内调整。改款方向不要提及已建、竞品或相比已建。';
-        const overlapRule = '\n**方案重复度计算**：对比组件列表，找出图案差异度<50%的重复组件，返回 component_overlap_ratio 和 overlap_details。';
-        const imageQuantityRule = '\n**文字数量最高优先级**：产品方案文字已明确组件名称、数量、尺寸、颜色时，以文字为准；图片只补充文字缺失信息。款式数不是销售数量；“共N款/种图案，每款/每种M个/件”必须识别为总数量N×M，不能只输出N；内部格子/网格/分区数量不是销售数量；多加号分项需逐项识别组件数量；一包200张/200张一包等包装销售数量优先识别为实际数量。';
-        const skuBundleRule = '\n**多SKU组合与补充备注规则**：SKU【主产品 + 补充备注】中，补充备注只说明打包、出货、仓库包装或一版多少个，不得覆盖主产品数量。混合单位套装不得强行合计成单一单位，应显示为1套并列出各组件数量。';
+        const overlapRule = '\n**方案重复度计算**：对比组件列表，找出图案差异度<50%的重复组件，返回 component_overlap_ratio 和 overlap_details。component_overlap_ratio必须输出0-100之间的百分数，例如重复度60%输出60，不得输出0.6。';
+         const imageQuantityRule = '\n**产品方案标题数量唯一来源**：built_quantity、unbuilt_quantity 以及组件 quantity 只能依据用户输入的产品方案标题识别。标题后的“补充备注”及其后所有打包、仓库、出货、每袋、每版、供应商包装数字都不属于产品/配件数量。禁止根据审核图中看见几个产品、图片标签、箭头标注、层数、格数、孔数、展示位数、支撑杆数、网格数或其他视觉信息擅自推断数量。图片只能用于识别真实款式和结构，不能补充或覆盖标题数量，也不能决定是否拆分组件。若标题没有明确写出销售数量，built_quantity/unbuilt_quantity 必须默认为1；若组合标题只写“1套/1组/1包”等整体单位而未使用“+”逐项列出组件，则不输出组件列表，整套作为一个整体展示。使用“+”时按加号逐项识别组件；总数量先取明确写出的“X套/X组”主产品分项，其次取主产品数量。盖子、吸管、杯盖、盘子、包装等配件数量不参与总数量相加。只有完全无法识别主产品且各分项地位相同、数量也相同的情况下，才取共同数量；数量不一致且无法判断主次时，默认为1，禁止直接求和。某分项未明确数量时，该组件 quantity 默认为1。款式数不是销售数量；“共N款/种图案，每款/每种M个/件”必须识别为总数量N×M，不能只输出N；内部格子/网格/分区数量不是销售数量；一包200张/200张一包等标题中的产品包装销售数量优先识别为实际数量。尺寸数字不得识别为数量。';
+        const skuBundleRule = '\n**多SKU组合与补充备注规则**：SKU【主产品 + 补充备注】中，补充备注只说明打包、出货、仓库包装或一版多少个，不得覆盖主产品数量。混合单位套装不得强行合计成单一单位；标题有“+”时按分项展示并分别识别数量，标题只写“1套/1组/1包”且没有“+”时直接作为一个整体方案展示。';
         const productSizeRule = '\n**产品尺寸与包装尺寸区分**：包装、出货、安全包装、体积、仓库、防摔测试、外箱、箱规等语境中的尺寸是包装/运输尺寸，不得填入产品本体尺寸。';
-        const imageTextConsistencyRule = '\n**图上文字与真实款式识别规则**：产品图片中的文字说明、红字标注、箭头、尺寸线、局部放大图、材质说明、款式说明、结构说明均属于产品方案信息，必须结合视觉主体识别真实款式。若图片文字说明按左图款式/参考上图/采用某结构，必须把被引用整体图作为主体结构，局部图只作细节补充。若图片红字/标注/箭头写“改成/定制/采用/做成/换成/使用右边图案/定制右边图案/参考右边图案/按右图图案”，必须按文字指定的最终成品图案进行识别；左侧或背景图若只是管身、结构、材质或颜色参考，不得把其旧表面图案当成最终图案。若图片或文字写“参考颜色/参考材质/参考色号/参考效果/参考某图做成品”，该参考图只用于提取颜色、材质、工艺或效果，不能自动把参考图里的物品识别为组件；只有明确写“包含/内含/配/带/附带/一套含”时，参考图中的物品才可作为组件。';
-        const primaryAccessoryRule = '\n**主品与配件权重规则**：组合产品必须先识别主售卖产品和附属配件。主售卖产品决定核心图案差异、竞争程度、可替代性和总数量；花插、贺卡、卡纸、丝带、缎带、手提袋、包装纸、贴纸、点胶、卡片、标签、欧根纱袋、绒布袋、礼袋、透明袋、勺子、叉子、餐具、夹子、擦手巾、毛巾、抹布、餐巾、造雾器、雾化器、适配器、水架、支架、底座、电源、遥控器、充气泵、连接线、挂绳等附属/功能配件只能作为子件展示，不得计入 built_quantity/unbuilt_quantity 的总数量，也不得单独把整体图案差异或综合差异抬高到≥50。若组合中存在菜板/托盘/篮子/桶/灯/地毯/挂布/摆件/花环/清洁液/清洁剂/清洁喷雾等明显承载核心用途的主体件，总数量优先取该主体件数量；例如白板清洁套装应按清洁液瓶数作为总数量，磁性标签、抹布只作配件展示。';
+        const imageTextConsistencyRule = '\n**图上文字与真实款式识别规则**：产品图片中的文字说明、红字标注、箭头、尺寸线、局部放大图、材质说明、款式说明、结构说明均属于产品方案信息，必须结合视觉主体识别真实款式。若图片文字说明按左图款式/参考上图/采用某结构，必须把被引用整体图作为主体结构，局部图只作细节补充。若图片红字/标注/箭头写“改成/定制/采用/做成/换成/使用右边图案/定制右边图案/参考右边图案/按右图图案”，必须按文字指定的最终成品图案进行识别；左侧或背景图若只是管身、结构、材质或颜色参考，不得把其旧表面图案当成最终图案。若图片或文字写“参考颜色/参考材质/参考色号/参考效果/参考某图做成品”，该参考图只用于提取颜色、材质、工艺或效果，不能自动把参考图里的物品识别为组件；参考图中的物品只有在产品方案使用“+”逐项列出时，才可作为组件展示。';
+         const primaryAccessoryRule = '\n**主品与配件权重规则**：组合产品必须先识别主售卖产品和附属配件。主售卖产品决定核心图案差异、竞争程度和可替代性；总数量和配件数量仍必须严格取产品方案标题中的明确数字，标题未明确时默认为1。补充备注和图片数字不得覆盖标题数量。花插、贺卡、卡纸、丝带、缎带、手提袋、包装纸、贴纸、点胶、卡片、标签、欧根纱袋、绒布袋、礼袋、透明袋、勺子、叉子、餐具、夹子、擦手巾、毛巾、抹布、餐巾、造雾器、雾化器、适配器、水架、支架、底座、电源、遥控器、充气泵、连接线、挂绳等附属/功能配件只有在标题使用“+”明确列出时才作为子件展示，不得计入 built_quantity/unbuilt_quantity 的总数量，也不得单独把整体图案差异或综合差异抬高到≥50。标题有“+”时按加号展示组件；标题只有“1套/1组/1包”等整体单位且没有“+”时，整套作为一个整体展示。若组合中存在菜板/托盘/篮子/桶/灯/地毯/挂布/摆件/花环/清洁液/清洁剂/清洁喷雾等明显承载核心用途的主体件，只用于识别主品和视觉权重，不得覆盖产品方案标题数量。';
         const appearanceDiffRule = '\n**全局图案差异度规则**：overall_percent 只表示产品视觉款式/图案设计差异度，不是综合差异度。overall_percent 必须在完成4个维度分项分析后计算得出，不能先拍overall_percent再倒推文字。4个维度为：1. 整体目视化差异 visual_overall_percent；2. 形状与轮廓 shape_contour_percent；3. 图案与装饰 pattern_decoration_percent；4. 结构与部件 structure_parts_percent。固定权重：整体目视化差异30%、图案与装饰35%、形状与轮廓25%、结构与部件10%。**颜色可以作为整体目视化差异的辅助因素参与图案差异度，但只能影响 visual_overall_percent，不得进入图案与装饰、形状与轮廓、结构与部件三个维度，也不得单独决定综合差异度或通过/不通过判断。**不要只因第一眼色彩/摆放/层次不同就给高分，必须同时看图案装饰、形状轮廓和结构部件是否真正变化；如果仅颜色不同而款式、外形、图案装饰和结构一致，overall_percent 通常不得超过30%。所有单品都必须忽视拍摄/摆放/展示角度差异：正拍、侧拍、俯拍、背面展示、倾斜、旋转、手持、平放、立放、悬挂、叠放、堆叠、展开/收起、局部放大、裁切、光影、透视、远近、单个/多个展示都不能作为款式/图案差异；如果产品本身款式、外形、图案、结构一致或高度相似，仅展示方式不同，overall_percent 应为0%-20%。功能用途、人群场景、Amazon市场、竞争关系、主题名称、节日名称、关键词、材质、价格、数量、尺寸、包装、出货方式、拍摄角度、图片展示数量都不得进入overall_percent；颜色/配色/色彩只允许作为整体目视化差异的辅助因素。所有查重对比通常都是同类或近类产品，“同类产品/用途相同/材质相同/都有底座/都是挂件/都是装饰品”等不能作为压低图案差异度的理由。同类产品内部也可以存在90%以上的视觉款式差异。天然/基础本体产品要单独谨慎判断：如松果、松塔、贝壳、石头、木片、树枝、干花、麦穗、叶片等，若两边仍是同一类自然本体，外形结构、自然纹理、层级和主体轮廓高度相似，数量、尺寸、单个/多个展示、摆放角度、包装配套不得抬高图案差异度，通常应为5%-25%；只有出现彩绘、印花、雕刻、镂空、人工造型重构、额外装饰图案或核心形态完全改变，才可按真实设计差异提高。主题、节日、适用场景或关键词不同不能单独作为加分项；但如果换主题后导致整体目视化、版式构图、字体/线条风格、主体造型、装饰元素组合、图案绘制方式都明显不同，应按这些视觉差异本身给高分。若两款产品是同一版式/同一模板/同一造型语言，仅替换主题、节日、文案关键词或局部元素，overall_percent 通常不得超过49。若两款产品属于同主体/同结构/同款族，例如主体造型、套装件数、部件布局、核心轮廓基本一致，只是文字位置、局部装饰、表面图案或小配件不同，overall_percent 通常不得超过35；如果只是颜色/配色不同，overall_percent 可以体现轻微整体目视化差异，但不得超过30%，不得因此判为图案装饰、形状轮廓或结构部件差异。若两款产品属于同一基础图形/视觉母题或同一设计框架，仅具体轮廓、尺寸组合、数量、比例、排列或摆放场景不同，不能判为90%-100%的完全不同设计体系，通常不超过60%。若两款产品图案装饰、材质风格、结构部件高度相似，仅从长方形改为正方形、从高款改为矮款、从大尺寸改小尺寸，或只改变容器比例/规格，属于形状尺寸差异，不得判为高图案差异，通常不超过35%-45%。若两款产品同为格子/网格/方格/色块/条纹/重复区块/分格矩形块等重复版式产品，且形状轮廓、分格结构、图案语言基本一致，只是排列节奏或局部纹理不同，overall_percent 通常为20%-35%，不得判为≥50。若整体目视化明显不同，且图案与装饰或形状轮廓也明显不同，overall_percent 通常应≥60；只有整体目视化、图案装饰、版式构图、字体/线条语言、主体造型整体都明显不同，才判为90%-100%。若图案与装饰已经判断为相同/相似/无明显差异/仅纹理差异，overall_percent 必须与该结论一致。overall_percent 为0%-30%时，只能使用“差异极小/差异较小/局部差异”等表述，禁止写“整体视觉差异明显/较为明显/区分度较明确/差异较大”。overall_percent 不要受人工审核的20/30/50/70档位影响，按实际视觉差异输出即可；0%-100%全区间都可用，允许使用5%粒度，如0、5、10、15、20、25、30、35、40、45、50、55、60、65、70、75、80、85、90、95、100。40%-50%之间允许输出45，但仍属于<50的未达标档，不得为了通过而抬到50。差异度标尺：四个视觉维度完全一致或仅拍摄/展示差异=0%-5%；几乎同款，仅极小局部细节变化=10%-15%；四个视觉维度基本一致=0%-20%；整体相似仅局部纹理/表面装饰变化=20%-30%；同主体/同结构/同款族仅局部装饰变化=30%-35%；同类重复格子/网格/色块版式，仅排列节奏或局部纹理变化=20%-35%；同一模板下只换关键词或局部装饰元素=30%-45%；中度差异/临界差异=45%-60%：两款产品仍属于同类或同一基础设计方向，但在主体造型、版式构图、图案装饰、结构部件中至少一项有明显变化，且另一项存在辅助变化；整体可以区分，但尚未达到明显不同设计体系。若只是数量、尺寸、角度、主题名称或轻微纹理变化，不得进入该档；若只是颜色/配色变化，通常不得进入45%-60%档；至少两个视觉维度明显不同=60%-80%；整体目视化和图案装饰体系完全不同，且形状/版式/结构也有明显变化=90%-100%。不要把所有相似主题产品都固定判为30%。';
+        const humanAlignedAppearanceRule = `
+**款式与图案差异两阶段判定（最高优先级；与其他图案差异规则冲突时，以本规则为准）**：
+
+第一阶段：先判断两款是否仍是同一设计模板，不得一开始就按四个维度平均给分。
+1. 先排除非设计因素。数量、件数、尺寸、规格、拍摄角度、摆放方式、展开/收起状态、图片裁切、光影、透视、背景场景、展示内容物、包装、图片说明文字和出货方式均不得形成款式/图案差异。天然纹理或随机纹路在不同单件上的分布变化，也不能被误判为重新设计。
+2. 只有主体剪影或通用载体、核心视觉主体、部件数量及连接关系、图案版式、元素位置与层级、表面设计体系和装饰语言均高度相似，才能判为同一设计模板。不能仅凭同品类、同用途、同材质、同主题、同节日、同基础物件或共享某个元素，就认定为同模板。主体结构相同但大面积表面图案、浮雕、分块、编织或肌理体系明显不同，也不能直接认定为同一模板小改。
+3. 完全同款、同图或同一结构仅展示方式不同，overall_percent应为0%-10%；核心设计框架一致、仅有极小细节变化为10%-20%；主体轮廓和设计框架仍一致、仅局部小面积纹理、少量文字、轻微装饰或配色变化为25%-35%；同一模板内存在较明显但仍未改变核心设计关系的局部变化可为40%-45%。这里的“局部纹理/装饰”必须只占主体较小区域，不包括覆盖主体大部分可见面的连续图案、立体分块、浮雕或系统性肌理。同模板不得为了通过抬到50%。
+4. 若无法确认主体剪影、核心视觉主体、构图层级、表面设计体系和部件关系均高度一致，就不得套用35%或49%的同模板上限，必须进入第二阶段按真实设计差异判断。
+
+第二阶段：对非同模板产品识别核心设计载体，再完成四维分析和最终评分。
+5. 核心设计载体必须根据“消费者第一眼主要通过什么设计识别这款产品”动态选择，不能只按产品的物理品类固定权重。立体产品也可能以大面积表面图案、浮雕、马赛克分块、编织或系统性肌理为核心设计载体；此时采用表面设计主导权重：整体目视化35%、图案与装饰40%、形状与轮廓15%、结构与部件10%。主体结构相同不能抵消核心表面设计已经重做的事实。
+6. 平面图案/印花载体：整体目视化35%、图案与装饰45%、形状与轮廓10%、结构与部件10%。重点比较主图案、文字与字体、版式构图、边框、元素位置和层级。通用矩形、圆形载体相同不得稀释已经明显重做的图文设计。
+7. 以立体造型和结构为核心的雕塑、容器、摆件：整体目视化30%、形状与轮廓35%、图案与装饰10%、结构与部件25%。重点比较剪影、体块比例、层级、开口、盖型、边缘、底座、支架、把手及部件连接关系。同属一种产品或用途相同不得压低这些真实结构差异。若差异主要来自覆盖主体大部分可见面的表面设计，则必须改用第5条的表面设计主导权重，不能仍把图案与装饰固定为10%。
+8. 纺织款式/软装：整体目视化30%、图案与装饰30%、形状与轮廓20%、结构与部件20%。重点比较主体轮廓、边缘处理、褶皱、荷叶边、拼接、贴布、刺绣、编织及装饰位置。
+9. 组合套装/服饰搭配：整体目视化35%、图案与装饰20%、形状与轮廓20%、结构与部件25%。重点比较主件造型、组件类型、各组件自身款式、部件关系和整套搭配体系；不得因数量不同加分，也不得因为存在一两个共同配件就把独立的整套设计压成低差异。
+10. 无法归类时才使用基础权重：整体目视化30%、图案与装饰35%、形状与轮廓25%、结构与部件10%。颜色只能辅助整体目视化，单独改色通常不得超过30%，不得单独形成50%。
+
+独立款式门槛与分数校准：
+11. 50%不是四项机械平均的普通中间值，而是“是否形成可独立识别款式”的判断门槛。若至少一个核心设计载体已明显重做，且第一视觉能够独立区分，应为50%-65%；固定权重平均不得把这种真实核心变化稀释到35%以下。即使主体剪影和内部结构相同，只要覆盖主体大部分可见面的核心图案、浮雕、分块或系统性肌理采用了明显不同的设计语言，也可形成50%-65%的独立款式；不得一律按“同结构仅表面变化”压到35%以下。
+12. 两个以上核心维度明显变化，或主体造型、版式构图、图案体系、元素组合、结构关系中多项重新设计，应为70%-85%；只有主体造型、构图、装饰语言和结构基本无可复用关系时才为90%-100%。
+13. 共享主题、题材、节日、语言场景或基础母题只是内容关联，不是设计相似证据。相同主题下重新设计了轮廓、构图、字体层级、装饰体系或部件关系，必须按这些视觉差异正常给到50%-100%；反之，仅换主题名称、文案关键词或颜色而模板未变，仍应低于50%。
+14. 给分前必须在内部依次核对：是否真的沿用同一设计模板；忽略角度、场景、内容物和标注后主体是否相同；核心视觉主体是否相同；主体剪影与部件关系是否相同；图案元素的构图、位置和层级是否相同；表面设计是否覆盖主体大部分可见面并形成另一套视觉语言；去掉品类名称和主题名称后是否仍会被视为同一款设计。不得向用户展示核对过程，只输出校验后的四维分析、总结和分数。
+15. 不得把分数习惯性集中在20%、30%、35%或45%。0%-100%全区间均可使用5%粒度，必须由实际设计关系决定。最终文字、四个维度百分比和overall_percent必须属于同一差异等级。`;
+        const comparisonModeColorRule = isPioneer
+            ? `\n**首创对比颜色规则（最高优先级）**：颜色、配色和色彩体系不计入首创款式/图案差异，不能依靠改色达到50%或通过。即使主色反差很大，也必须按去除颜色后的主体造型、图案构图、装饰语言和结构部件判断overall_percent。`
+            : `\n**非首创对比颜色规则（最高优先级；覆盖前文“颜色只能辅助、单独改色不得达到50%”等限制）**：颜色目视化差异是有效的图案差异组成部分。即使两款的款式、轮廓、图案版式和结构完全一致，只要产品主体大部分可见面采用明显不同的主色体系，第一眼形成强烈且稳定的视觉区分，overall_percent允许直接达到50%并按图案差异通过。此时颜色只计入visual_overall_percent，不得虚构shape_contour、pattern_decoration或structure_parts差异；最终overall_percent可执行“大面积强色差触发”，不受普通四维加权结果低于50%的限制。强色差必须来自产品本身，并同时满足：主色覆盖主体大部分可见区域；两套主色在色相、明度或冷暖上有明显反差；不是拍摄光线、白平衡、滤镜、阴影、背景或显示偏色造成；不是仅提手、包边、文字、小配件等小面积点缀色变化。大面积红白与绿白、黑白与浅色、深色与高明度浅色等能够改变第一视觉识别的配色，可判50%；只有轻微深浅、近似色、局部点缀色或低覆盖率换色时，不得触发50%。若除强色差外还存在格纹尺度、排列节奏、荷叶边、装饰位置或表面图案等真实变化，可在50%基础上按实际增加；不得因为款式相同再把结果压回50%以下。`;
         const comprehensiveDiffRule = '\n**综合差异度计算边界**：综合差异度只由三项组成：1. 数量/套装结构差异；2. 尺寸/规格定位差异；3. 图案/文案设计差异。主产品是否一致、功能用途、人群场景、Amazon市场竞争、关键词重合、购买意图、是否可替代等内容只能在文字分析和上架竞争程度分析中说明，不得作为综合差异度的组成项。';
-        const componentRule = '\n**组件拆分严格限制**：只有两种情况可以输出 components：1）产品方案文字中使用“+”号连接多个产品/部件，必须按加号逐项拆分；2）产品方案只写“1套/1组/套装”等笼统信息，但审核图片中明显展示多个可物理分离、可独立计数、功能不同的组件，可以结合图片拆分。除此之外不要拆 components。产品名称或描述中的“带/含/有/配有”如果只是说明主体上的装饰、结构或工艺，不代表独立组件。窗帘、罩帘、遮挡帘、微波炉罩、防尘罩、桌布、地毯、挂布、服装、包袋等整体成品中的花边、蕾丝边、蝴蝶结、绑带、流苏、滚边、褶皱、拼接布、印花、刺绣、口袋、提手、边框、装饰条都属于主体的一部分，不得拆成 components，也不得参与总数量。1套/1组/1包是售卖单位，不等于组件数量；1大2小等规格只有在方案或图片明确为多个独立实体时才拆分。参考颜色、参考材质、参考效果的图片不得拆成组件。';
-        const sizeFormatRule = '\n**尺寸格式约束**：built_size/unbuilt_size/components.size 必须为 JSON 对象，如 {length:20,width:10,height:5,unit:cm}；尺寸数值必须是纯数字。无法识别尺寸时返回空对象。';
+        const componentRule = '\n**组件拆分与命名严格限制**：产品方案使用“+”号明确连接多个产品/部件时，按加号逐项拆分；如果没有“+”，但方案在同一标题中使用逗号、顿号或分号列出至少两个独立产品，且每个分项都明确写出数量（包括“产品*数量”写法），也必须按分项拆分并分别展示。例如“红色大号蝴蝶结*1，充气桔彩圣诞球*3，红色圣诞球*24个”应展示3个组件，数量分别为1、3、24。括号内的颜色、尺寸、材质、款式和备注逗号不属于组件分隔符。只有明确数量的顶层分项才可拆分；普通属性罗列、单个整体产品的装饰细节、只写“1套/1组/1包”但没有明确分项数量时不得拆分。某分项没有明确数量时，该组件 quantity 默认为1。components必须与方案分项一一对应，数量和排列顺序必须完全一致。每个component.name必须直接提取对应分项里的真实产品名称，只删除SKU编号/日期编号、销售数量和括号内颜色尺寸材质等属性，不得根据图片颜色或视觉概括自行改名；禁止输出“棕色系产品”“粉色产品”“某色产品”“产品1”“组件1”“配件”“套装单品”等泛化名称。例如方案中的分项应保留为“仿真绿植花朵鹿角发箍”“亮片半身裙”“毛绒鹿尾巴”“袖套”“腿套”。产品方案只写“1套/1组/1包”等整体售卖单位、没有明确分项数量时，必须把整套直接作为一个整体展示，数量为1，不得根据审核图片中看到的多个独立物品拆分，即使图片明显展示多个组件也不能拆分。产品名称或描述中的“带/含/有/配有”如果只是说明主体上的装饰、结构或工艺，不代表独立组件。窗帘、罩帘、遮挡帘、微波炉罩、防尘罩、桌布、地毯、挂布、服装、包袋等整体成品中的花边、蕾丝边、蝴蝶结、绑带、流苏、滚边、褶皱、拼接布、印花、刺绣、口袋、提手、边框、装饰条都属于主体的一部分，不得拆成 components，也不得参与总数量。1套/1组/1包是整体售卖单位；图片、图片文字、标注、层数、格数和视觉计数不能改变整体展示规则。参考颜色、参考材质、参考效果的图片不得单独产生组件。';
+        const sizeFormatRule = '\n**尺寸格式与单位换算约束**：built_size/unbuilt_size/components.size 必须为JSON对象，如 {length:20,width:10,height:5,unit:"cm"}。所有尺寸在输出JSON前必须逐个换算成厘米，数值必须是换算后的纯数字，unit固定输出cm；禁止输出ft/in、in/ft、cm/in等混合总单位。遇到“17 in × 32.8 ft”这类各边单位不同的尺寸，必须分别换算为43.18cm和999.74cm，再按实际长边、宽边对应输出为 {length:999.74,width:43.18,unit:"cm"}，不能把两个原始数字共用同一个单位，也不能直接用17和32.8参与比较。无明确长宽标签的二维/三维尺寸，换算后按数值从大到小依次映射为length、width、height，避免因书写顺序不同造成错位；有明确长/宽/高标签时按标签映射。无法识别尺寸时返回空对象。';
         const pairRule = '\n**成对物品数量规则**：手套、袜子、袖套、耳环等通常成对销售的物品，除非明确单只，否则按1双/1套/1对计数。';
         const mappingRule = '\n**图文组件对应流程**：先将文字组件与图片组件一一对应，再找出图案差异度<50%的重复组件。重复组件判定基于视觉图案/款式相似度；颜色差异可作为整体目视化辅助因素，但不能单独改变重复组件结论。';
-        const dimensionDetailRule = '\n**四个视觉维度输出要求**：visual_overall、shape_contour、pattern_decoration、structure_parts 只能分析产品本身的款式、外形轮廓、图案装饰、纹理语言、结构部件和版式构图。四个字段均必须忽视数量、件数、套装数量、尺寸、规格、大小、多尺寸组合、拍摄角度、展示角度、单个/多个展示、叠放/摆放方式、包装和出货方式；颜色、配色、色彩只能在整体目视化差异中作为辅助因素描述，不得写入形状与轮廓、图案与装饰、结构与部件三个维度；禁止写“未建4个、已建1个所以差异明显”“多尺寸套装与单个产品差异明显”“仅颜色不同导致视觉差异明显”等把非图案因素当成视觉维度依据的表述。如果两边只是数量/尺寸/展示方式不同，而碗口形态、主体轮廓、棋盘格图案、装饰位置、结构部件一致或高度相似，应在四个维度中写差异较小或高度相似；如果仅颜色不同，可在整体目视化差异中写轻微或一定色彩区分，但其他三个维度仍应按款式/图案/结构本身判断。不能只写“差异较大/差异明显/无差异/差异较小”这类等级词。每个文字字段用一句自然表达说明“差异程度 + 具体款式/图案依据”，同时必须输出对应的分项百分比字段；但文字字段本身禁止出现任何百分比、分值、权重、占比、分项占比、对应分项占比、对应分项百分比、该项XX%、XX分等内部计算信息，百分比只能放在 visual_overall_percent、shape_contour_percent、pattern_decoration_percent、structure_parts_percent 和 overall_percent 字段里。不要写“依据是/原因是/主要依据是”这类套话。例如直接写“差异较小，二者均为敞口碗形主体并采用棋盘格外壁装饰，仅碗口比例或局部细节略有区别”。';
-        const summaryRule = '\n**summary字段约束**：summary 是“图案差异度总结性分析”，输出2-3句分析型总结。必须围绕款式、外形、图案、装饰、纹理、结构这些视觉差异说明为什么给出该图案差异度，不得把数量、件数、套装数量、尺寸、规格、大小、多尺寸组合、拍摄角度、展示角度、单个/多个展示、叠放/摆放方式、包装和出货方式作为差异依据。颜色/配色/色彩只能作为整体目视化辅助因素总结，不得作为图案装饰、形状轮廓或结构部件差异依据。可以归纳上方四个视觉维度的关键结论，但不要逐项机械复述“整体目视化、形状轮廓、图案装饰、结构部件”。summary、四个视觉维度和 overall_percent 必须使用同一套差异等级口径，不能前面写差异明显/差异较大，后面又写中等偏小/差异较小，也不能百分比很高但文字结论偏低；如果overall_percent低于50，禁止出现“整体视觉差异较为明显/明显/差异较大/区分度较明确”等高差异表达。summary 禁止出现受众、人群、使用场景、场景、市场、Amazon、亚马逊、竞争、关键词、上架、消费者、需求、用途、功能、是否可替代等内容。';
-        let prompt = `对比已建与未建产品图片及文字。优先采纳产品方案文字，但若文字缺少数量信息，可从图片补充。${marketHint}${consistencyRule}${noMetaComment}${competitionFocusRule}${redesignDirectionRule}${overlapRule}${imageQuantityRule}${skuBundleRule}${productSizeRule}${imageTextConsistencyRule}${primaryAccessoryRule}${appearanceDiffRule}${comprehensiveDiffRule}${componentRule}${sizeFormatRule}${pairRule}${mappingRule}${dimensionDetailRule}${summaryRule}\n【组合产品数量提取规则】只有产品方案使用“+”号连接，或方案写1套/1组但审核图明显存在多个独立组件时，才按组合产品处理并拆分 components。若产品方案明确写“某产品1个/1件/1套”，且后续只是描述该产品自带的花边、蕾丝、蝴蝶结、绑带、装饰边、印花、刺绣、口袋、提手、滚边、褶皱等结构/装饰细节，则总数量取该主体数量，不得把这些细节拆成组件相加。最终总数量 built_quantity/unbuilt_quantity 优先取主售卖产品数量；卡片、袋子、包装、标签、贴纸、点胶、丝带、勺子、叉子、夹子、擦手巾、毛巾、造雾器、雾化器、适配器、水架、支架、底座、电源、遥控器、充气泵、连接线等配件只在组件列表展示，不参与总数量相加。只有在所有组件地位相近、没有明显主品和配件时，才取所有组件数量之和。${priceInfo}\n竞争程度分5级：高度/较高/一般/较低/无竞争。详细分析(≥150字)。细分市场差异分析以“细分市场差异：较大/较小/无明显差异”开头(≥80字)。\n任务：提取描述、数量、尺寸、颜色、材质、成本水平和组件列表；总结功能用途、人群场景；必须先分别对“整体目视化差异、形状与轮廓、图案与装饰、结构与部件”写明差异程度和具体依据，并分别输出分项百分比，再据此计算overall_percent；summary只输出图案差异度总结；输出overall_percent、竞争程度、细分市场差异、重复组件和 Amazon 改款方向。`;
+        const dimensionDetailRule = '\n**四个视觉维度输出要求**：visual_overall、shape_contour、pattern_decoration、structure_parts 只能分析产品本身的款式、外形轮廓、图案装饰、纹理语言、结构部件和版式构图。四个字段均必须忽视数量、件数、套装数量、尺寸、规格、大小、多尺寸组合、拍摄角度、展示角度、单个/多个展示、叠放/摆放方式、包装和出货方式；颜色、配色、色彩只能写入整体目视化差异，不得写入形状与轮廓、图案与装饰、结构与部件三个维度，颜色对最终差异度的有效性严格按当前首创/非首创颜色规则执行；禁止写“未建4个、已建1个所以差异明显”“多尺寸套装与单个产品差异明显”等把非图案因素当成视觉维度依据的表述。如果两边只是数量/尺寸/展示方式不同，而碗口形态、主体轮廓、棋盘格图案、装饰位置、结构部件一致或高度相似，应在四个维度中写差异较小或高度相似；如果仅颜色不同，整体目视化必须如实描述色彩覆盖范围和视觉反差，其他三个维度仍按款式/图案/结构本身判断。不能只写“差异较大/差异明显/无差异/差异较小”这类等级词。每个文字字段用一句自然表达说明“差异程度 + 具体款式/图案依据”，同时必须输出对应的分项百分比字段；但文字字段本身禁止出现任何百分比、分值、权重、占比、分项占比、对应分项占比、对应分项百分比、该项XX%、XX分等内部计算信息，百分比只能放在 visual_overall_percent、shape_contour_percent、pattern_decoration_percent、structure_parts_percent 和 overall_percent 字段里。不要写“依据是/原因是/主要依据是”这类套话。例如直接写“差异较小，二者均为敞口碗形主体并采用棋盘格外壁装饰，仅碗口比例或局部细节略有区别”。';
+        const summaryRule = '\n**summary字段约束**：summary 是“图案差异度总结性分析”，输出2-3句分析型总结。必须围绕款式、外形、图案、装饰、纹理、结构和当前模式允许计入的颜色目视化差异，说明为什么给出该图案差异度；不得把数量、件数、套装数量、尺寸、规格、大小、多尺寸组合、拍摄角度、展示角度、单个/多个展示、叠放/摆放方式、包装和出货方式作为差异依据。颜色只能归入整体目视化，不得作为图案装饰、形状轮廓或结构部件差异依据；非首创强色差可按模式规则成为达到50%的有效依据，首创不得使用颜色抬分。可以归纳上方四个视觉维度的关键结论，但不要逐项机械复述“整体目视化、形状轮廓、图案装饰、结构部件”。summary、四个视觉维度和 overall_percent 必须使用同一套差异等级口径，不能前面写差异明显/差异较大，后面又写中等偏小/差异较小，也不能百分比很高但文字结论偏低；如果overall_percent低于50，禁止出现“整体视觉差异较为明显/明显/差异较大/区分度较明确”等高差异表达。summary 禁止出现受众、人群、使用场景、场景、市场、Amazon、亚马逊、竞争、关键词、上架、消费者、需求、用途、功能、是否可替代等内容。';
+        const auditRemarkDifferenceRule = '\n**审核备注差异类型判定**：“款式”仅指产品本体的外形、轮廓和造型特征；“图案设计”仅指产品表面的印花、图文、版式、装饰图形和纹样设计。必须分开判断并输出audit_style_shape_diff、audit_pattern_design_diff两个布尔值。外形一致、仅表面图案设计不同时，audit_style_shape_diff=false、audit_pattern_design_diff=true；仅外形不同时为true/false；外形和图案设计都不同时才为true/true。不得因为颜色、数量、尺寸、拍摄角度、摆放方式、背景或包装不同将任一字段判为true。只有该类差异真实存在且足以在最终审核备注中单独概括时才输出true。';
+        const uncertaintyRule = '\n**置信度证据字段（只报告事实，不得计算或输出置信度）**：quantity_source必须分别报告built与unbuilt的初始数量来源，只允许“文字、图片、推测、未知”；产品方案标题明确写出数量时为“文字”，方案未明确数量且系统应默认1时为“未知”，不得把图片计数或推测数量伪装成文字来源。size_uncertain 仅在尺寸文字、单位、对应关系或图片标注无法可靠确认时为true；components_uncertain 仅在组合边界、主配件关系或组件对应无法可靠确认时为true；image_quality只能输出good/fair/poor，图片模糊、遮挡严重、分辨率过低或主体不可辨时输出poor；uncertainty_reasons用简短数组列出实际不确定点，无不确定点时输出空数组。不得把“差异接近50%”写成识别不确定，那由系统另行计算。不得输出confidence、置信度分数或高/中/低档位。';
+         let prompt = `对比已建与未建产品图片及文字。产品方案文字是数量的唯一来源；即使图片中展示或标注了其他数字，也不得用图片数字补充数量，方案没有明确数量时数量默认为1。${marketHint}${consistencyRule}${noMetaComment}${competitionFocusRule}${redesignDirectionRule}${overlapRule}${imageQuantityRule}${skuBundleRule}${productSizeRule}${imageTextConsistencyRule}${primaryAccessoryRule}${appearanceDiffRule}${humanAlignedAppearanceRule}${comparisonModeColorRule}${comprehensiveDiffRule}${componentRule}${sizeFormatRule}${pairRule}${mappingRule}${dimensionDetailRule}${summaryRule}${auditRemarkDifferenceRule}${uncertaintyRule}\n【组合产品数量提取规则】产品方案使用“+”号明确分项时，按加号逐项识别；没有“+”但使用逗号、顿号或分号列出至少两个独立产品，且每个顶层分项明确写出数量时，也必须逐项识别。例如“红色大号蝴蝶结*1，充气桔彩圣诞球*3，红色圣诞球*24个”应识别为1、3、24三个组件。括号内颜色、尺寸、材质、款式和备注中的逗号不能拆分组件。只写“1套/1组/1包”且没有明确分项数量时，整套作为一个方案展示，数量为1，即使图片中有多个独立物品也不得拆分。有多个组件时，先取明确写出的“X套/X组”主产品分项，其次取主产品数量；盖子、吸管、杯盖、盘子、包装等配件不参与总数量相加。例如“30个杯子+30个盖子+1个盘子+10个吸管”，总数量应为30，不是71。只有完全无法识别主产品且各分项地位相同、数量也相同的情况下，才取共同数量；数量不一致且无法判断主次时默认为1，禁止直接求和。最终数量不得回退到图片、AI视觉计数或补充备注数字。若标题只是描述单个整体产品自带的花边、蕾丝、蝴蝶结、绑带、装饰边、印花、刺绣、口袋、提手、滚边、褶皱等结构/装饰细节，不得把这些细节拆成组件相加。卡片、袋子、包装、标签、贴纸、点胶、丝带、勺子、叉子、夹子、擦手巾、毛巾、造雾器、雾化器、适配器、水架、支架、底座、电源、遥控器、充气泵、连接线等配件只在允许展示 components 时列出，不参与总数量相加。${priceInfo}\n竞争程度分5级：高度/较高/一般/较低/无竞争。详细分析(≥150字)。细分市场差异分析以“细分市场差异：较大/较小/无明显差异”开头(≥80字)。\n任务：提取描述、数量、尺寸、颜色、材质、成本水平和组件列表；总结功能用途、人群场景；必须先识别核心设计载体，再分别对“整体目视化差异、形状与轮廓、图案与装饰、结构与部件”写明差异程度和具体依据，并分别输出分项百分比；按照核心设计载体使用对应权重计算基础分，再执行核心差异触发规则和当前对比模式颜色规则得到overall_percent；summary只输出图案差异度总结；单独判定审核备注中的款式外形差异和图案设计差异；只报告证据不确定字段，不得自行计算置信度；输出overall_percent、竞争程度、细分市场差异、重复组件和 Amazon 改款方向。`;
         if (isPioneer) prompt += `\n【首创保护期规则】首创对比的核心是产品款式/外形特征差异。若款式/外形高度相似，且材质没有明显大类差异，则不予通过，不能仅因低竞争、数量、普通尺寸变化、颜色变化或轻微表面差异放行。保护期内首创对比必须先判断是否只是数量、尺寸拓展或单纯改色：若外形/款式差异小，仅做数量、尺寸或颜色的单一拓展或组合拓展，原则上属于保护期内不可做。尺寸/容量若差异过大并明显影响用途，可作为用途差异单独说明；材质若为大类差异（如亚克力/金属/木质/陶瓷等）并影响用途，可作为非单纯拓展说明。组合产品不直接套用单品保护期限制，需回到方案差异判断。保护期外按正常查重维度判断；服装产品尺码差异不计入有效尺寸差异。\n【首创图案差异约束】展示角度、拍摄角度、俯视/侧视、叠放方式、产品数量、尺寸组合、颜色、图片裁切、光影差异不得作为款式/图案差异计算。主题/节日/适用场景不同也不得单独作为款式/图案差异加分；若版式结构、构图布局、字体结构、主体造型、装饰位置和设计语言高度相似，仅替换主题或节日元素，图案差异度不得判为≥50。但不能因为两者同属同类产品就压低差异度；只要款式/图案设计本身出现不同版式构图、不同字体结构、不同核心造型语言、不同图案绘制方案或不同主体造型，就应按真实设计差异判为≥50，差异很大时可判80%-100%。`;
         prompt += `\n\n只输出JSON：{
   "built_product_desc":"", "built_quantity":"", "built_size":{}, "built_color":"", "built_material":"", "built_cost_level":"",
@@ -1600,20 +2526,22 @@
   "unbuilt_product_desc":"", "unbuilt_quantity":"", "unbuilt_size":{}, "unbuilt_color":"", "unbuilt_material":"", "unbuilt_cost_level":"",
   "unbuilt_function_usage":"", "unbuilt_scene_audience":"",
   "function_usage_summary":"", "scene_audience_summary":"",
-  "visual_overall":"", "shape_contour":"", "pattern_decoration":"", "structure_parts":"",
-  "summary":"", "overall_percent":0,
+  "visual_overall":"", "visual_overall_percent":0, "shape_contour":"", "shape_contour_percent":0,
+  "pattern_decoration":"", "pattern_decoration_percent":0, "structure_parts":"", "structure_parts_percent":0,
+  "summary":"", "overall_percent":0, "audit_style_shape_diff":false, "audit_pattern_design_diff":false,
+  "quantity_source":{"built":"文字", "unbuilt":"文字"},
+  "size_uncertain":false, "components_uncertain":false, "image_quality":"good", "uncertainty_reasons":[],
   "competition_level":"", "competition_analysis":"", "submarket_difference_analysis":"", "amazon_redesign_direction":"",
   "built_components": [], "unbuilt_components": [], "component_overlap_ratio":0, "overlap_details": []
 }`;
         const userText = `已建文字：${safeString(txtA) || '无'}；未建文字：${safeString(txtB) || '无'}`;
         const baseContent = [{ type: "text", text: prompt + "\n\n" + userText }, { type: "image_url", image_url: { url: `data:image/jpeg;base64,${b64A}` } }, { type: "image_url", image_url: { url: `data:image/jpeg;base64,${b64B}` } }];
         let lastResult = null, lastIssues = [];
-        for (let attempt = 0; attempt < 3; attempt++) {
-            const retryText = attempt === 0 ? '' : `\n\n上一次图案差异度相关分析存在前后矛盾，请重新分析并输出完整JSON，不要沿用矛盾结论。矛盾点：${lastIssues.join('；')}。\n上一次JSON：${JSON.stringify(lastResult || {})}`;
+        for (let attempt = 0; attempt < 4; attempt++) {
+            const retryText = attempt === 0 ? '' : `\n\n上一次分析存在前后矛盾，请重新分析并输出完整JSON，不要沿用矛盾结论，也不要只改标签而保留相反论证。矛盾点：${lastIssues.join('；')}。\n上一次JSON：${JSON.stringify(lastResult || {})}`;
             const messages = [{ role: "user", content: attempt === 0 ? baseContent : [{ type: "text", text: prompt + "\n\n" + userText + retryText }, baseContent[1], baseContent[2]] }];
             const reqBody = { model: DOUBAO_ENDPOINT_ID, messages, max_tokens: 3500, temperature: 0.2 };
-            const resp = await fetch(DOUBAO_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${DOUBAO_API_KEY}` }, body: JSON.stringify(reqBody) });
-            if (!resp.ok) throw new Error(`豆包请求失败: ${resp.status}`);
+            const resp = await fetchDoubao(reqBody);
             const data = await resp.json();
             const content = data.choices[0].message.content;
             let m = content.match(/\{[\s\S]*\}/);
@@ -1622,11 +2550,10 @@
             lastIssues = findVisualContradictions(lastResult);
             if (!lastIssues.length) return lastResult;
         }
-        lastResult._visual_consistency_warning = lastIssues.join('；');
-        return lastResult;
+        throw new Error(`豆包连续返回前后矛盾的分析：${lastIssues.join('；')}`);
     }
 
-    async function askQuestion(q) { const messages = [{ role: "user", content: `请简洁准确回答：${q}` }]; const req = { model: DOUBAO_ENDPOINT_ID, messages, max_tokens: 800, temperature: 0.3 }; const resp = await fetch(DOUBAO_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${DOUBAO_API_KEY}` }, body: JSON.stringify(req) }); if (!resp.ok) throw new Error(`请求失败: ${resp.status}`); const data = await resp.json(); return data.choices[0].message.content; }
+    async function askQuestion(q) { const messages = [{ role: "user", content: `请简洁准确回答：${q}` }]; const req = { model: DOUBAO_ENDPOINT_ID, messages, max_tokens: 800, temperature: 0.3 }; const resp = await fetchDoubao(req); const data = await resp.json(); return data.choices[0].message.content; }
     async function compressToThumbnail(dataUrl, max = 80, q = 0.6) { return new Promise(res => { const img = new Image(); img.onload = () => { const c = document.createElement('canvas'); let w = img.width, h = img.height; if (w > max || h > max) { if (w > h) { h = h * (max / w); w = max; } else { w = w * (max / h); h = max; } } c.width = w; c.height = h; c.getContext('2d').drawImage(img, 0, 0, w, h); res(c.toDataURL('image/jpeg', q)); }; img.src = dataUrl; }); }
 
     // ---------- 界面构建 ----------
@@ -1675,75 +2602,67 @@
         const unbuiltImg = cfg.unbuiltImageData, unbuiltTxt = cfg.unbuiltText, unbuiltPr = cfg.unbuiltPrice;
         const builtData = cfg.builtItemsData;
         let allHtml = '', overallPass = true, finalMin = 100, pioneerFail = false, cachedUnbuilt = null, finalCompLevel = null;
+        const comparisonSummaryRows = [];
         const uPriceDisp = unbuiltPr ? `$${parseFloat(unbuiltPr).toFixed(2)}` : '未填';
         const bPricesDisp = builtData.map(b => b.price ? `$${parseFloat(b.price).toFixed(2)}` : '未填').join(', ');
+        // 所有已建对比组同时请求豆包；返回后仍按原始编号顺序处理和展示。
+        const rawComparisonResults = await Promise.all(builtData.map(b => {
+            if (!b.imageData) return Promise.resolve(null);
+            const isPio = b.compareType === 'pioneer';
+            return callDoubaoProductComparison(
+                b.imageData,
+                unbuiltImg,
+                b.text,
+                unbuiltTxt,
+                isPio,
+                b.price ? parseFloat(b.price) : null,
+                unbuiltPr ? parseFloat(unbuiltPr) : null
+            );
+        }));
         for (let i = 0; i < builtData.length; i++) {
             const b = builtData[i]; if (!b.imageData) continue;
             const isPio = b.compareType === 'pioneer';
             const sameImage = isSameImageData(b.imageData, unbuiltImg);
-            let res = await callDoubaoProductComparison(b.imageData, unbuiltImg, b.text, unbuiltTxt, isPio, b.price ? parseFloat(b.price) : null, unbuiltPr ? parseFloat(unbuiltPr) : null);
+            let res = rawComparisonResults[i];
             if (sameImage) forceSameImageVisualResult(res);
             normalizeImageTextStructure(res, b.text, unbuiltTxt);
-            let builtComps = res.built_components || [], unbuiltComps = res.unbuilt_components || [];
+            res.built_size = normalizeMixedUnitSizeFromSolutionText(res.built_size, b.text);
+            res.unbuilt_size = normalizeMixedUnitSizeFromSolutionText(res.unbuilt_size, unbuiltTxt);
+            const rawBuiltAiComponents = Array.isArray(res.built_components) ? res.built_components : [];
+            const rawUnbuiltAiComponents = Array.isArray(res.unbuilt_components) ? res.unbuilt_components : [];
+            const rawBuiltAiComponentTotal = sumAiComponentQuantities(rawBuiltAiComponents);
+            const rawUnbuiltAiComponentTotal = sumAiComponentQuantities(rawUnbuiltAiComponents);
+            let builtComps = rawBuiltAiComponents, unbuiltComps = rawUnbuiltAiComponents;
             builtComps = filterMinorAccessories(builtComps); unbuiltComps = filterMinorAccessories(unbuiltComps);
             const builtAnalysisText = [res.built_product_desc, res.visual_overall, res.shape_contour, res.pattern_decoration, res.structure_parts, res.summary].map(v => safeString(v)).join('\n');
             const unbuiltAnalysisText = [res.unbuilt_product_desc, res.visual_overall, res.shape_contour, res.pattern_decoration, res.structure_parts, res.summary].map(v => safeString(v)).join('\n');
             builtComps = filterReferenceOnlyComponents(builtComps, b.text, builtAnalysisText);
             unbuiltComps = filterReferenceOnlyComponents(unbuiltComps, unbuiltTxt, unbuiltAnalysisText);
+            builtComps = normalizeComponentQuantitiesFromSolutionText(builtComps, b.text);
+            unbuiltComps = normalizeComponentQuantitiesFromSolutionText(unbuiltComps, unbuiltTxt);
             const pairKeywords = ['手套', '袜子', '袖套', '耳环', '手袜', 'glove', 'sock', 'earring'];
             const isPairItem = (name) => pairKeywords.some(kw => name.toLowerCase().includes(kw));
             if (builtComps.length) builtComps.forEach(c => { if (isPairItem(c.name||'') && parseFloat(c.quantity) === 2) c.quantity = 1; });
             if (unbuiltComps.length) unbuiltComps.forEach(c => { if (isPairItem(c.name||'') && parseFloat(c.quantity) === 2) c.quantity = 1; });
-            const unbuiltTextQty = extractPrimaryQuantity(unbuiltTxt), builtTextQty = extractPrimaryQuantity(b.text);
-            const unbuiltMainTextQty = extractMainProductQuantityBeforeAccessory(unbuiltTxt), builtMainTextQty = extractMainProductQuantityBeforeAccessory(b.text);
-            const unbuiltPlusQty = sumPlusSeparatedQuantities(unbuiltTxt), builtPlusQty = sumPlusSeparatedQuantities(b.text);
-            const unbuiltUnit = extractUnit(unbuiltTxt) || '个', builtUnit = extractUnit(b.text) || '个';
-            const builtHasPlus = /\+/.test(b.text || ''), unbuiltHasPlus = /\+/.test(unbuiltTxt || '');
-            if (!builtHasPlus && builtComps.length <= 1) builtComps = [];
-            if (!unbuiltHasPlus && unbuiltComps.length <= 1) unbuiltComps = [];
+            const aiUnbuiltQuantity = parseQuantityValue(res.unbuilt_quantity), aiBuiltQuantity = parseQuantityValue(res.built_quantity);
+            const unbuiltTitleText = extractSolutionTitleText(unbuiltTxt), builtTitleText = extractSolutionTitleText(b.text);
+            const unbuiltQuantityInfo = extractSolutionQuantityInfo(unbuiltTitleText), builtQuantityInfo = extractSolutionQuantityInfo(builtTitleText);
+            const unbuiltTextQty = unbuiltQuantityInfo.quantity, builtTextQty = builtQuantityInfo.quantity;
+            const unbuiltExplicitTotalQty = extractExplicitTotalQuantity(unbuiltTitleText), builtExplicitTotalQty = extractExplicitTotalQuantity(builtTitleText);
+            const builtCanDisplayComponents = shouldDisplayComponentsFromSolutionText(b.text);
+            const unbuiltCanDisplayComponents = shouldDisplayComponentsFromSolutionText(unbuiltTxt);
+            const builtComponentCountBeforeDisplay = builtComps.length, unbuiltComponentCountBeforeDisplay = unbuiltComps.length;
+            if (!builtCanDisplayComponents) builtComps = [];
+            if (!unbuiltCanDisplayComponents) unbuiltComps = [];
             const primaryConsistency = normalizePrimaryConsistency(builtComps, unbuiltComps);
             const builtHasPrimary = primaryConsistency.builtPrimary, unbuiltHasPrimary = primaryConsistency.unbuiltPrimary;
-            const builtPrimaryQty = builtComps.length > 0 ? getPrimaryQuantity(builtComps, builtHasPrimary) : 0;
-            const unbuiltPrimaryQty = unbuiltComps.length > 0 ? getPrimaryQuantity(unbuiltComps, unbuiltHasPrimary) : 0;
-            const builtHasAccessorySplit = builtComps.length > 0 && getMainComponents(builtComps).length !== builtComps.length;
-            const unbuiltHasAccessorySplit = unbuiltComps.length > 0 && getMainComponents(unbuiltComps).length !== unbuiltComps.length;
-            const unbuiltCompsTotal = unbuiltComps.reduce((sum, c) => sum + (parseFloat(c.quantity) || 0), 0);
-            const builtCompsTotal = builtComps.reduce((sum, c) => sum + (parseFloat(c.quantity) || 0), 0);
-            // 总数量优先展示主售卖产品数量；卡片、包装袋、礼袋等配件只在子件中展示。
-            if (unbuiltMainTextQty) { res.unbuilt_quantity = String(unbuiltMainTextQty.qty); } else if (unbuiltHasAccessorySplit && unbuiltPrimaryQty > 0) { res.unbuilt_quantity = String(unbuiltPrimaryQty); } else if (unbuiltPlusQty !== null && unbuiltPlusQty !== undefined) { res.unbuilt_quantity = String(unbuiltPlusQty); } else if (unbuiltTextQty !== null && unbuiltTextQty !== undefined) { res.unbuilt_quantity = String(unbuiltTextQty); } else if (unbuiltCompsTotal > 0) { res.unbuilt_quantity = String(unbuiltCompsTotal); } else { res.unbuilt_quantity = '1'; }
-            if (builtMainTextQty) { res.built_quantity = String(builtMainTextQty.qty); } else if (builtHasAccessorySplit && builtPrimaryQty > 0) { res.built_quantity = String(builtPrimaryQty); } else if (builtPlusQty !== null && builtPlusQty !== undefined) { res.built_quantity = String(builtPlusQty); } else if (builtTextQty !== null && builtTextQty !== undefined) { res.built_quantity = String(builtTextQty); } else if (builtCompsTotal > 0) { res.built_quantity = String(builtCompsTotal); } else { res.built_quantity = '1'; }
-            if (sameImage) {
-                const sameQty = parseQuantityValue(res.unbuilt_quantity) > 0 ? res.unbuilt_quantity : res.built_quantity;
-                res.unbuilt_quantity = sameQty;
-                res.built_quantity = sameQty;
-            }
+            // 总数量只能来自产品方案文字；图片视觉计数、组件数量和相同图片兜底都不能覆盖文字数量。
+            res.unbuilt_quantity = String(unbuiltTextQty || 1);
+            res.built_quantity = String(builtTextQty || 1);
             let appearFix = { reason: '' }, accessoryAppearFix = { reason: '' };
-            if (!sameImage) {
-                const generalAppearFix = normalizeAppearanceDiffIgnoringNonDesignFactors(res, b.text, unbuiltTxt);
-                res.overall_percent = generalAppearFix.diff;
-                appearFix = normalizePioneerAppearanceDiff(res, b.text, unbuiltTxt, isPio);
-                res.overall_percent = appearFix.diff;
-                accessoryAppearFix = normalizeAccessoryDrivenAppearanceDiff(res, b.text, unbuiltTxt);
-                res.overall_percent = accessoryAppearFix.diff;
-                const lowAppearFix = calibrateLowAppearanceDiff(res, b.text, unbuiltTxt);
-                res.overall_percent = lowAppearFix.diff;
-                const scaleAppearFix = calibrateAppearanceDiffByDesignScale(res, b.text, unbuiltTxt);
-                res.overall_percent = scaleAppearFix.diff;
-                const strongDesignFix = calibrateStrongDesignDiff(res, b.text, unbuiltTxt);
-                res.overall_percent = strongDesignFix.diff;
-                const themeTemplateFix = normalizeThemeOnlyTemplateDiff(res, b.text, unbuiltTxt);
-                res.overall_percent = themeTemplateFix.diff;
-                const visualDimensionFix = calibrateAppearanceByVisualDimensions(res);
-                res.overall_percent = visualDimensionFix.diff;
-                const sameFamilyCap = capSameFamilyDesignDiff(res, b.text, unbuiltTxt);
-                res.overall_percent = sameFamilyCap.diff;
-                const sameBasicMotifCap = capSameBasicMotifDiff(res, b.text, unbuiltTxt);
-                res.overall_percent = sameBasicMotifCap.diff;
-                const sameNaturalCap = capSameNaturalObjectDiff(res, b.text, unbuiltTxt);
-                res.overall_percent = sameNaturalCap.diff;
-                const presentationCap = capSingleProductPresentationDiff(res, b.text, unbuiltTxt);
-                res.overall_percent = presentationCap.diff;
-            }
+            // 图案差异由豆包按完整视觉规则一次判定；前端不再按关键词二次抬分或压分。
+            const aiAppearanceDiff = Number(res.overall_percent);
+            res.overall_percent = isFinite(aiAppearanceDiff) ? Math.max(0, Math.min(100, aiAppearanceDiff)) : 0;
             const appearDiffRawBeforeBucket = Number(res.overall_percent) || 0;
             res.overall_percent = bucketAppearanceDiffPercent(res.overall_percent);
             const appearDiff = res.overall_percent;
@@ -1754,7 +2673,6 @@
             const builtResult = formatSubItemsWithDuplicates(builtComps, !builtHasPrimary, overlapDetails, unbuiltComps, true, false);
             res.built_product_desc = (res.built_product_desc || '—') + (builtResult.html ? `<div class="sub-items">${builtResult.html}</div>` : '');
             res.unbuilt_product_desc = (res.unbuilt_product_desc || '—') + (unbuiltResult.html ? `<div class="sub-items">${unbuiltResult.html}</div>` : '');
-            const isMultiComponent = (builtComps && builtComps.length > 1) || (unbuiltComps && unbuiltComps.length > 1);
             if (!res.unbuilt_color || res.unbuilt_color === '未知') res.unbuilt_color = '-';
             if (!res.built_color || res.built_color === '未知') res.built_color = '-';
             const uSizeStr = formatSize(res.unbuilt_size, 'cm'), bSizeStr = formatSize(res.built_size, 'cm');
@@ -1762,17 +2680,12 @@
             if (!cachedUnbuilt) cachedUnbuilt = { product_desc: res.unbuilt_product_desc, short_desc: shortDesc, quantity: res.unbuilt_quantity, size: res.unbuilt_size, color: res.unbuilt_color, material: res.unbuilt_material, cost_level: res.unbuilt_cost_level, function_usage: res.unbuilt_function_usage, scene_audience: res.unbuilt_scene_audience };
             res.unbuilt_product_desc = cachedUnbuilt.product_desc; res.unbuilt_quantity = cachedUnbuilt.quantity; res.unbuilt_size = cachedUnbuilt.size; res.unbuilt_color = cachedUnbuilt.color; res.unbuilt_material = cachedUnbuilt.material; res.unbuilt_cost_level = cachedUnbuilt.cost_level; res.unbuilt_function_usage = cachedUnbuilt.function_usage; res.unbuilt_scene_audience = cachedUnbuilt.scene_audience;
             const builtNum = parseQuantityValue(res.built_quantity), unbuiltNum = parseQuantityValue(res.unbuilt_quantity);
-            let usePrimaryQty = isMultiComponent && (builtHasPrimary || unbuiltHasPrimary || builtHasAccessorySplit || unbuiltHasAccessorySplit);
-            let qtyBuilt = usePrimaryQty && builtPrimaryQty > 0 ? builtPrimaryQty : builtNum;
-            let qtyUnbuilt = usePrimaryQty && unbuiltPrimaryQty > 0 ? unbuiltPrimaryQty : unbuiltNum;
-            if (qtyBuilt <= 0 && builtTextQty) qtyBuilt = builtTextQty;
-            if (qtyUnbuilt <= 0 && unbuiltTextQty) qtyUnbuilt = unbuiltTextQty;
+            const usePrimaryQty = false;
+            const qtyBuilt = builtNum > 0 ? builtNum : 1;
+            const qtyUnbuilt = unbuiltNum > 0 ? unbuiltNum : 1;
             let qDiff = null, skipQ = false;
             if (qtyBuilt > 0) {
                 qDiff = Math.abs(qtyUnbuilt - qtyBuilt) / qtyBuilt * 100;
-                const bothQtyFromText = (builtTextQty !== null && builtTextQty !== undefined) && (unbuiltTextQty !== null && unbuiltTextQty !== undefined);
-                const bothDisplayedQty = builtNum > 0 && unbuiltNum > 0;
-                if (qDiff >= 100 && !bothQtyFromText && !bothDisplayedQty) skipQ = true;
             }
             const skipSizeDiff = builtHasPrimary || unbuiltHasPrimary;
             let sizeDiff = null, sizeReason = '', sizeDetails = [], weightedDetails = [];
@@ -1791,6 +2704,7 @@
             // 删除了一般竞争+细分市场较大的自动通过
             const inProt = isPio ? isInProtection(b.buildDate, b.productType) : true;
             const isLowCompetition = compLevel === '较低竞争' || compLevel === '无竞争';
+            let passedByMarketDifference = false;
             if (isPio && !inProt) {
                 const rule = evaluateOutOfProtectionRule(res, builtComps, unbuiltComps, builtHasPrimary, unbuiltHasPrimary, isClothingProductText(b.text + unbuiltTxt));
                 isPass = rule.pass; passReason = rule.reason;
@@ -1800,22 +2714,89 @@
                 if (appearFix.reason) passReason = `${appearFix.reason} ${passReason}`;
                 if (accessoryAppearFix.reason) passReason = `${accessoryAppearFix.reason} ${passReason}`;
             } else if (combined >= 50) { isPass = true; passReason = `综合差异度${formatPercent(combinedRounded)}≥50%，通过。`; }
-            else if (isLowCompetition && submarketLevel === '较大') { isPass = true; passReason = `综合差异度${formatPercent(combinedRounded)}<50%，但竞争程度“${compLevel}”且细分市场差异较大，通过。`; }
+            else if (isLowCompetition && submarketLevel === '较大') { isPass = true; passedByMarketDifference = true; passReason = `综合差异度${formatPercent(combinedRounded)}<50%，但竞争程度“${compLevel}”且细分市场差异较大，通过。`; }
             else { isPass = false; passReason = `综合差异度${formatPercent(combinedRounded)}<50%，且未同时满足低竞争+细分市场差异较大，不通过。`; }
-            if ((compLevel === '高度竞争' || compLevel === '较高竞争') && submarketLevel === '较大') {
-                submarketLevel = '较小';
-                res.submarket_difference_analysis = (res.submarket_difference_analysis || '').replace(/细分市场差异[：:]\s*较大/, '细分市场差异：较小');
-            }
+            const visualColorText = [res.visual_overall, res.summary].map(v => safeString(v)).join(' ');
+            const strongColor = !isPio && appearDiff >= 50
+                && /(颜色|配色|色彩|主色|色系)/.test(visualColorText)
+                && /(明显|强烈|反差|显著|区分|差异较大)/.test(visualColorText);
+            const hasCombination = builtCanDisplayComponents || unbuiltCanDisplayComponents || builtComps.length > 1 || unbuiltComps.length > 1;
+            const hasDuplicates = overlapDetails && overlapDetails.length > 0;
+            const auditVisualFlags = getAuditVisualDifferenceFlags(res);
+            const quantityMismatch = (expected, recognized) => {
+                const e = Number(expected), r = Number(recognized);
+                return isFinite(e) && e > 0 && isFinite(r) && r > 0 && Math.abs(r - e) / e > 0.30;
+            };
+            const quantityUncertain = quantityMismatch(unbuiltTextQty, aiUnbuiltQuantity) || quantityMismatch(builtTextQty, aiBuiltQuantity);
+            const componentQuantityMismatch = quantityMismatch(unbuiltExplicitTotalQty, rawUnbuiltAiComponentTotal) || quantityMismatch(builtExplicitTotalQty, rawBuiltAiComponentTotal);
+            const aiQuantitySource = res.quantity_source && typeof res.quantity_source === 'object' ? res.quantity_source : {};
+            const quantitySourceUncertain = isUnreliableAiQuantitySource(aiQuantitySource.unbuilt ?? res.unbuilt_quantity_source)
+                || isUnreliableAiQuantitySource(aiQuantitySource.built ?? res.built_quantity_source);
+            const textShort = safeString(unbuiltTxt).replace(/\s+/g, '').length < 20 || safeString(b.text).replace(/\s+/g, '').length < 20;
+            const plusComponentsMissing = (unbuiltCanDisplayComponents && unbuiltComponentCountBeforeDisplay === 0) || (builtCanDisplayComponents && builtComponentCountBeforeDisplay === 0);
+            const sizeUncertain = normalizeAuditDifferenceFlag(res.size_uncertain, false);
+            const componentsUncertain = normalizeAuditDifferenceFlag(res.components_uncertain, false);
+            const imageQualityPoor = /^(poor|差|较差|模糊)$/i.test(safeString(res.image_quality).trim());
+            const uncertaintyReasons = Array.isArray(res.uncertainty_reasons) ? res.uncertainty_reasons.filter(Boolean) : [];
+            const aiUncertain = uncertaintyReasons.length > 0 && !sizeUncertain && !componentsUncertain && !imageQualityPoor;
+            const pioneerDateMissing = isPio && !safeString(b.buildDate).trim();
+            const evidenceIssues = buildConfidenceEvidenceIssues({
+                sizeMissing: !skipSizeDiff && sizeReason === '未识别',
+                sizeUncertain,
+                quantityUncertain,
+                componentQuantityMismatch,
+                quantitySourceUncertain,
+                textShort,
+                plusComponentsMissing,
+                componentsUncertain,
+                imageQualityPoor,
+                pioneerDateMissing,
+                aiUncertain: aiUncertain || !!res._visual_consistency_warning
+            });
+            const marketAnalysisTextForConfidence = formatAiText(res.competition_analysis).replace(/\s+/g, ' ').trim();
+            const submarketTextForConfidence = formatAiText(res.submarket_difference_analysis).replace(/\s+/g, ' ').trim();
+            const marketReliable = !res._visual_consistency_warning && !compFix.reason && marketAnalysisTextForConfidence.length >= 80 && submarketTextForConfidence.length >= 40;
+            const normalizedOverlapRatio = normalizeOverlapPercent(res.component_overlap_ratio);
+            let confidencePath = 'combined';
+            if (isPio && pioneerDateMissing) confidencePath = 'pioneer_missing_date';
+            else if (isPio && inProt) confidencePath = 'pioneer_protection';
+            else if (isPio && hasCombination && !builtHasPrimary && !unbuiltHasPrimary && normalizedOverlapRatio !== null) confidencePath = 'component_overlap';
+            else if (passedByMarketDifference) confidencePath = 'market';
+            const confidence = calculateComparisonConfidence({
+                isPass,
+                decisionPath: confidencePath,
+                combinedDiff: combinedRounded,
+                overlapRatio: normalizedOverlapRatio,
+                competitionLevel: compLevel,
+                marketReliable,
+                evidenceIssues
+            });
+            const auditRemark = buildFinalAuditRemark({
+                isPass,
+                isPioneer: isPio,
+                inProtection: inProt,
+                marketPass: passedByMarketDifference,
+                appearDiff,
+                quantityDiff: qDiff,
+                sizeDiff: (!skipSizeDiff && sizeDiff !== null && !isNaN(sizeDiff)) ? sizeDiff : null,
+                hasCombination,
+                hasDuplicates,
+                strongColor,
+                styleDiff: auditVisualFlags.styleDiff,
+                patternDiff: auditVisualFlags.patternDiff
+            });
             if (!isPass) overallPass = false; if (combined < finalMin) finalMin = combined;
+            comparisonSummaryRows.push({ index: i + 1, isPass, combined: combinedRounded, auditRemark, confidence });
             const uAttr = [], bAttr = [];
             const unbuiltQtyNum = parseQuantityValue(res.unbuilt_quantity);
             const builtQtyNumForEdit = parseQuantityValue(res.built_quantity);
-            if (res.unbuilt_quantity) uAttr.push(`<span class="attr-row">📦 数量：<span class="qty-edit"><input class="qty-input" data-side="unbuilt" type="number" min="0" step="1" value="${unbuiltQtyNum || ''}" title="可人工修正数量"><span class="qty-hint">可修正</span></span></span>`);
-            const unitOptions = '<option value="mm">毫米 (mm)</option><option value="cm" selected>厘米 (cm)</option><option value="m">米 (m)</option><option value="in">英寸 (in)</option><option value="ft">英尺 (ft)</option><option value="yd">码 (yd)</option><option value="g">克 (g)</option><option value="kg">千克 (kg)</option><option value="ml">毫升 (ml)</option><option value="l">升 (L)</option>';
-            uAttr.push(`<span class="attr-row">📏 尺寸：<span class="size-edit"><input class="size-input" data-side="unbuilt" type="text" placeholder="选填" title="可人工填写尺寸，如 60x60x12"><select class="size-unit" data-side="unbuilt" title="选择人工填写尺寸的单位">${unitOptions}</select><span class="size-hint">可填</span></span><span>${uSizeStr !== '-' ? uSizeStr : '—'}</span></span>`);
+            if (res.unbuilt_quantity) uAttr.push(`<span class="attr-row">📦 数量：<span class="qty-edit"><input class="qty-input" data-side="unbuilt" data-original="${unbuiltQtyNum || ''}" type="number" min="0" step="1" value="${unbuiltQtyNum || ''}" title="可人工修正数量"><span class="qty-hint">可修正</span></span></span>`);
+            const sizeCountOptions = '<option value="1" selected>1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>';
+            const manualSizeToolbarHtml = `<div class="manual-size-toolbar"><span>对比尺寸数：</span><select class="size-count-select" title="选择要按顺序对比的尺寸数量">${sizeCountOptions}</select><span class="manual-size-hint">1-10</span><span class="manual-size-note">需要多组尺寸时选择</span></div>`;
+            const unbuiltManualSizeHtml = renderManualSizeSide('unbuilt', uSizeStr);
+            const builtManualSizeHtml = renderManualSizeSide('built', bSizeStr);
             if (res.unbuilt_material) uAttr.push(`<span class="attr-row">🔧 材质：${res.unbuilt_material}</span>`);
-            if (res.built_quantity) bAttr.push(`<span class="attr-row">📦 数量：<span class="qty-edit"><input class="qty-input" data-side="built" type="number" min="0" step="1" value="${builtQtyNumForEdit || ''}" title="可人工修正数量"><span class="qty-hint">可修正</span></span></span>`);
-            bAttr.push(`<span class="attr-row">📏 尺寸：<span class="size-edit"><input class="size-input" data-side="built" type="text" placeholder="选填" title="可人工填写尺寸，如 40x40x10"><select class="size-unit" data-side="built" title="选择人工填写尺寸的单位">${unitOptions}</select><span class="size-hint">可填</span></span><span>${bSizeStr !== '-' ? bSizeStr : '—'}</span></span>`);
+            if (res.built_quantity) bAttr.push(`<span class="attr-row">📦 数量：<span class="qty-edit"><input class="qty-input" data-side="built" data-original="${builtQtyNumForEdit || ''}" type="number" min="0" step="1" value="${builtQtyNumForEdit || ''}" title="可人工修正数量"><span class="qty-hint">可修正</span></span></span>`);
             if (res.built_material) bAttr.push(`<span class="attr-row">🔧 材质：${res.built_material}</span>`);
             const hasUnbuiltDuplicates = overlapDetails && overlapDetails.length > 0;
             const duplicateNoteHtml = hasUnbuiltDuplicates ? '<div class="duplicate-note">图案差异<50%为重复款</div>' : '';
@@ -1831,7 +2812,7 @@
                     totalWeight += d.weight; weightedSum += d.diffPercent * d.weight;
                 });
                 if (totalWeight > 0) detailHtml += `<div>加权平均差异 = ${weightedSum.toFixed(1)} / ${totalWeight.toFixed(1)} = ${Math.round(sizeDiff)}%</div>`;
-                sizeDisp = `<div class="size-calc">尺寸差异（加权平均） = ${formatPercent(sizeDiff)}</div>${detailHtml}`;
+                sizeDisp = `<div class="size-calc">尺寸差异（加权平均） = ${formatPercent(sizeDiff)}</div><div class="size-auto-detail">${detailHtml}</div>`;
             } else sizeDisp = '<div class="size-calc">尺寸差异 = 未识别</div>';
             let qDisp = '';
             if (skipQ && qDiff >= 100) qDisp = '<div>数量差异 = 数量差异过大，可能识别错误，不参与计算</div>';
@@ -1841,13 +2822,21 @@
             let schemeSubValue = '';
             schemeSubValue = `数量差 ${qDiff !== null ? formatPercent(qDiff) : '—'} + 尺寸差 ${sizeDiff !== null ? formatPercent(sizeDiff) : '—'}`;
             const imagesHtml = `<div class="product-images-compare"><div class="product-image-box"><img src="${unbuiltImg}" alt="未建产品图"><p>📦 未建产品</p></div><div class="product-image-box"><img src="${b.imageData}" alt="已建产品图"><p>🏷️ 已建产品</p></div></div>`;
-            const funcSummary = res.function_usage_summary ? res.function_usage_summary.split('。')[0] : '分析中';
-            const sceneSummary = res.scene_audience_summary ? res.scene_audience_summary.split('。')[0] : '分析中';
-            const funcHtml = `<div class="diff-item"><div class="diff-label">核心功能与用途</div><div class="diff-desc"><span class="summary-badge">${funcSummary}</span><br><strong>未建：</strong> ${res.unbuilt_function_usage || '—'}<br><strong>已建：</strong> ${res.built_function_usage || '—'}</div></div>`;
-            const sceneHtml = `<div class="diff-item"><div class="diff-label">使用人群与场景</div><div class="diff-desc"><span class="summary-badge">${sceneSummary}</span><br><strong>未建：</strong> ${res.unbuilt_scene_audience || '—'}<br><strong>已建：</strong> ${res.built_scene_audience || '—'}</div></div>`;
+            const funcSummary = formatAiText(res.function_usage_summary) || '—';
+            const sceneSummary = formatAiText(res.scene_audience_summary) || '—';
+            const funcHtml = `<div class="diff-item inline-diff-item"><div class="diff-label">核心功能与用途：</div><div class="diff-desc"><span class="summary-badge">${funcSummary}</span></div></div>`;
+            const sceneHtml = `<div class="diff-item inline-diff-item"><div class="diff-label">使用人群与场景：</div><div class="diff-desc"><span class="summary-badge">${sceneSummary}</span></div></div>`;
+            const visualOverallHtml = `<div class="diff-item inline-diff-item"><div class="diff-label">整体目视化差异：</div><div class="diff-desc">${formatVisualDimensionText(res.visual_overall, appearDiff)}</div></div>`;
+            const shapeContourHtml = `<div class="diff-item inline-diff-item"><div class="diff-label">形状与轮廓：</div><div class="diff-desc">${formatVisualDimensionText(res.shape_contour, appearDiff)}</div></div>`;
+            const patternDecorationHtml = `<div class="diff-item inline-diff-item"><div class="diff-label">图案与装饰：</div><div class="diff-desc">${formatVisualDimensionText(res.pattern_decoration, appearDiff)}</div></div>`;
+            const structurePartsHtml = `<div class="diff-item inline-diff-item"><div class="diff-label">结构与部件：</div><div class="diff-desc">${formatVisualDimensionText(res.structure_parts, appearDiff)}</div></div>`;
+            const patternSummaryHtml = `<div class="diff-item inline-diff-item"><div class="diff-label">📌 总结性分析：</div><div class="diff-desc">${formatPatternSummary(res.summary, appearDiff)}</div></div>`;
             const compFixHtml = '';
             const competitionAnalysisText = cleanMarketAnalysisText(normalizeLanguageMarketText(res.competition_analysis), 4) || '无详细分析';
             const submarketAnalysisText = cleanMarketAnalysisText(normalizeLanguageMarketText(res.submarket_difference_analysis), 3);
+            const submarketDetailText = submarketAnalysisText
+                .replace(/^细分市场差异[：:]\s*(?:较大|较小|无明显差异)\s*[。.]?\s*/, '')
+                .trim();
             let redesignDirectionText = formatAiText(res.amazon_redesign_direction);
             if (appearDiff < 50 && !redesignDirectionText) {
                 redesignDirectionText = [
@@ -1858,61 +2847,107 @@
             }
             const redesignDirectionHtml = (appearDiff < 50) ? formatRedesignDirections(redesignDirectionText) : '';
             const redesignHtml = redesignDirectionHtml ? `<div class="submarket-box" style="background:#ecfdf5;border-left-color:#16a34a;"><div class="label" style="color:#166534;">基于Amazon市场的改款方向</div><div style="font-size:12px;color:#15803d;margin-bottom:6px;">提示：图案差异度&lt;50%时会显示改款建议。</div><div class="content">${redesignDirectionHtml}</div></div>` : '';
-            const compHtml = `<div class="diff-item"><div class="diff-label">🏆 上架竞争程度分析</div><div class="diff-desc"><div class="competition-level-box"><div class="label">判定等级</div><div>${compLevel}</div></div>${compFixHtml}<div class="competition-analysis-text"><strong>详细分析：</strong><br>${competitionAnalysisText.replace(/\n/g, '<br>')}</div>${submarketAnalysisText ? `<div class="submarket-box"><div class="label">细分市场差异分析</div><div class="content">${submarketAnalysisText.replace(/\n/g, '<br>')}</div></div>` : ''}${redesignHtml}</div></div>`;
+            const compHtml = `<div class="diff-item"><div class="diff-label">🏆 上架竞争程度分析</div><div class="diff-desc"><div class="competition-level-box"><div class="label">判定等级</div><div>${compLevel}</div></div>${compFixHtml}<div class="competition-analysis-text market-inline-row"><span class="market-inline-label">详细分析：</span><span class="market-inline-content">${competitionAnalysisText.replace(/\n/g, '<br>')}</span></div>${submarketLevel ? `<div class="submarket-box market-inline-row"><div class="label">细分市场差异：</div><div class="content">${submarketLevel}${submarketDetailText ? `。${submarketDetailText.replace(/\n/g, '<br>')}` : ''}</div></div>` : ''}${redesignHtml}</div></div>`;
             const pioneerHtml = isPio ? `<div class="diff-item"><div class="diff-label">📋 首创规则判定</div><div class="diff-desc">${isPass ? '通过' : '不通过'}：图案差异度${appearDiffDisplay}${isLowCompetition ? '，竞争程度较低' : `，竞争程度${compLevel}`}</div></div>` : '';
             const schemeValue = schemeRounded !== null ? formatPercent(schemeRounded) : (sizeReason === '微小' ? '微小' : '—');
             const combinedSubValue = skipSizeDiff ? '数量差 + 尺寸差不计 + 图案差' : '数量差 + 尺寸差 + 图案差';
-            allHtml += `<div class="comparison-result" data-appear-diff="${appearDiff}" data-size-diff="${(!skipSizeDiff && sizeDiff !== null && !isNaN(sizeDiff)) ? sizeDiff : ''}" data-skip-size="${skipSizeDiff ? '1' : '0'}" data-pioneer="${isPio ? '1' : '0'}" data-market-pass="${(!isPio && isLowCompetition && submarketLevel === '较大') ? '1' : '0'}" style="margin-bottom:20px; border:1px solid #e2e8f0; border-radius:16px; padding:12px;"><h4 style="margin-bottom:12px;">📊 对比已建 ${i+1}</h4>${imagesHtml}<div class="product-descriptions"><div class="product-card"><h4>📦 未建</h4><div class="product-desc-text">${res.unbuilt_product_desc || '—'}${uAttr.length ? `<div class="attr">${uAttr.join('')}</div>` : ''}${duplicateNoteHtml}</div></div><div class="product-card"><h4>🏷️ 已建</h4><div class="product-desc-text">${res.built_product_desc || '—'}${bAttr.length ? `<div class="attr">${bAttr.join('')}</div>` : ''}</div></div></div><div class="dimension-summary"><div class="dimension-card"><h4>📊 方案差异度</h4><div class="dimension-value scheme-value">${schemeValue}</div><div class="sub-value scheme-sub">${schemeSubValue}</div></div><div class="dimension-card"><h4>🎨 图案差异度</h4><div class="dimension-value">${appearDiffDisplay}</div><div class="sub-value">款式/图案分析</div></div><div class="dimension-card"><h4>⚖️ 综合差异度</h4><div class="dimension-value combined-value">${formatPercent(combinedRounded)}</div><div class="sub-value combined-sub">${combinedSubValue}</div></div></div><div class="formula-area"><div><strong>📐 计算过程：</strong></div><div class="quantity-calc">${qDisp.replace(/^<div>|<\/div>$/g, '')}</div>${sizeDisp}<div>图案差异 = ${appearDiffDisplay}</div><div class="combined-calc">综合差异 = ${formatPercent(combinedRounded)}</div></div><div class="diff-detail">${funcHtml} ${sceneHtml}<div class="diff-item"><div class="diff-label">整体目视化差异</div><div class="diff-desc">${formatVisualDimensionText(res.visual_overall, appearDiff)}</div></div><div class="diff-item"><div class="diff-label">形状与轮廓</div><div class="diff-desc">${formatVisualDimensionText(res.shape_contour, appearDiff)}</div></div><div class="diff-item"><div class="diff-label">图案与装饰</div><div class="diff-desc">${formatVisualDimensionText(res.pattern_decoration, appearDiff)}</div></div><div class="diff-item"><div class="diff-label">结构与部件</div><div class="diff-desc">${formatVisualDimensionText(res.structure_parts, appearDiff)}</div></div><div class="diff-item"><div class="diff-label">📌 总结性分析</div><div class="diff-desc">${formatPatternSummary(res.summary, appearDiff)}</div></div>${pioneerHtml}${compHtml}</div><div class="final-conclusion"><div class="conclusion-text ${isPass ? 'pass' : 'fail'}">${isPass ? '✅ 通过' : '❌ 不通过'}</div>${isPass && combined < 50 && isLowCompetition && submarketLevel === '较大' ? `<div style="font-size:12px;color:#15803d;">上架竞争程度较低，细分市场差异大，通过</div>` : ''}</div></div>`;
+            const unbuiltSchemeText = safeString(unbuiltTxt);
+            const builtSchemeText = safeString(b.text);
+            res.unbuilt_product_desc = `<div class="product-scheme-text">${escapeHtml(unbuiltSchemeText.trim() ? unbuiltSchemeText : '—')}</div>${unbuiltResult.html ? `<div class="sub-items">${unbuiltResult.html}</div>` : ''}`;
+            res.built_product_desc = `<div class="product-scheme-text">${escapeHtml(builtSchemeText.trim() ? builtSchemeText : '—')}</div>${builtResult.html ? `<div class="sub-items">${builtResult.html}</div>` : ''}`;
+            allHtml += `<div class="comparison-result" data-comparison-index="${i + 1}" data-appear-diff="${appearDiff}" data-quantity-diff="${qDiff !== null && !isNaN(qDiff) ? qDiff : ''}" data-size-diff="${(!skipSizeDiff && sizeDiff !== null && !isNaN(sizeDiff)) ? sizeDiff : ''}" data-current-size-diff="${(!skipSizeDiff && sizeDiff !== null && !isNaN(sizeDiff)) ? sizeDiff : ''}" data-skip-size="${skipSizeDiff ? '1' : '0'}" data-pioneer="${isPio ? '1' : '0'}" data-in-protection="${inProt ? '1' : '0'}" data-market-pass="${passedByMarketDifference ? '1' : '0'}" data-has-combination="${hasCombination ? '1' : '0'}" data-has-duplicates="${hasDuplicates ? '1' : '0'}" data-strong-color="${strongColor ? '1' : '0'}" data-style-diff="${auditVisualFlags.styleDiff ? '1' : '0'}" data-pattern-diff="${auditVisualFlags.patternDiff ? '1' : '0'}" data-confidence-path="${confidencePath}" data-confidence-evidence="${encodeURIComponent(JSON.stringify(evidenceIssues))}" data-overlap-ratio="${normalizedOverlapRatio ?? ''}" data-competition-level="${compLevel || ''}" data-market-reliable="${marketReliable ? '1' : '0'}" style="margin-bottom:20px; border:1px solid #e2e8f0; border-radius:16px; padding:12px;"><h4 style="margin-bottom:12px;">📊 对比已建 ${i+1}</h4>${imagesHtml}<div class="product-descriptions"><div class="product-card"><h4>📦 未建</h4><div class="product-desc-text">${res.unbuilt_product_desc || '—'}${uAttr.length ? `<div class="attr">${uAttr.join('')}</div>` : ''}${manualSizeToolbarHtml}${unbuiltManualSizeHtml}${duplicateNoteHtml}</div></div><div class="product-card"><h4>🏷️ 已建</h4><div class="product-desc-text">${res.built_product_desc || '—'}${bAttr.length ? `<div class="attr">${bAttr.join('')}</div>` : ''}${manualSizeToolbarHtml}${builtManualSizeHtml}</div></div></div><div class="dimension-summary"><div class="dimension-card"><h4>📊 方案差异度</h4><div class="dimension-value scheme-value">${schemeValue}</div><div class="sub-value scheme-sub">${schemeSubValue}</div></div><div class="dimension-card"><h4>🎨 图案差异度</h4><div class="dimension-value">${appearDiffDisplay}</div><div class="sub-value">款式/图案分析</div></div><div class="dimension-card"><h4>⚖️ 综合差异度</h4><div class="dimension-value combined-value">${formatPercent(combinedRounded)}</div><div class="sub-value combined-sub">${combinedSubValue}</div></div></div><div class="formula-area"><div><strong>📐 计算过程：</strong></div><div class="quantity-calc">${qDisp.replace(/^<div>|<\/div>$/g, '')}</div>${sizeDisp}<div>图案差异 = ${appearDiffDisplay}</div><div class="combined-calc">综合差异 = ${formatPercent(combinedRounded)}</div></div><div class="diff-detail">${funcHtml}${sceneHtml}${visualOverallHtml}${shapeContourHtml}${patternDecorationHtml}${structurePartsHtml}${patternSummaryHtml}${pioneerHtml}${compHtml}</div>${renderConfidenceDetail(confidence)}<div class="final-conclusion"><div class="conclusion-text ${isPass ? 'pass' : 'fail'}">${isPass ? '✅ 通过' : '❌ 不通过'}</div>${passedByMarketDifference ? `<div style="font-size:12px;color:#15803d;">上架竞争程度较低，细分市场差异大，通过</div>` : ''}</div></div>`;
         }
         const finalPass = overallPass, shortDesc = cachedUnbuilt?.short_desc || '—';
+        const hasPassComparison = comparisonSummaryRows.some(row => row.isPass);
+        const hasFailComparison = comparisonSummaryRows.some(row => !row.isPass);
+        const mixedOutcomes = hasPassComparison && hasFailComparison;
+        const confidenceRows = comparisonSummaryRows.map(row => ({
+            ...row,
+            confidence: mixedOutcomes ? addMixedOutcomeEvidence(row.confidence, row.isPass) : row.confidence
+        }));
+        const finalConfidence = [...confidenceRows].sort((a, b) => (a.confidence?.score ?? 100) - (b.confidence?.score ?? 100))[0]?.confidence
+            || calculateComparisonConfidence({ isPass: finalPass, combinedDiff: finalMin });
+        const finalConfidenceAction = getConfidenceReviewAction(finalPass, finalConfidence.level, finalConfidence.forcedReview);
+        finalConfidence.action = finalConfidenceAction.text;
+        finalConfidence.requiresReview = finalConfidenceAction.requiresReview;
+        finalConfidence.sampleReview = finalConfidenceAction.sampleReview;
+        const confidenceSummaryHtml = `<div class="confidence-summary"><span>结果置信度</span><span class="confidence-score summary-confidence-score">${finalConfidence.score}</span><span class="confidence-badge summary-confidence-badge ${finalConfidence.level}">${finalConfidence.levelLabel}</span><span class="review-action summary-review-action ${finalConfidence.requiresReview ? 'required' : ''}">${finalConfidence.action}</span><span class="confidence-reasons summary-confidence-reasons">原因：${escapeHtml(finalConfidence.reasons.join('；'))}</span></div>`;
+        const auditCandidates = finalPass ? [...comparisonSummaryRows] : comparisonSummaryRows.filter(row => !row.isPass);
+        auditCandidates.sort((a, b) => a.combined - b.combined);
+        const finalAuditRemark = auditCandidates[0]?.auditRemark || (finalPass ? '整体差异满足，可以尝试' : '整体差异不足，暂不可建');
         let statsHtml = '';
-        if (pioneerFail) statsHtml = `<div class="summary-stats" style="display:flex;gap:16px;"><div class="stat"><span class="stat-value summary-pass-status">❌ 不通过</span></div><div class="stat"><span class="stat-value">与首创款式差异不足</span></div></div>`;
+        if (pioneerFail) statsHtml = `<div class="summary-stats" style="display:flex;gap:16px;flex-wrap:wrap;"><div class="stat"><span class="stat-value summary-pass-status">❌ 不通过</span></div><div class="summary-audit-note"><span class="summary-audit-note-label">审核备注：</span><span class="summary-audit-note-text">${escapeHtml(finalAuditRemark)}</span></div>${confidenceSummaryHtml}</div>`;
         else {
             let passExtra = '';
             if (finalCompLevel === '较低竞争' || finalCompLevel === '无竞争') passExtra = `（竞争程度${finalCompLevel}，不构成直接竞争）`;
-            statsHtml = `<div class="summary-stats" style="display:flex;gap:16px;"><div class="stat"><span class="stat-value summary-pass-status">${finalPass ? '✅ 通过' : '❌ 不通过'}</span></div><div class="stat"><span class="stat-value summary-min-combined">${formatPercent(finalMin)}</span><span class="stat-label">最小综合差异</span></div></div>${finalPass && passExtra ? `<div style="font-size:12px;color:#15803d;">${passExtra}</div>` : ''}`;
+            const comparisonSummaryHtml = comparisonSummaryRows.length > 1 ? `<div class="comparison-summary-list"><span class="comparison-summary-label">各对比审核结果：</span>${confidenceRows.map(row => `<span class="comparison-summary-row ${row.isPass ? 'pass' : 'fail'}" data-summary-index="${row.index}">对比已建${row.index}：${row.isPass ? '✅ 通过' : '❌ 不通过'}，综合差异度 <span class="comparison-summary-diff">${formatPercent(row.combined)}</span><span class="comparison-summary-confidence">，置信度 ${row.confidence.score}</span></span>`).join('')}</div>` : '';
+            statsHtml = `<div class="summary-stats" style="display:flex;gap:16px;flex-wrap:wrap;"><div class="stat"><span class="stat-label">最终审核结果</span><span class="stat-value summary-pass-status">${finalPass ? '✅ 通过' : '❌ 不通过'}</span></div><div class="stat"><span class="stat-value summary-min-combined">${formatPercent(finalMin)}</span><span class="stat-label">最小综合差异</span></div><div class="summary-audit-note"><span class="summary-audit-note-label">审核备注：</span><span class="summary-audit-note-text">${escapeHtml(finalAuditRemark)}</span></div>${confidenceSummaryHtml}${comparisonSummaryHtml}</div>${finalPass && passExtra ? `<div style="font-size:12px;color:#15803d;">${passExtra}</div>` : ''}`;
         }
-        const summaryHtml = `<div class="record-summary"><div class="record-info"><div class="image-row"><div class="thumb"><img src="${cfg.unbuiltThumb}"></div><span class="vs">VS</span>${cfg.builtThumbs.map(t => `<div class="thumb"><img src="${t}"></div>`).join('')}</div><div class="record-desc">新品ID: ${cfg.newProductId||'未填'}<br>产品名称: ${shortDesc}</div></div><div class="price-display">💰 未建: ${uPriceDisp} &nbsp;|&nbsp; 已建: ${bPricesDisp}</div>${statsHtml}<span class="toggle-icon">▼</span></div><div class="record-detail" style="display:none;">${allHtml}</div>`;
-        return { summaryHtml, detailHtml: allHtml, isPass: finalPass, combinedDiff: finalMin, productName: shortDesc };
+         const summaryHtml = `<div class="record-summary"><div class="record-info"><div class="image-row"><div class="thumb"><img src="${cfg.unbuiltThumb}"></div><span class="vs">VS</span>${cfg.builtThumbs.map(t => `<div class="thumb"><img src="${t}"></div>`).join('')}</div><div class="record-desc">新品ID: ${cfg.newProductId||'未填'}<br>产品名称: ${shortDesc}</div></div><div class="price-display">💰 未建: ${uPriceDisp} &nbsp;|&nbsp; 已建: ${bPricesDisp}</div>${statsHtml}</div><div class="record-detail">${allHtml}</div>`;
+        return { summaryHtml, detailHtml: allHtml, isPass: finalPass, combinedDiff: finalMin, productName: shortDesc, confidenceScore: finalConfidence.score, confidenceLevel: finalConfidence.level, requiresReview: finalConfidence.requiresReview, reviewAction: finalConfidence.action, confidenceReasons: finalConfidence.reasons, comparisonConfidences: confidenceRows.map(row => ({ index: row.index, isPass: row.isPass, combined: row.combined, confidence: row.confidence })), confidenceRuleVersion: CONFIDENCE_RULE_VERSION };
     }
 
-    async function retryAnalysis(rec) { if (!rec || (rec.status !== 'failed' && rec.status !== 'done')) return; await updateRecord(rec.id, { status: 'analyzing', summaryHtml: '', detailHtml: '', isPass: false, combinedDiff: 0, productName: '' }); try { const builtCfg = rec.builtConfigs.map((c, idx) => ({ imageData: rec.builtImagesData?.[idx] || null, text: c.text, price: c.price, compareType: c.compareType, buildDate: c.buildDate, productType: c.productType })).filter(b => b.imageData); if (!rec.unbuiltImageData) throw new Error('缺少未建原图'); const cfg = { unbuiltImageData: rec.unbuiltImageData, unbuiltText: rec.unbuiltDesc, unbuiltPrice: rec.unbuiltPrice, newProductId: rec.newProductId, unbuiltThumb: rec.unbuiltThumb, builtThumbs: rec.builtThumbs, builtItemsData: builtCfg }; const r = await analyzeWithConfig(cfg); await updateRecord(rec.id, { status: 'done', summaryHtml: r.summaryHtml, detailHtml: r.detailHtml, isPass: r.isPass, combinedDiff: r.combinedDiff, productName: r.productName }); } catch (e) { console.error(e); await updateRecord(rec.id, { status: 'failed', summaryHtml: `<div class="record-summary">分析失败: ${e.message}</div>`, detailHtml: '', isPass: false, combinedDiff: 0, productName: '分析失败' }); } }
+    async function retryAnalysis(rec) { if (!rec || (rec.status !== 'failed' && rec.status !== 'done')) return; await updateRecord(rec.id, { status: 'analyzing', summaryHtml: '', detailHtml: '', errorMessage: '', isPass: false, combinedDiff: 0, productName: '', confidenceScore: null, confidenceLevel: '', requiresReview: false, reviewAction: '', confidenceReasons: [], comparisonConfidences: [] }); try { const builtCfg = rec.builtConfigs.map((c, idx) => ({ imageData: rec.builtImagesData?.[idx] || null, text: c.text, price: c.price, compareType: c.compareType, buildDate: c.buildDate, productType: c.productType })).filter(b => b.imageData); if (!rec.unbuiltImageData) throw new Error('缺少未建原图'); const cfg = { unbuiltImageData: rec.unbuiltImageData, unbuiltText: rec.unbuiltDesc, unbuiltPrice: rec.unbuiltPrice, newProductId: rec.newProductId, unbuiltThumb: rec.unbuiltThumb, builtThumbs: rec.builtThumbs, builtItemsData: builtCfg }; const r = await analyzeWithConfig(cfg); await updateRecord(rec.id, { status: 'done', summaryHtml: r.summaryHtml, detailHtml: r.detailHtml, errorMessage: '', isPass: r.isPass, combinedDiff: r.combinedDiff, productName: r.productName, confidenceScore: r.confidenceScore, confidenceLevel: r.confidenceLevel, requiresReview: r.requiresReview, reviewAction: r.reviewAction, confidenceReasons: r.confidenceReasons, comparisonConfidences: r.comparisonConfidences, confidenceRuleVersion: r.confidenceRuleVersion }); } catch (e) { console.error(e); const errorMessage = normalizeAnalysisErrorMessage(e); await updateRecord(rec.id, { status: 'failed', summaryHtml: renderAnalysisFailure(errorMessage), detailHtml: '', errorMessage, isPass: false, combinedDiff: 0, productName: '分析失败', confidenceScore: null, confidenceLevel: '', requiresReview: true, reviewAction: '分析失败，需人工处理' }); } }
 
     function renderRecordsList(searchTerm = '') {
-        let expandedId = null;
-        const exist = document.querySelector('.record-detail[style*="display: block"]');
-        if (exist) { const item = exist.closest('.record-item'); if (item) expandedId = item.getAttribute('data-id'); }
         const cont = document.getElementById('recordsList');
         if (!cont) return;
         let filtered = [...historyRecords];
+        const confidenceFilter = document.getElementById('confidenceFilter')?.value || 'all';
+        const confidenceSort = document.getElementById('confidenceSort')?.value || 'time';
+        if (confidenceFilter === 'review') {
+            filtered = filtered.filter(r => r.status === 'analyzing' || r.status === 'failed' || r.requiresReview === true || r.confidenceScore === null || r.confidenceScore === undefined);
+        } else if (['high', 'medium', 'low'].includes(confidenceFilter)) {
+            filtered = filtered.filter(r => r.status === 'analyzing' || r.status === 'failed' || r.confidenceLevel === confidenceFilter);
+        }
         if (searchTerm.trim()) {
             const t = searchTerm.trim().toLowerCase();
             filtered = filtered.filter(r => r.newProductId && r.newProductId.toLowerCase().includes(t));
         }
-        if (filtered.length === 0) { cont.innerHTML = '<p style="text-align:center;color:#64748b;">暂无记录</p>'; return; }
+        if (confidenceSort === 'confidence_asc') filtered.sort((a, b) => (a.confidenceScore ?? 101) - (b.confidenceScore ?? 101));
+        else if (confidenceSort === 'confidence_desc') filtered.sort((a, b) => (b.confidenceScore ?? -1) - (a.confidenceScore ?? -1));
+        filtered.sort((a, b) => {
+            const priority = record => record.status === 'failed' ? 0 : (record.status === 'analyzing' ? 1 : 2);
+            return priority(a) - priority(b);
+        });
+        if (filtered.length === 0) { cont.innerHTML = '<p style="text-align:center;color:#64748b;">暂无符合条件的记录</p>'; return; }
         let html = '';
         filtered.forEach(rec => {
-            const statText = rec.status === 'analyzing' ? 'AI分析中...' : (rec.isPass ? '通过' : '不通过');
-            const statClass = rec.status === 'analyzing' ? 'analyzing' : (rec.isPass ? 'pass' : 'fail');
+            const statText = rec.status === 'analyzing' ? 'AI分析中...' : (rec.status === 'failed' ? '分析失败' : (rec.isPass ? '通过' : '不通过'));
+            const statClass = rec.status === 'analyzing' ? 'analyzing' : (rec.status === 'failed' ? 'fail' : (rec.isPass ? 'pass' : 'fail'));
+            const confidenceFallback = rec.confidenceScore !== null && rec.confidenceScore !== undefined ? `<div class="confidence-summary"><span>结果置信度</span><span class="confidence-score">${rec.confidenceScore}</span><span class="confidence-badge ${rec.confidenceLevel || getConfidenceLevel(rec.confidenceScore)}">${getConfidenceLevelLabel(rec.confidenceLevel || getConfidenceLevel(rec.confidenceScore))}</span><span class="review-action ${rec.requiresReview ? 'required' : ''}">${rec.reviewAction || ''}</span></div>` : '';
             const uPriceDisp = rec.unbuiltPrice ? `$${parseFloat(rec.unbuiltPrice).toFixed(2)}` : '未填';
             const bPricesDisp = (rec.builtConfigs || []).map(c => c.price ? `$${parseFloat(c.price).toFixed(2)}` : '未填').join(', ');
             if (rec.summaryHtml) {
-                html += `<div class="record-item" data-id="${rec.id}">${rec.summaryHtml}${rec.status === 'failed' ? `<div style="text-align:right;"><button class="retry-btn" data-id="${rec.id}">重新分析</button></div>` : ''}</div>`;
+                const summaryContent = rec.status === 'failed' ? renderAnalysisFailure(getRecordFailureMessage(rec)) : rec.summaryHtml;
+                html += `<div class="record-item" data-id="${rec.id}" data-confidence-score="${rec.confidenceScore ?? ''}" data-confidence-level="${rec.confidenceLevel || ''}" data-requires-review="${rec.requiresReview ? '1' : '0'}">${summaryContent}${rec.status === 'failed' ? `<div class="analysis-failure-actions"><button class="retry-btn" data-id="${rec.id}">重新分析</button></div>` : ''}</div>`;
             } else {
-                const prodName = rec.productName || (rec.status === 'analyzing' ? '分析中...' : (rec.isPass ? '通过' : '不通过'));
-                html += `<div class="record-item" data-id="${rec.id}"><div class="record-summary"><div class="record-info"><div class="image-row"><div class="thumb"><img src="${rec.unbuiltThumb || ''}"></div><span class="vs">VS</span>${(rec.builtThumbs || []).map(t => `<div class="thumb"><img src="${t}"></div>`).join('')}</div><div class="record-desc">新品ID: ${rec.newProductId || '未填'}<br>产品名称: ${prodName}</div></div><div class="price-display">💰 未建: ${uPriceDisp} &nbsp;|&nbsp; 已建: ${bPricesDisp}</div><div class="record-status ${statClass}">${statText}</div>${rec.status === 'failed' ? `<button class="retry-btn" data-id="${rec.id}">重新分析</button>` : ''}<span class="toggle-icon">▼</span></div><div class="record-detail" style="display:none;"></div></div>`;
+                const prodName = rec.productName || (rec.status === 'analyzing' ? '分析中...' : (rec.status === 'failed' ? '分析失败' : (rec.isPass ? '通过' : '不通过')));
+                const failureFallback = rec.status === 'failed' ? renderAnalysisFailure(getRecordFailureMessage(rec)) : '';
+                html += `<div class="record-item" data-id="${rec.id}" data-confidence-score="${rec.confidenceScore ?? ''}" data-confidence-level="${rec.confidenceLevel || ''}" data-requires-review="${rec.requiresReview ? '1' : '0'}"><div class="record-summary"><div class="record-info"><div class="image-row"><div class="thumb"><img src="${rec.unbuiltThumb || ''}"></div><span class="vs">VS</span>${(rec.builtThumbs || []).map(t => `<div class="thumb"><img src="${t}"></div>`).join('')}</div><div class="record-desc">新品ID: ${rec.newProductId || '未填'}<br>产品名称: ${prodName}</div></div><div class="price-display">💰 未建: ${uPriceDisp} &nbsp;|&nbsp; 已建: ${bPricesDisp}</div><div class="record-status ${statClass}">${statText}</div>${confidenceFallback}${failureFallback}${rec.status === 'failed' ? `<button class="retry-btn" data-id="${rec.id}">重新分析</button>` : ''}</div><div class="record-detail"></div></div>`;
             }
         });
         cont.innerHTML = html;
         cont.querySelectorAll('.record-item').forEach(item => {
-            const sum = item.querySelector('.record-summary'), det = item.querySelector('.record-detail');
-            if (sum && det) sum.addEventListener('click', e => {
-                if (e.target.classList.contains('retry-btn')) return;
-                const hidden = det.style.display === 'none';
-                det.style.display = hidden ? 'block' : 'none';
-                const icon = sum.querySelector('.toggle-icon');
-                if (icon) icon.textContent = hidden ? '▲' : '▼';
+            item.querySelectorAll('.comparison-result').forEach(result => {
+                const toolbars = [...result.querySelectorAll('.manual-size-toolbar')];
+                const toolbar = toolbars[0];
+                const unbuiltText = result.querySelector('.product-card:first-child .product-desc-text');
+                const unbuiltSize = unbuiltText?.querySelector('.manual-size-side');
+                const builtText = result.querySelector('.product-card:nth-child(2) .product-desc-text');
+                const builtSize = builtText?.querySelector('.manual-size-side');
+                toolbars.slice(1).forEach(extra => extra.remove());
+                if (toolbar && unbuiltText && unbuiltSize) unbuiltText.insertBefore(toolbar, unbuiltSize);
+                if (builtText && builtSize) {
+                    const spacer = document.createElement('div');
+                    spacer.className = 'manual-size-toolbar-spacer';
+                    spacer.setAttribute('aria-hidden', 'true');
+                    builtText.insertBefore(spacer, builtSize);
+                }
             });
+            if (item.querySelector('.summary-confidence-score')) updateRecordConfidence(item, false);
+            const det = item.querySelector('.record-detail');
+            if (det) det.style.display = 'block';
             item.querySelectorAll('.qty-input').forEach(input => {
                 input.addEventListener('click', e => e.stopPropagation());
                 input.addEventListener('input', e => {
@@ -1934,6 +2969,16 @@
                     recalcManualQuantityDiff(select.closest('.comparison-result'));
                 });
             });
+            item.querySelectorAll('.size-count-select').forEach(select => {
+                select.addEventListener('click', e => e.stopPropagation());
+                select.addEventListener('change', e => {
+                    e.stopPropagation();
+                    const result = select.closest('.comparison-result');
+                    updateManualSizeRows(result);
+                    recalcManualQuantityDiff(result);
+                });
+                updateManualSizeRows(select.closest('.comparison-result'));
+            });
             const retry = item.querySelector('.retry-btn');
             if (retry) retry.addEventListener('click', async e => {
                 e.stopPropagation();
@@ -1942,17 +2987,6 @@
                 if (rec) await retryAnalysis(rec);
             });
         });
-        if (expandedId) {
-            const tgt = cont.querySelector(`.record-item[data-id="${expandedId}"]`);
-            if (tgt) {
-                const det = tgt.querySelector('.record-detail'), sum = tgt.querySelector('.record-summary');
-                if (det && sum && det.style.display !== 'block') {
-                    det.style.display = 'block';
-                    const icon = sum.querySelector('.toggle-icon');
-                    if (icon) icon.textContent = '▲';
-                }
-            }
-        }
     }
     // ---------- 启动 ----------
     initUnbuilt(); for (let i = 1; i <= 1; i++) builtItems[`built_${i}`] = { imageDataUrl: null, compressedBase64: null, text: '', price: '', compareType: 'non_pioneer', buildDate: '', productType: 'regular' }; rebuildBuiltItems(1);
@@ -1961,21 +2995,29 @@
         if (!unbuilt.imageDataUrl) { alert('请上传未建产品图片'); return; }
         const anyBuilt = Object.keys(builtItems).some(k => builtItems[k].imageDataUrl);
         if (!anyBuilt) { alert('请至少上传一个已建图片'); return; }
+        // 新分析始终展示在记录列表中，避免从“分析中”变为完成后被置信度筛选隐藏。
+        const confidenceFilterEl = document.getElementById('confidenceFilter');
+        const confidenceSortEl = document.getElementById('confidenceSort');
+        const historySearchEl = document.getElementById('historySearchInput');
+        if (confidenceFilterEl) confidenceFilterEl.value = 'all';
+        if (confidenceSortEl) confidenceSortEl.value = 'time';
+        if (historySearchEl) historySearchEl.value = '';
         const uImg = unbuilt.imageDataUrl, uTxt = unbuilt.text, uPrice = unbuilt.price, uThumb = unbuilt.compressedBase64 || '', newId = unbuilt.newProductId;
         const builtData = Object.keys(builtItems).map(k => ({ imageData: builtItems[k].imageDataUrl, text: builtItems[k].text, price: builtItems[k].price, compareType: builtItems[k].compareType, buildDate: builtItems[k].buildDate, productType: builtItems[k].productType }));
         const bThumbs = Object.keys(builtItems).map(k => builtItems[k].compressedBase64 || '');
         clearComparisonGroup();
         const recId = Date.now() + '_' + Math.random();
-        const tmp = { id: recId, newProductId: newId, timestamp: new Date().toLocaleString(), status: 'analyzing', summaryHtml: '', detailHtml: '', isPass: false, combinedDiff: 0, unbuiltThumb: uThumb, builtThumbs: bThumbs, unbuiltDesc: uTxt, unbuiltPrice: uPrice, builtConfigs: builtData.map(b => ({ text: b.text, price: b.price, compareType: b.compareType, buildDate: b.buildDate, productType: b.productType })), productName: '', unbuiltImageData: uImg, builtImagesData: builtData.map(b => b.imageData) };
+        const tmp = { id: recId, newProductId: newId, timestamp: new Date().toLocaleString(), status: 'analyzing', summaryHtml: '', detailHtml: '', errorMessage: '', isPass: false, combinedDiff: 0, confidenceScore: null, confidenceLevel: '', requiresReview: false, reviewAction: '', confidenceReasons: [], comparisonConfidences: [], confidenceRuleVersion: CONFIDENCE_RULE_VERSION, unbuiltThumb: uThumb, builtThumbs: bThumbs, unbuiltDesc: uTxt, unbuiltPrice: uPrice, builtConfigs: builtData.map(b => ({ text: b.text, price: b.price, compareType: b.compareType, buildDate: b.buildDate, productType: b.productType })), productName: '', unbuiltImageData: uImg, builtImagesData: builtData.map(b => b.imageData) };
         await addRecord(tmp);
         (async () => {
             try {
                 const cfg = { unbuiltImageData: uImg, unbuiltText: uTxt, unbuiltPrice: uPrice, newProductId: newId, unbuiltThumb: uThumb, builtThumbs: bThumbs, builtItemsData: builtData };
                 const r = await analyzeWithConfig(cfg);
-                await updateRecord(recId, { status: 'done', summaryHtml: r.summaryHtml, detailHtml: r.detailHtml, isPass: r.isPass, combinedDiff: r.combinedDiff, productName: r.productName });
+                await updateRecord(recId, { status: 'done', summaryHtml: r.summaryHtml, detailHtml: r.detailHtml, errorMessage: '', isPass: r.isPass, combinedDiff: r.combinedDiff, productName: r.productName, confidenceScore: r.confidenceScore, confidenceLevel: r.confidenceLevel, requiresReview: r.requiresReview, reviewAction: r.reviewAction, confidenceReasons: r.confidenceReasons, comparisonConfidences: r.comparisonConfidences, confidenceRuleVersion: r.confidenceRuleVersion });
             } catch (e) {
                 console.error(e);
-                await updateRecord(recId, { status: 'failed', summaryHtml: `<div class="record-summary">分析失败: ${e.message}</div>`, detailHtml: '', isPass: false, combinedDiff: 0, productName: '分析失败' });
+                const errorMessage = normalizeAnalysisErrorMessage(e);
+                await updateRecord(recId, { status: 'failed', summaryHtml: renderAnalysisFailure(errorMessage), detailHtml: '', errorMessage, isPass: false, combinedDiff: 0, productName: '分析失败', confidenceScore: null, confidenceLevel: '', requiresReview: true, reviewAction: '分析失败，需人工处理' });
             }
         })();
     };
@@ -1984,6 +3026,8 @@
     resetBtn.addEventListener('click', () => { searchInp.value = ''; renderRecordsList(''); });
     clearBtn.addEventListener('click', async () => { if (confirm('确定清空所有记录？')) await clearHistory(); });
     searchInp.addEventListener('keypress', e => { if (e.key === 'Enter') renderRecordsList(searchInp.value); });
+    document.getElementById('confidenceFilter')?.addEventListener('change', () => renderRecordsList(searchInp.value));
+    document.getElementById('confidenceSort')?.addEventListener('change', () => renderRecordsList(searchInp.value));
     const qaBtn = document.getElementById('qaAskBtn'), qaQ = document.getElementById('qaQuestion'), qaA = document.getElementById('qaAnswer');
     qaBtn.addEventListener('click', async () => {
         const q = qaQ.value.trim();
