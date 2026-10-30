@@ -2716,7 +2716,7 @@
         const userText = `已建文字：${safeString(txtA) || '无'}；未建文字：${safeString(txtB) || '无'}`;
         const baseContent = [{ type: "text", text: prompt + "\n\n" + userText }, { type: "image_url", image_url: { url: `data:image/jpeg;base64,${b64A}` } }, { type: "image_url", image_url: { url: `data:image/jpeg;base64,${b64B}` } }];
         let lastResult = null, lastIssues = [];
-        for (let attempt = 0; attempt < 4; attempt++) {
+        for (let attempt = 0; attempt < 2; attempt++) {
             const retryText = attempt === 0 ? '' : `\n\n上一次分析存在前后矛盾，请重新分析并输出完整JSON，不要沿用矛盾结论，也不要只改标签而保留相反论证。矛盾点：${lastIssues.join('；')}。\n上一次JSON：${JSON.stringify(lastResult || {})}`;
             const messages = [{ role: "user", content: attempt === 0 ? baseContent : [{ type: "text", text: prompt + "\n\n" + userText + retryText }, baseContent[1], baseContent[2]] }];
             const reqBody = { model: DOUBAO_ENDPOINT_ID, messages, max_tokens: 3500, temperature: 0.2 };
@@ -2729,7 +2729,13 @@
             lastIssues = findVisualContradictions(lastResult);
             if (!lastIssues.length) return lastResult;
         }
-        throw new Error(`豆包连续返回前后矛盾的分析：${lastIssues.join('；')}`);
+        // 第二次仍存在矛盾时保留并展示最后一次完整结果，不再将该记录判为分析失败。
+        if (lastResult) {
+            lastResult._visual_consistency_warning = true;
+            lastResult._visual_consistency_issues = lastIssues;
+            return lastResult;
+        }
+        throw new Error('豆包未返回可展示的分析结果');
     }
 
     async function askQuestion(q) { const messages = [{ role: "user", content: `请简洁准确回答：${q}` }]; const req = { model: DOUBAO_ENDPOINT_ID, messages, max_tokens: 800, temperature: 0.3 }; const resp = await fetchDoubao(req); const data = await resp.json(); return data.choices[0].message.content; }
