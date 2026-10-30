@@ -2938,9 +2938,7 @@
                 pioneerDateMissing,
                 aiUncertain: aiUncertain || !!res._visual_consistency_warning
             });
-            const marketAnalysisTextForConfidence = formatAiText(res.competition_analysis).replace(/\s+/g, ' ').trim();
-            const submarketTextForConfidence = formatAiText(res.submarket_difference_analysis).replace(/\s+/g, ' ').trim();
-            const marketReliable = !res._visual_consistency_warning && !compFix.reason && marketAnalysisTextForConfidence.length >= 80 && submarketTextForConfidence.length >= 40;
+            const marketReliable = !res._visual_consistency_warning && !compFix.reason;
             const normalizedOverlapRatio = normalizeOverlapPercent(res.component_overlap_ratio);
             let confidencePath = 'combined';
             if (isPio && pioneerDateMissing) confidencePath = 'pioneer_missing_date';
