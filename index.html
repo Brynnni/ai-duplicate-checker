@@ -392,20 +392,10 @@
         record.detailHtml = recordItem.querySelector('.record-detail')?.innerHTML || record.detailHtml || '';
         record.combinedDiff = results.length ? Math.min(...results) : record.combinedDiff;
         record.isPass = allPass;
-        const latestConfidence = recordItem._latestConfidence;
-        if (latestConfidence) {
-            record.confidenceScore = latestConfidence.score;
-            record.confidenceLevel = latestConfidence.level;
-            record.requiresReview = latestConfidence.requiresReview;
-            record.reviewAction = latestConfidence.action;
-            record.confidenceReasons = latestConfidence.reasons;
-            record.comparisonConfidences = latestConfidence.comparisonConfidences;
-        } else {
-            const score = Number(recordItem.dataset.confidenceScore);
-            if (isFinite(score)) record.confidenceScore = score;
-            record.confidenceLevel = recordItem.dataset.confidenceLevel || record.confidenceLevel || '';
-            record.requiresReview = recordItem.dataset.requiresReview === '1';
-        }
+        const score = Number(recordItem.dataset.confidenceScore);
+        if (isFinite(score)) record.confidenceScore = score;
+        record.confidenceLevel = recordItem.dataset.confidenceLevel || record.confidenceLevel || '';
+        record.requiresReview = recordItem.dataset.requiresReview === '1';
         return record;
     }
     async function saveRecordItemState(recordItem) {
@@ -936,6 +926,11 @@
         return num > 100 ? '100%+' : `${Math.round(num)}%`;
     }
 
+    function meetsCombinedPassThreshold(value) {
+        const num = Number(value);
+        return isFinite(num) && Math.round(num) >= 50;
+    }
+
     function parseManualSizeInput(text, unitOverride = '') {
         const raw = safeString(text).trim();
         if (!raw) return null;
@@ -1170,14 +1165,14 @@
     function singleDimensionConfidenceOverride(quantityDiff, sizeDiff) {
         const quantity = Number(quantityDiff);
         const size = Number(sizeDiff);
-        const quantityExceeded = isFinite(quantity) && quantity > 50;
-        const sizeExceeded = isFinite(size) && size > 50;
-        if (!quantityExceeded && !sizeExceeded) return null;
-        const label = quantityExceeded && sizeExceeded
-            ? '数量差异度和尺寸差异度均超过50%，结果需人工复核后生效'
-            : (quantityExceeded
-                ? '数量差异度超过50%，结果需人工复核后生效'
-                : '尺寸差异度超过50%，结果需人工复核后生效');
+        const quantityAtOrAboveThreshold = isFinite(quantity) && quantity >= 50;
+        const sizeAtOrAboveThreshold = isFinite(size) && size >= 50;
+        if (!quantityAtOrAboveThreshold && !sizeAtOrAboveThreshold) return null;
+        const label = quantityAtOrAboveThreshold && sizeAtOrAboveThreshold
+            ? '数量差异度和尺寸差异度均达到或超过50%，结果需人工复核后生效'
+            : (quantityAtOrAboveThreshold
+                ? '数量差异度达到或超过50%，结果需人工复核后生效'
+                : '尺寸差异度达到或超过50%，结果需人工复核后生效');
         return { score: 40, forcedReview: false, label, singleDimensionReview: true };
     }
 
@@ -1279,107 +1274,6 @@
         if (!confidence) return '';
         const reasons = confidence.reasons.length ? confidence.reasons.join('；') : '证据完整';
         return `<div class="confidence-detail"><div class="confidence-detail-title">结果置信度 <span class="confidence-score">${confidence.score}</span><span class="confidence-badge ${confidence.level}">${confidence.levelLabel}</span><span class="review-action ${confidence.requiresReview ? 'required' : ''}">${confidence.action}</span></div><div class="confidence-formula">${confidence.formula}</div><div class="confidence-reason-list">原因：${escapeHtml(reasons)}</div></div>`;
-    }
-
-    function parseConfidenceEvidenceFromElement(result) {
-        try {
-            return uniqueEvidenceIssues(JSON.parse(decodeURIComponent(result.dataset.confidenceEvidence || '[]')));
-        } catch (e) {
-            return [];
-        }
-    }
-
-    function calculateConfidenceFromElement(result, mixedOutcomes = false) {
-        const conclusion = result.querySelector('.conclusion-text')?.textContent || '';
-        const isPass = conclusion.includes('通过') && !conclusion.includes('不通过');
-        const combined = parseQuantityValue(result.querySelector('.combined-value')?.textContent);
-        const quantityDiff = Number(result.dataset.quantityDiff);
-        const currentSizeDiff = result.dataset.currentSizeDiff !== '' && result.dataset.currentSizeDiff !== undefined
-            ? Number(result.dataset.currentSizeDiff)
-            : Number(result.dataset.sizeDiff);
-        let decisionPath = result.dataset.confidencePath || 'combined';
-        if (decisionPath === 'market' && combined >= 50) decisionPath = 'combined';
-        let issues = parseConfidenceEvidenceFromElement(result);
-        const manualSize = calculateManualMultiSizeDiff(result);
-        if (manualSize.used) issues = issues.filter(issue => !['size_missing', 'size_uncertain'].includes(issue.code));
-        const quantityChanged = [...result.querySelectorAll('.qty-input')].some(input => input.dataset.original !== undefined && String(input.value) !== String(input.dataset.original));
-        if (quantityChanged) issues = issues.filter(issue => !['quantity_uncertain', 'quantity_source_uncertain'].includes(issue.code));
-        if (mixedOutcomes) issues.push({ code: 'mixed_outcomes', label: '多个已建对比结论不一致', factor: 0.85 });
-        return calculateComparisonConfidence({
-            isPass,
-            isPioneer: result.dataset.pioneer === '1' && result.dataset.pioneerRule !== '0',
-            decisionPath,
-            combinedDiff: isFinite(combined) ? combined : 0,
-            quantityDiff: isFinite(quantityDiff) ? quantityDiff : null,
-            sizeDiff: result.dataset.skipSize === '1' || !isFinite(currentSizeDiff) ? null : currentSizeDiff,
-            competitionLevel: result.dataset.competitionLevel || '',
-            marketReliable: result.dataset.marketReliable !== '0',
-            evidenceIssues: issues
-        });
-    }
-
-    function updateRecordConfidence(recordItem, persist = true) {
-        if (!recordItem) return null;
-        const results = [...recordItem.querySelectorAll('.comparison-result')];
-        if (!results.length) return null;
-        const decisions = results.map(result => {
-            const text = result.querySelector('.conclusion-text')?.textContent || '';
-            return text.includes('通过') && !text.includes('不通过');
-        });
-        const mixedOutcomes = decisions.some(Boolean) && decisions.some(value => !value);
-        const confidences = results.map((result, index) => {
-            const confidence = calculateConfidenceFromElement(result, mixedOutcomes);
-            const detail = result.querySelector('.confidence-detail');
-            if (detail) detail.outerHTML = renderConfidenceDetail(confidence);
-            const summaryConfidence = recordItem.querySelector(`.comparison-summary-row[data-summary-index="${result.dataset.comparisonIndex}"] .comparison-summary-confidence`);
-            if (summaryConfidence) summaryConfidence.textContent = `，置信度 ${confidence.score}`;
-            return { ...confidence, isPass: decisions[index], comparisonIndex: result.dataset.comparisonIndex };
-        });
-        const finalConfidence = [...confidences].sort((a, b) => a.score - b.score)[0];
-        const finalPass = decisions.every(Boolean);
-        const finalAction = getConfidenceReviewAction(finalPass, finalConfidence.level, finalConfidence.forcedReview);
-        finalConfidence.action = finalAction.text;
-        finalConfidence.requiresReview = finalAction.requiresReview;
-        finalConfidence.sampleReview = finalAction.sampleReview;
-        const scoreEl = recordItem.querySelector('.summary-confidence-score');
-        const badgeEl = recordItem.querySelector('.summary-confidence-badge');
-        const actionEl = recordItem.querySelector('.summary-review-action');
-        const reasonsEl = recordItem.querySelector('.summary-confidence-reasons');
-        if (scoreEl) scoreEl.textContent = String(finalConfidence.score);
-        if (badgeEl) {
-            badgeEl.textContent = finalConfidence.levelLabel;
-            badgeEl.className = `confidence-badge summary-confidence-badge ${finalConfidence.level}`;
-        }
-        if (actionEl) {
-            actionEl.textContent = finalConfidence.action;
-            actionEl.classList.toggle('required', finalConfidence.requiresReview);
-        }
-        if (reasonsEl) reasonsEl.textContent = `原因：${finalConfidence.reasons.join('；')}`;
-        recordItem.dataset.confidenceScore = String(finalConfidence.score);
-        recordItem.dataset.confidenceLevel = finalConfidence.level;
-        recordItem.dataset.requiresReview = finalConfidence.requiresReview ? '1' : '0';
-        recordItem._latestConfidence = {
-            score: finalConfidence.score,
-            level: finalConfidence.level,
-            requiresReview: finalConfidence.requiresReview,
-            action: finalConfidence.action,
-            reasons: finalConfidence.reasons,
-            comparisonConfidences: confidences
-        };
-        if (persist && recordItem.dataset.id) {
-            const record = historyRecords.find(item => String(item.id) === String(recordItem.dataset.id));
-            if (record) {
-                record.confidenceScore = finalConfidence.score;
-                record.confidenceLevel = finalConfidence.level;
-                record.requiresReview = finalConfidence.requiresReview;
-                record.reviewAction = finalConfidence.action;
-                record.confidenceReasons = finalConfidence.reasons;
-                record.comparisonConfidences = confidences;
-                record.summaryHtml = recordItem.innerHTML;
-                saveHistory();
-            }
-        }
-        return { finalConfidence, confidences, mixedOutcomes };
     }
 
     function auditRemarkFromComparisonElement(result) {
@@ -1516,8 +1410,9 @@
             conclusionText.classList.toggle('pass', finalPass);
             conclusionText.classList.toggle('fail', !finalPass);
         } else if (conclusionText && (container.dataset.pioneer !== '1' || container.dataset.pioneerRule === '0')) {
-            marketPassUsed = combined < 50 && marketEligible;
-            const isPass = combined >= 50 || marketEligible;
+            const combinedPass = meetsCombinedPassThreshold(combined);
+            marketPassUsed = !combinedPass && marketEligible;
+            const isPass = combinedPass || marketEligible;
             conclusionText.textContent = isPass ? '✅ 通过' : '❌ 不通过';
             conclusionText.classList.toggle('pass', isPass);
             conclusionText.classList.toggle('fail', !isPass);
@@ -1538,7 +1433,7 @@
             });
             updateRecordAuditRemark(recordItem);
             // 输入过程中只更新当前记录的界面，保存延后到防抖计时器，避免每个字符触发整库写入。
-            updateRecordConfidence(recordItem, false);
+            // Confidence is the original analysis snapshot; manual quantity/size edits must not recalculate it.
             scheduleManualRecordSave(recordItem);
         }
     }
@@ -3186,7 +3081,7 @@
             } else if (!isPio && hasOutOfProtectionPioneer) {
                 const rule = evaluateOutOfProtectionOtherBuiltRule({ res, qDiff, sizeDiff: !skipSizeDiff ? outsideRuleSizeDiff : null });
                 isPass = rule.pass; passReason = rule.reason; pioneerPassBasis = rule.basis || '';
-            } else if (combined >= 50) { isPass = true; passReason = `综合差异度${formatPercent(combinedRounded)}≥50%，通过。`; }
+            } else if (meetsCombinedPassThreshold(combined)) { isPass = true; passReason = `综合差异度${formatPercent(combinedRounded)}≥50%，通过。`; }
             else { isPass = false; passReason = `综合差异度${formatPercent(combinedRounded)}<50%，且未同时满足低竞争+细分市场差异较大，不通过。`; }
             if (!isPass && marketEligible) {
                 isPass = true;
@@ -3467,7 +3362,6 @@
                 const result = item.querySelector(`.comparison-result[data-comparison-index="${row.dataset.summaryIndex}"]`);
                 if (result) updateComparisonSummaryMetric(row, result);
             });
-            if (item.querySelector('.summary-confidence-score')) updateRecordConfidence(item, false);
             const det = item.querySelector('.record-detail');
             if (det) det.style.display = 'block';
             item.querySelectorAll('.qty-input').forEach(input => {
