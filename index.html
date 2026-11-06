@@ -1656,8 +1656,10 @@
     function extractExplicitComponentDefinitions(text) {
         // 组件边界必须先从完整标题中识别；提前删除尺寸片段会误删
         // “尺寸：贝壳1个+海星1个+海星1个”这类明确的配件明细。
-        const s = extractSolutionTitleText(text);
+        let s = extractSolutionTitleText(text);
         if (!s) return [];
+        // 句末“共N个/总计N件”是整条方案总数，不得被归到最后一个加号分项。
+        s = s.replace(new RegExp(`(?:共|总计|合计|一共|总共)\\s*\\d+(?:\\.\\d+)?\\s*${QUANTITY_UNIT_PATTERN}\\s*$`, 'i'), '').trim();
         const hasPlus = /[+＋]/.test(s);
         const parts = hasPlus ? splitTopLevelSolutionParts(s, /[+＋]/) : splitTopLevelSolutionParts(s, /[,，、;；]/);
         if (parts.length < 2) return extractNestedComponentDefinitions(s);
@@ -1665,10 +1667,12 @@
             const nested = extractNestedComponentDefinitions(part);
             if (nested.length >= 2) return nested;
             const q = solutionQuantityFromPart(part);
-            return [{ quantity: q.quantity, unit: q.unit, part: part.trim(), name: cleanSolutionComponentName(part) }];
-        }).filter(item => item.name && item.quantity > 0);
-        // 没有“+”时，只有至少两个逗号/顿号分项都写了明确数量，才认定为组合组件。
-        if (!hasPlus && definitions.length < 2) return [];
+            return q.quantity > 0
+                ? [{ quantity: q.quantity, unit: q.unit, part: part.trim(), name: cleanSolutionComponentName(part) }]
+                : [];
+        });
+        // 只有所有顶层分项都各自写明数量时才展示组件，未标数量的分项不能默认补1。
+        if (definitions.length !== parts.length || definitions.length < 2) return [];
         return definitions;
     }
 
@@ -1748,12 +1752,18 @@
         const units = QUANTITY_UNIT_PATTERN;
         const topLevelPlusParts = splitTopLevelSolutionParts(s, /[+＋]/);
         if (topLevelPlusParts.length >= 2) {
-            // 顶层“+”组合中的“共N个”可能只是某个SKU的局部数量，先按所有分项关系计算。
+            // 只有每个加号分项都明确标注数量时才按组件关系计算；否则读取整条方案的显式总量。
             const plusQty = sumPlusSeparatedQuantities(s);
-            return plusQty !== null && plusQty !== undefined && plusQty > 0
-                ? { quantity: plusQty, source: 'text' }
+            if (plusQty !== null && plusQty !== undefined && plusQty > 0) return { quantity: plusQty, source: 'text' };
+            const explicitTotal = extractExplicitTotalQuantity(s);
+            if (explicitTotal !== null && explicitTotal > 0) return { quantity: explicitTotal, source: 'text' };
+            const genericPlusQty = extractPrimaryQuantity(s);
+            return genericPlusQty !== null && genericPlusQty > 0
+                ? { quantity: genericPlusQty, source: 'text' }
                 : { quantity: 1, source: 'default' };
         }
+        const explicitTotal = extractExplicitTotalQuantity(s);
+        if (explicitTotal !== null && explicitTotal > 0) return { quantity: explicitTotal, source: 'text' };
         let match = s.match(new RegExp(`(?:共|总计|合计|一共|总共)\\s*(\\d+(?:\\.\\d+)?)\\s*${units}`));
         if (match) return { quantity: parseFloat(match[1]), source: 'text' };
         const styleEachPatterns = [
@@ -2945,6 +2955,7 @@
         prompt += protectionOutsideFieldsRule;
         if (isPioneer && !isOutOfProtection) prompt += `\n【首创保护期内通过规则（最高优先级）】以下三个条件为“或”关系，满足任意一个即可通过：1.款式/图案差异度≥50%；2.上架竞争程度为较低竞争或无竞争；3.两款产品的主体材质属于不同大类。主体材质大类包括：${majorMaterialCategoryText}。其中硅胶/橡胶与亚克力等硬塑料属于大类差异，软塑料/薄膜与硬塑料属于大类差异，树脂与硬塑料属于大类差异。材质条件必须由两侧产品方案明确描述或审核图片中的清晰文字标注明确支持；单纯视觉猜测、未知、混合且无法确定主体材质或无法归类时，不得按材质直接通过。数量差异、尺寸差异不能单独作为保护期内首创通过条件，颜色差异也不能作为首创款式/图案差异加分项。\n【首创图案差异约束】展示角度、拍摄角度、俯视/侧视、叠放方式、产品数量、尺寸组合、颜色、图片裁切、光影差异不得作为款式/图案差异计算。主题/节日/适用场景不同也不得单独作为款式/图案差异加分；若版式结构、构图布局、字体结构、主体造型、装饰位置和设计语言高度相似，仅替换主题或节日元素，图案差异度不得判为≥50。但不能因为两者同属同类产品就压低差异度；只要款式/图案设计本身出现不同版式构图、不同字体结构、不同核心造型语言、不同图案绘制方案或不同主体造型，就应按真实设计差异判为≥50，差异很大时可判80%-100%。`;
         if (isPioneer && isOutOfProtection) prompt += `\n【首创保护期外审核规则】保护期到期日当天起即按保护期外执行。系统将款式/图案、数量、尺寸、颜色、明确主体材质分别作为独立差异维度；主体材质大类包括：${majorMaterialCategoryText}。材质维度同样必须由两侧方案文字或图片文字明确支持，视觉推测、未知、混合且无法确定主体材质或无法归类时不得作为有效材质维度。颜色必须单独输出color_difference_percent，不得并入首创overall_percent。与首创本身对比时，需至少形成2个有效差异维度；任何大于0的真实差异都算一个有效维度，不设置最低有效门槛。存在多维度差异时：若任一维度达到50%可通过；若所有维度均低于50%，则按所有有效维度加总判断，加总达到50%可通过，加总低于50%不通过。与除首创外的其他已建产品对比时，至少一个维度达到50%才可通过。变体拓展不设例外，服装产品不设额外门槛。组合产品没有首创保护期，按普通非首创规则审核。最终通过/不通过由系统计算，你只需准确返回各字段。\n【首创图案差异约束】展示角度、拍摄角度、俯视/侧视、叠放方式、产品数量、尺寸组合、颜色、图片裁切、光影差异不得作为款式/图案差异计算。主题/节日/适用场景不同也不得单独作为款式/图案差异加分；若版式结构、构图布局、字体结构、主体造型、装饰位置和设计语言高度相似，仅替换主题或节日元素，图案差异度不得判为≥50。`;
+        prompt += '\n【数量识别与组件拆分覆盖规则（优先级最高）】产品方案中“共N个/总计N件/合计N只/一共N套”等明确总数必须识别为整条方案销售数量；不得因为方案含有“+”符号就提前返回默认数量1。只有每个拟拆分的独立组件都在方案文字中明确标注了各自数量时，才允许拆分并分别展示；任何组件未明确数量时，不得默认补1，也不得仅凭“+”拆分。若没有可成立的逐项组件拆分，但标题存在明确总数，数量取该总数；若标题没有明确销售数量，整体方案数量默认为1。图片里的物品数量、尺寸标注或视觉计数不得改变上述文字数量。此规则覆盖前文任何“组件未标数量默认1”或“见加号就拆分”的表述。';
         prompt += `\n\n只输出JSON：{
   "built_product_desc":"", "built_quantity":"", "built_size":{}, "built_color":"", "built_material":"", "built_cost_level":"",
   "built_function_usage":"", "built_scene_audience":"",
