@@ -1185,7 +1185,7 @@
         });
     }
 
-    function buildConfidenceEvidenceIssues({ sizeMissing = false, sizeUncertain = false, quantityUncertain = false, componentQuantityMismatch = false, quantitySourceUncertain = false, textShort = false, plusComponentsMissing = false, componentsUncertain = false, imageQualityPoor = false, pioneerDateMissing = false, aiUncertain = false } = {}) {
+    function buildConfidenceEvidenceIssues({ sizeMissing = false, sizeUncertain = false, quantityUncertain = false, componentQuantityMismatch = false, quantitySourceUncertain = false, textShort = false, plusComponentsMissing = false, componentsUncertain = false, imageQualityPoor = false, aiUncertain = false } = {}) {
         const issues = [];
         if (sizeMissing) issues.push({ code: 'size_missing', label: '尺寸未识别', factor: 0.85 });
         else if (sizeUncertain) issues.push({ code: 'size_uncertain', label: '尺寸识别不确定', factor: 0.85 });
@@ -1196,7 +1196,6 @@
         if (plusComponentsMissing) issues.push({ code: 'plus_components_missing', label: '组合方案未正确拆分组件', factor: 0.80 });
         else if (componentsUncertain) issues.push({ code: 'components_uncertain', label: '组件拆分不确定', factor: 0.85 });
         if (imageQualityPoor) issues.push({ code: 'image_quality', label: '图片质量较差', factor: 0.85 });
-        if (pioneerDateMissing) issues.push({ code: 'pioneer_date_missing', label: '首创产品缺少建SKU时间', factor: 0.80 });
         if (aiUncertain) issues.push({ code: 'ai_uncertain', label: 'AI标记识别不确定', factor: 0.85 });
         return uniqueEvidenceIssues(issues);
     }
@@ -1217,8 +1216,6 @@
             strength = { score: base, forcedReview: false, label: marketReliable ? `${competitionLevel}且细分市场差异较大` : '市场分析空泛或前后不一致' };
         } else if (!strength && decisionPath === 'pioneer_protection') {
             strength = { score: 100, forcedReview: false, label: '首创保护期规则明确' };
-        } else if (!strength && decisionPath === 'pioneer_missing_date') {
-            strength = { score: 40, forcedReview: false, label: '首创保护期无法准确计算' };
         } else if (!strength) {
             strength = confidenceStrengthByDifference(combinedDiff);
         }
@@ -1677,6 +1674,17 @@
         return generic !== null && generic !== undefined && generic > 0
             ? { quantity: generic, source: 'text' }
             : { quantity: 1, source: 'default' };
+    }
+
+    function hasExplicitZeroQuantity(text) {
+        const title = extractSolutionTitleText(text);
+        if (!title) return false;
+        return new RegExp(`(?:^|[+＋,，;；])[^+＋,，;；]{0,80}?0\\s*${QUANTITY_UNIT_PATTERN}(?=\\s|$|[+＋,，;；])`, 'i').test(title);
+    }
+
+    function isSolutionQuantityUnavailable(text) {
+        const title = extractSolutionTitleText(text);
+        return !title || hasExplicitZeroQuantity(title);
     }
 
     function extractSolutionQuantityStrict(text) {
@@ -2850,6 +2858,7 @@
         prompt += protectionOutsideFieldsRule;
         if (isPioneer && !isOutOfProtection) prompt += `\n【首创保护期内通过规则（最高优先级）】以下三个条件为“或”关系，满足任意一个即可通过：1.款式/图案差异度≥50%；2.上架竞争程度为较低竞争或无竞争；3.两款产品的主体材质属于不同大类。主体材质大类包括：${majorMaterialCategoryText}。其中硅胶/橡胶与亚克力等硬塑料属于大类差异，软塑料/薄膜与硬塑料属于大类差异，树脂与硬塑料属于大类差异。材质条件必须由两侧产品方案明确描述或审核图片中的清晰文字标注明确支持；单纯视觉猜测、未知、混合且无法确定主体材质或无法归类时，不得按材质直接通过。数量差异、尺寸差异不能单独作为保护期内首创通过条件，颜色差异也不能作为首创款式/图案差异加分项。\n【首创图案差异约束】展示角度、拍摄角度、俯视/侧视、叠放方式、产品数量、尺寸组合、颜色、图片裁切、光影差异不得作为款式/图案差异计算。主题/节日/适用场景不同也不得单独作为款式/图案差异加分；若版式结构、构图布局、字体结构、主体造型、装饰位置和设计语言高度相似，仅替换主题或节日元素，图案差异度不得判为≥50。但不能因为两者同属同类产品就压低差异度；只要款式/图案设计本身出现不同版式构图、不同字体结构、不同核心造型语言、不同图案绘制方案或不同主体造型，就应按真实设计差异判为≥50，差异很大时可判80%-100%。`;
         if (isPioneer && isOutOfProtection) prompt += `\n【首创保护期外审核规则】保护期到期日当天起即按保护期外执行。系统将款式/图案、数量、尺寸、颜色、明确主体材质分别作为独立差异维度；主体材质大类包括：${majorMaterialCategoryText}。材质维度同样必须由两侧方案文字或图片文字明确支持，视觉推测、未知、混合且无法确定主体材质或无法归类时不得作为有效材质维度。颜色必须单独输出color_difference_percent，不得并入首创overall_percent。与首创本身对比时，需至少形成2个有效差异维度；任何大于0的真实差异都算一个有效维度，不设置最低有效门槛。存在多维度差异时：若任一维度达到50%可通过；若所有维度均低于50%，则按所有有效维度加总判断，加总达到50%可通过，加总低于50%不通过。与除首创外的其他已建产品对比时，至少一个维度达到50%才可通过。变体拓展不设例外，服装产品不设额外门槛。组合产品没有首创保护期，按普通非首创规则审核。最终通过/不通过由系统计算，你只需准确返回各字段。\n【首创图案差异约束】展示角度、拍摄角度、俯视/侧视、叠放方式、产品数量、尺寸组合、颜色、图片裁切、光影差异不得作为款式/图案差异计算。主题/节日/适用场景不同也不得单独作为款式/图案差异加分；若版式结构、构图布局、字体结构、主体造型、装饰位置和设计语言高度相似，仅替换主题或节日元素，图案差异度不得判为≥50。`;
+        if (isPioneer) prompt += '\n【首创对比颜色排除最终规则（优先于所有通用视觉及颜色规则）】款式/图案差异的四个维度分项文字与分数、overall_percent、summary均必须完全忽略产品颜色、配色和色彩体系。即使颜色完全不同或反差很大，也不得据此提高或降低任何视觉差异分数；visual_overall只分析非颜色的造型、构图、装饰和结构差异，summary不得提颜色差异。built_color/unbuilt_color仍如实提取；保护期外的color_difference_percent仍单独输出供系统作为独立审核维度使用，但绝不并入首创款式/图案差异度。';
         prompt += '\n【数量识别与组件拆分覆盖规则（优先级最高）】产品方案中“共N个/总计N件/合计N只/一共N套”等明确总数必须识别为整条方案销售数量；不得因为方案含有“+”符号就提前返回默认数量1。只有每个拟拆分的独立组件都在方案文字中明确标注了各自数量时，才允许拆分并分别展示；任何组件未明确数量时，不得默认补1，也不得仅凭“+”拆分。若没有可成立的逐项组件拆分，但标题存在明确总数，数量取该总数；若标题没有明确销售数量，整体方案数量默认为1。图片里的物品数量、尺寸标注或视觉计数不得改变上述文字数量。此规则覆盖前文任何“组件未标数量默认1”或“见加号就拆分”的表述。';
         prompt += `\n\n只输出JSON：{
   "built_product_desc":"", "built_quantity":"", "built_size":{}, "built_color":"", "built_material":"", "built_cost_level":"",
@@ -2997,6 +3006,7 @@
             const unbuiltTitleText = extractSolutionTitleText(unbuiltTxt), builtTitleText = extractSolutionTitleText(b.text);
             const unbuiltQuantityInfo = extractSolutionQuantityInfo(unbuiltTitleText), builtQuantityInfo = extractSolutionQuantityInfo(builtTitleText);
             const unbuiltTextQty = unbuiltQuantityInfo.quantity, builtTextQty = builtQuantityInfo.quantity;
+            const builtQuantityMissing = isSolutionQuantityUnavailable(b.text);
             const unbuiltExplicitTotalQty = extractExplicitTotalQuantity(unbuiltTitleText), builtExplicitTotalQty = extractExplicitTotalQuantity(builtTitleText);
             const builtCanDisplayComponents = shouldDisplayComponentsFromSolutionText(b.text);
             const unbuiltCanDisplayComponents = shouldDisplayComponentsFromSolutionText(unbuiltTxt);
@@ -3007,7 +3017,7 @@
             const builtHasPrimary = primaryConsistency.builtPrimary, unbuiltHasPrimary = primaryConsistency.unbuiltPrimary;
             // 总数量只能来自产品方案文字；图片视觉计数、组件数量和相同图片兜底都不能覆盖文字数量。
             res.unbuilt_quantity = String(unbuiltTextQty || 1);
-            res.built_quantity = String(builtTextQty || 1);
+            res.built_quantity = builtQuantityMissing ? '' : String(builtTextQty || 1);
             let appearFix = { reason: '' }, accessoryAppearFix = { reason: '' };
             // 图案差异由豆包按完整视觉规则一次判定；前端不再按关键词二次抬分或压分。
             const aiAppearanceDiff = Number(res.overall_percent);
@@ -3028,10 +3038,10 @@
             res.unbuilt_product_desc = cachedUnbuilt.product_desc; res.unbuilt_quantity = cachedUnbuilt.quantity; res.unbuilt_size = cachedUnbuilt.size; res.unbuilt_color = cachedUnbuilt.color; res.unbuilt_material = cachedUnbuilt.material; res.unbuilt_cost_level = cachedUnbuilt.cost_level; res.unbuilt_function_usage = cachedUnbuilt.function_usage; res.unbuilt_scene_audience = cachedUnbuilt.scene_audience;
             const builtNum = parseQuantityValue(res.built_quantity), unbuiltNum = parseQuantityValue(res.unbuilt_quantity);
             const usePrimaryQty = false;
-            const qtyBuilt = builtNum > 0 ? builtNum : 1;
+            const qtyBuilt = builtQuantityMissing ? null : (builtNum > 0 ? builtNum : 1);
             const qtyUnbuilt = unbuiltNum > 0 ? unbuiltNum : 1;
-            let qDiff = null, skipQ = false;
-            if (qtyBuilt > 0) {
+            let qDiff = null;
+            if (qtyBuilt !== null && qtyBuilt > 0 && qtyUnbuilt > 0) {
                 qDiff = Math.abs(qtyUnbuilt - qtyBuilt) / qtyBuilt * 100;
             }
             const skipSizeDiff = builtHasPrimary || unbuiltHasPrimary;
@@ -3049,7 +3059,7 @@
                 ? sizeDiff
                 : (isFinite(Number(sizeRawDiff)) && Number(sizeRawDiff) > 0 ? Number(sizeRawDiff) : null);
             let schemeDiff = 0, combined = 0;
-            if (!skipQ && qDiff !== null) { schemeDiff += qDiff; combined += qDiff; }
+            if (qDiff !== null) { schemeDiff += qDiff; combined += qDiff; }
             if (!skipSizeDiff && sizeDiff !== null) { schemeDiff += sizeDiff; combined += sizeDiff; }
             combined += appearDiff;
             const schemeRounded = schemeDiff !== 0 ? Math.round(schemeDiff) : null;
@@ -3111,7 +3121,6 @@
             const imageQualityPoor = /^(poor|差|较差|模糊)$/i.test(safeString(res.image_quality).trim());
             const uncertaintyReasons = Array.isArray(res.uncertainty_reasons) ? res.uncertainty_reasons.filter(Boolean) : [];
             const aiUncertain = uncertaintyReasons.length > 0 && !sizeUncertain && !componentsUncertain && !imageQualityPoor;
-            const pioneerDateMissing = applyPioneerRule && !safeString(b.buildDate).trim();
             const evidenceIssues = buildConfidenceEvidenceIssues({
                 sizeMissing: !skipSizeDiff && sizeReason === '未识别',
                 sizeUncertain,
@@ -3122,13 +3131,11 @@
                 plusComponentsMissing,
                 componentsUncertain,
                 imageQualityPoor,
-                pioneerDateMissing,
                 aiUncertain: aiUncertain || !!res._visual_consistency_warning
             });
             const marketReliable = !res._visual_consistency_warning && !compFix.reason;
             let confidencePath = 'combined';
-            if (applyPioneerRule && pioneerDateMissing) confidencePath = 'pioneer_missing_date';
-            else if (applyPioneerRule && inProt) confidencePath = 'pioneer_protection';
+            if (applyPioneerRule && inProt) confidencePath = 'pioneer_protection';
             else if (applyPioneerRule && !inProt) confidencePath = 'combined';
             else if (passedByMarketDifference) confidencePath = 'market';
             const confidence = calculateComparisonConfidence({
@@ -3168,7 +3175,7 @@
             const unbuiltManualSizeHtml = renderManualSizeSide('unbuilt', uSizeStr);
             const builtManualSizeHtml = renderManualSizeSide('built', bSizeStr);
             if (res.unbuilt_material) uAttr.push(`<span class="attr-row">🔧 材质：${res.unbuilt_material}</span>`);
-            if (res.built_quantity) bAttr.push(`<span class="attr-row">📦 数量：<span class="qty-edit"><input class="qty-input" data-side="built" data-original="${builtQtyNumForEdit || ''}" type="number" min="0" step="1" value="${builtQtyNumForEdit || ''}" title="可人工修正数量"><span class="qty-hint">可修正</span></span></span>`);
+            if (res.built_quantity || builtQuantityMissing) bAttr.push(`<span class="attr-row">📦 数量：<span class="qty-edit"><input class="qty-input" data-side="built" data-original="${builtQtyNumForEdit || ''}" type="number" min="0" step="1" value="${builtQtyNumForEdit || ''}" placeholder="${builtQuantityMissing ? '请填写' : ''}" title="可人工修正数量"><span class="qty-hint">${builtQuantityMissing ? '数据缺失' : '可修正'}</span></span></span>`);
             if (res.built_material) bAttr.push(`<span class="attr-row">🔧 材质：${res.built_material}</span>`);
             let sizeDisp = '';
             if (skipSizeDiff) sizeDisp = '<div class="size-calc">尺寸差异 = 复杂组合产品，不参与计算</div>';
@@ -3185,8 +3192,7 @@
                 sizeDisp = `<div class="size-calc">尺寸差异（加权平均） = ${formatPercent(sizeDiff)}</div><div class="size-auto-detail">${detailHtml}</div>`;
             } else sizeDisp = '<div class="size-calc">尺寸差异 = 未识别</div>';
             let qDisp = '';
-            if (skipQ && qDiff >= 100) qDisp = '<div>数量差异 = 数量差异过大，可能识别错误，不参与计算</div>';
-            else if (qDiff !== null && !isNaN(qDiff)) {
+            if (qDiff !== null && !isNaN(qDiff)) {
                 qDisp = `<div>数量差异 = |${qtyUnbuilt} - ${qtyBuilt}| / ${qtyBuilt} × 100% = ${formatPercent(qDiff)}${usePrimaryQty ? ` (主产品数量 未建${qtyUnbuilt} / 已建${qtyBuilt})` : ''}</div>`;
             } else qDisp = '<div>数量差异 = 数据缺失</div>';
             let schemeSubValue = '';
